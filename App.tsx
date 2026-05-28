@@ -1,17 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   StatusBar,
   StyleSheet,
   Text,
   View,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   ActivityIndicator,
   Platform,
   Switch,
   Linking,
   Modal,
   DeviceEventEmitter,
+  Vibration,
+  Image,
+  Animated,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PermissionsAndroid } from 'react-native';
@@ -25,7 +28,7 @@ import { NativeModules } from 'react-native';
 
 const { PrayerCapsuleModule } = NativeModules;
 
-type Screen = 'dashboard' | 'settings' | 'prayer_rules' | 'notifications' | 'data_management' | 'about';
+type Screen = 'dashboard' | 'settings' | 'prayer_rules' | 'notifications' | 'data_management' | 'about' | 'notification_guide';
 
 interface CustomAlertConfig {
   visible: boolean;
@@ -35,6 +38,63 @@ interface CustomAlertConfig {
   onCancel?: () => void;
   confirmText?: string;
   cancelText?: string;
+}
+
+// Light tactile device vibration feedback
+const triggerHaptic = () => {
+  try {
+    Vibration.vibrate(15);
+  } catch (e) {
+    // Ignore if not supported on the device
+  }
+};
+
+// Shimmer card loading placeholders
+function SkeletonCard() {
+  const shimmerAnim = useRef(new Animated.Value(0.15)).current;
+
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(shimmerAnim, {
+          toValue: 0.35,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(shimmerAnim, {
+          toValue: 0.15,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    animation.start();
+    return () => animation.stop();
+  }, []);
+
+  return (
+    <Animated.View style={[styles.skeletonCard, { opacity: shimmerAnim }]} />
+  );
+}
+
+function SkeletonLoader() {
+  return (
+    <View style={styles.skeletonContainer}>
+      <View style={styles.skeletonCountdownWrapper}>
+        <Animated.View style={styles.skeletonCountdownRing} />
+      </View>
+      <View style={styles.divider}>
+        <View style={styles.dividerLine} />
+        <Text style={styles.dividerText}>TODAY'S PRAYERS</Text>
+        <View style={styles.dividerLine} />
+      </View>
+      <SkeletonCard />
+      <SkeletonCard />
+      <SkeletonCard />
+      <SkeletonCard />
+      <SkeletonCard />
+    </View>
+  );
 }
 
 export default function App(): React.JSX.Element {
@@ -51,9 +111,31 @@ function DeenPulseApp(): React.JSX.Element {
   const [locationMode, setLocationMode] = useState<'gps' | 'cached'>('gps');
   const [juristicMethod, setJuristicMethod] = useState<'standard' | 'hanafi'>('standard');
   const [calculationRule, setCalculationRule] = useState<'auto' | 'karachi' | 'isna'>('auto');
+  const [isSetupGuideDismissed, setIsSetupGuideDismissed] = useState<boolean>(true);
 
   const [showJuristicPicker, setShowJuristicPicker] = useState(false);
   const [showCalculationPicker, setShowCalculationPicker] = useState(false);
+
+  // Screen transition animations
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(15)).current;
+
+  useEffect(() => {
+    fadeAnim.setValue(0);
+    slideAnim.setValue(15);
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [currentScreen]);
 
   // Custom alert modal config
   const [alertConfig, setAlertConfig] = useState<CustomAlertConfig>({
@@ -62,7 +144,7 @@ function DeenPulseApp(): React.JSX.Element {
     message: '',
   });
 
-  const { prayerTimes, loading, error, location, refresh } = usePrayerTimes(
+  const { prayerTimes, loading, error, location, refresh, offlineFallback } = usePrayerTimes(
     locationMode,
     juristicMethod,
     calculationRule
@@ -70,32 +152,35 @@ function DeenPulseApp(): React.JSX.Element {
 
   const nextPrayer = usePrayerCountdown(prayerTimes, true);
 
-  // Listen to refresh requests from ongoing notification action buttons
-  useEffect(() => {
-    const sub = DeviceEventEmitter.addListener('onRefreshRequested', () => {
-      console.log('Refresh requested from native ongoing notification.');
-      refresh();
-    });
-    return () => sub.remove();
-  }, [refresh]);
-
-  // Load settings on startup
+  // Load preferences and setup guide state on startup
   useEffect(() => {
     const loadSettings = async () => {
       try {
         const mode = await AsyncStorage.getItem('@deenpulse_location_mode');
         const juristic = await AsyncStorage.getItem('@deenpulse_juristic_method');
         const rule = await AsyncStorage.getItem('@deenpulse_calculation_rule');
+        const guideDismissed = await AsyncStorage.getItem('@isSetupGuideDismissed');
 
         if (mode !== null) setLocationMode(mode as 'gps' | 'cached');
         if (juristic !== null) setJuristicMethod(juristic as 'standard' | 'hanafi');
         if (rule !== null) setCalculationRule(rule as 'auto' | 'karachi' | 'isna');
+        setIsSetupGuideDismissed(guideDismissed === 'true');
       } catch (e) {
         console.warn('Failed to load settings:', e);
       }
     };
     loadSettings();
   }, []);
+
+  // Monitor network connectivity failure warning
+  useEffect(() => {
+    if (offlineFallback) {
+      showAlert(
+        'Offline Fallback',
+        'Unable to connect to the network. The system is relying on cached fallback datasets for your prayer times.'
+      );
+    }
+  }, [offlineFallback]);
 
   const showAlert = (
     title: string,
@@ -110,10 +195,12 @@ function DeenPulseApp(): React.JSX.Element {
       title,
       message,
       onConfirm: () => {
+        triggerHaptic();
         setAlertConfig(prev => ({ ...prev, visible: false }));
         if (onConfirm) onConfirm();
       },
       onCancel: onCancel ? () => {
+        triggerHaptic();
         setAlertConfig(prev => ({ ...prev, visible: false }));
         onCancel();
       } : undefined,
@@ -138,6 +225,7 @@ function DeenPulseApp(): React.JSX.Element {
           setLocationMode('gps');
           setJuristicMethod('standard');
           setCalculationRule('auto');
+          setIsSetupGuideDismissed(false);
           try {
             PrayerCapsuleModule?.stopCapsule();
           } catch (e) {
@@ -199,24 +287,41 @@ function DeenPulseApp(): React.JSX.Element {
     return 'Islamic Society of North America (ISNA)';
   };
 
+  // Listen to refresh requests from ongoing notification action buttons
+  useEffect(() => {
+    const sub = DeviceEventEmitter.addListener('onRefreshRequested', () => {
+      console.log('Refresh requested from native ongoing notification.');
+      refresh();
+    });
+    return () => sub.remove();
+  }, [refresh]);
+
   const renderScreen = () => {
     switch (currentScreen) {
       case 'settings':
         return (
           <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             <View style={styles.subHeader}>
-              <TouchableOpacity onPress={() => setCurrentScreen('dashboard')} style={styles.backButton}>
+              <Pressable
+                onPress={() => {
+                  triggerHaptic();
+                  setCurrentScreen('dashboard');
+                }}
+                style={({ pressed }) => [styles.backButton, { opacity: pressed ? 0.7 : 1 }]}
+              >
                 <Icon name="arrow-left" size={20} color="#FFFFFF" />
-              </TouchableOpacity>
+              </Pressable>
               <Text style={styles.subTitle}>Settings</Text>
             </View>
 
             <View style={styles.cardContainer}>
               {/* Row 1: Prayer Rules */}
-              <TouchableOpacity
-                style={styles.settingsRowCard}
-                onPress={() => setCurrentScreen('prayer_rules')}
-                activeOpacity={0.7}
+              <Pressable
+                style={({ pressed }) => [styles.settingsRowCard, { opacity: pressed ? 0.75 : 1 }]}
+                onPress={() => {
+                  triggerHaptic();
+                  setCurrentScreen('prayer_rules');
+                }}
               >
                 <Icon name="book-open" size={20} color="#00C896" style={styles.rowIcon} />
                 <View style={styles.rowInfo}>
@@ -224,13 +329,15 @@ function DeenPulseApp(): React.JSX.Element {
                   <Text style={styles.rowDesc}>Juristic settings and calculation methods</Text>
                 </View>
                 <Icon name="chevron-right" size={18} color="rgba(255, 255, 255, 0.3)" />
-              </TouchableOpacity>
+              </Pressable>
 
               {/* Row 2: Notifications */}
-              <TouchableOpacity
-                style={styles.settingsRowCard}
-                onPress={() => setCurrentScreen('notifications')}
-                activeOpacity={0.7}
+              <Pressable
+                style={({ pressed }) => [styles.settingsRowCard, { opacity: pressed ? 0.75 : 1 }]}
+                onPress={() => {
+                  triggerHaptic();
+                  setCurrentScreen('notifications');
+                }}
               >
                 <Icon name="bell" size={20} color="#00C896" style={styles.rowIcon} />
                 <View style={styles.rowInfo}>
@@ -238,13 +345,15 @@ function DeenPulseApp(): React.JSX.Element {
                   <Text style={styles.rowDesc}>Configure system alert permissions</Text>
                 </View>
                 <Icon name="chevron-right" size={18} color="rgba(255, 255, 255, 0.3)" />
-              </TouchableOpacity>
+              </Pressable>
 
               {/* Row 3: Data Management */}
-              <TouchableOpacity
-                style={styles.settingsRowCard}
-                onPress={() => setCurrentScreen('data_management')}
-                activeOpacity={0.7}
+              <Pressable
+                style={({ pressed }) => [styles.settingsRowCard, { opacity: pressed ? 0.75 : 1 }]}
+                onPress={() => {
+                  triggerHaptic();
+                  setCurrentScreen('data_management');
+                }}
               >
                 <Icon name="database" size={20} color="#00C896" style={styles.rowIcon} />
                 <View style={styles.rowInfo}>
@@ -252,13 +361,15 @@ function DeenPulseApp(): React.JSX.Element {
                   <Text style={styles.rowDesc}>Storage, cache, and GPS positioning</Text>
                 </View>
                 <Icon name="chevron-right" size={18} color="rgba(255, 255, 255, 0.3)" />
-              </TouchableOpacity>
+              </Pressable>
 
               {/* Row 4: About DeenPulse */}
-              <TouchableOpacity
-                style={styles.settingsRowCard}
-                onPress={() => setCurrentScreen('about')}
-                activeOpacity={0.7}
+              <Pressable
+                style={({ pressed }) => [styles.settingsRowCard, { opacity: pressed ? 0.75 : 1 }]}
+                onPress={() => {
+                  triggerHaptic();
+                  setCurrentScreen('about');
+                }}
               >
                 <Icon name="info" size={20} color="#00C896" style={styles.rowIcon} />
                 <View style={styles.rowInfo}>
@@ -266,7 +377,7 @@ function DeenPulseApp(): React.JSX.Element {
                   <Text style={styles.rowDesc}>App information and credits</Text>
                 </View>
                 <Icon name="chevron-right" size={18} color="rgba(255, 255, 255, 0.3)" />
-              </TouchableOpacity>
+              </Pressable>
             </View>
           </ScrollView>
         );
@@ -275,34 +386,44 @@ function DeenPulseApp(): React.JSX.Element {
         return (
           <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             <View style={styles.subHeader}>
-              <TouchableOpacity onPress={() => setCurrentScreen('settings')} style={styles.backButton}>
+              <Pressable
+                onPress={() => {
+                  triggerHaptic();
+                  setCurrentScreen('settings');
+                }}
+                style={({ pressed }) => [styles.backButton, { opacity: pressed ? 0.7 : 1 }]}
+              >
                 <Icon name="arrow-left" size={20} color="#FFFFFF" />
-              </TouchableOpacity>
+              </Pressable>
               <Text style={styles.subTitle}>Prayer Rules</Text>
             </View>
 
             <View style={styles.cardContainer}>
               {/* Card 1: Juristic Method */}
-              <TouchableOpacity
-                style={styles.menuDetailCard}
-                onPress={() => setShowJuristicPicker(true)}
-                activeOpacity={0.7}
+              <Pressable
+                style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
+                onPress={() => {
+                  triggerHaptic();
+                  setShowJuristicPicker(true);
+                }}
               >
                 <Text style={styles.menuDetailLabel}>Juristic Method (Asr)</Text>
                 <Text style={styles.menuDetailValue}>{getJuristicLabel()}</Text>
                 <Text style={styles.menuDetailDesc}>Select Standard (Shafi'i, Maliki, Hanbali) or Hanafi school rules.</Text>
-              </TouchableOpacity>
+              </Pressable>
 
               {/* Card 2: Calculation Rule */}
-              <TouchableOpacity
-                style={styles.menuDetailCard}
-                onPress={() => setShowCalculationPicker(true)}
-                activeOpacity={0.7}
+              <Pressable
+                style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
+                onPress={() => {
+                  triggerHaptic();
+                  setShowCalculationPicker(true);
+                }}
               >
                 <Text style={styles.menuDetailLabel}>Calculation Rule</Text>
                 <Text style={styles.menuDetailValue}>{getCalculationLabel()}</Text>
                 <Text style={styles.menuDetailDesc}>Choose calculation method rules for regional timing math offsets.</Text>
-              </TouchableOpacity>
+              </Pressable>
             </View>
           </ScrollView>
         );
@@ -311,23 +432,31 @@ function DeenPulseApp(): React.JSX.Element {
         return (
           <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             <View style={styles.subHeader}>
-              <TouchableOpacity onPress={() => setCurrentScreen('settings')} style={styles.backButton}>
+              <Pressable
+                onPress={() => {
+                  triggerHaptic();
+                  setCurrentScreen('settings');
+                }}
+                style={({ pressed }) => [styles.backButton, { opacity: pressed ? 0.7 : 1 }]}
+              >
                 <Icon name="arrow-left" size={20} color="#FFFFFF" />
-              </TouchableOpacity>
+              </Pressable>
               <Text style={styles.subTitle}>Notifications</Text>
             </View>
 
             <View style={styles.cardContainer}>
-              <TouchableOpacity
-                style={styles.menuDetailCard}
-                onPress={openAppNotificationSettings}
-                activeOpacity={0.7}
+              <Pressable
+                style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
+                onPress={() => {
+                  triggerHaptic();
+                  openAppNotificationSettings();
+                }}
               >
                 <Text style={styles.menuDetailLabel}>Allow Notifications</Text>
                 <Text style={styles.menuDetailDesc}>
                   Deep-links directly to the native Android OS system app notification settings panel to toggle alerts.
                 </Text>
-              </TouchableOpacity>
+              </Pressable>
             </View>
           </ScrollView>
         );
@@ -336,9 +465,15 @@ function DeenPulseApp(): React.JSX.Element {
         return (
           <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             <View style={styles.subHeader}>
-              <TouchableOpacity onPress={() => setCurrentScreen('settings')} style={styles.backButton}>
+              <Pressable
+                onPress={() => {
+                  triggerHaptic();
+                  setCurrentScreen('settings');
+                }}
+                style={({ pressed }) => [styles.backButton, { opacity: pressed ? 0.7 : 1 }]}
+              >
                 <Icon name="arrow-left" size={20} color="#FFFFFF" />
-              </TouchableOpacity>
+              </Pressable>
               <Text style={styles.subTitle}>Data Management</Text>
             </View>
 
@@ -354,7 +489,10 @@ function DeenPulseApp(): React.JSX.Element {
                   </View>
                   <Switch
                     value={locationMode === 'gps'}
-                    onValueChange={handleLocationModeChange}
+                    onValueChange={(val) => {
+                      triggerHaptic();
+                      handleLocationModeChange(val);
+                    }}
                     trackColor={{ false: '#2A2E3D', true: '#00C896' }}
                     thumbColor={Platform.OS === 'android' ? '#FFFFFF' : undefined}
                   />
@@ -362,28 +500,36 @@ function DeenPulseApp(): React.JSX.Element {
               </View>
 
               {/* Force GPS Permission Request */}
-              <TouchableOpacity
-                style={styles.menuDetailCard}
-                onPress={handleRequestGPS}
-                activeOpacity={0.7}
+              <Pressable
+                style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
+                onPress={() => {
+                  triggerHaptic();
+                  handleRequestGPS();
+                }}
               >
                 <Text style={styles.menuDetailLabel}>Request GPS Permission</Text>
                 <Text style={styles.menuDetailDesc}>
                   Manually trigger system location permission dialog to authorize GPS coordinates tracking.
                 </Text>
-              </TouchableOpacity>
+              </Pressable>
 
               {/* Reset Cache / Reset History */}
-              <TouchableOpacity
-                style={[styles.menuDetailCard, styles.destructiveBorder]}
-                onPress={handleAppReset}
-                activeOpacity={0.7}
+              <Pressable
+                style={({ pressed }) => [
+                  styles.menuDetailCard,
+                  styles.destructiveBorder,
+                  { opacity: pressed ? 0.75 : 1 }
+                ]}
+                onPress={() => {
+                  triggerHaptic();
+                  handleAppReset();
+                }}
               >
                 <Text style={[styles.menuDetailLabel, styles.destructiveText]}>Clear Cache / Reset History</Text>
                 <Text style={styles.menuDetailDesc}>
                   Wipes out all stored calculation rules, caching tables, and restarts positioning loop.
                 </Text>
-              </TouchableOpacity>
+              </Pressable>
             </View>
           </ScrollView>
         );
@@ -392,9 +538,15 @@ function DeenPulseApp(): React.JSX.Element {
         return (
           <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             <View style={styles.subHeader}>
-              <TouchableOpacity onPress={() => setCurrentScreen('settings')} style={styles.backButton}>
+              <Pressable
+                onPress={() => {
+                  triggerHaptic();
+                  setCurrentScreen('settings');
+                }}
+                style={({ pressed }) => [styles.backButton, { opacity: pressed ? 0.7 : 1 }]}
+              >
                 <Icon name="arrow-left" size={20} color="#FFFFFF" />
-              </TouchableOpacity>
+              </Pressable>
               <Text style={styles.subTitle}>About</Text>
             </View>
 
@@ -428,6 +580,85 @@ function DeenPulseApp(): React.JSX.Element {
           </ScrollView>
         );
 
+      case 'notification_guide':
+        return (
+          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+            <View style={styles.subHeader}>
+              <Pressable
+                onPress={() => {
+                  triggerHaptic();
+                  setCurrentScreen('dashboard');
+                }}
+                style={({ pressed }) => [styles.backButton, { opacity: pressed ? 0.7 : 1 }]}
+              >
+                <Icon name="arrow-left" size={20} color="#FFFFFF" />
+              </Pressable>
+              <Text style={styles.subTitle}>Notification Guide</Text>
+            </View>
+
+            <View style={styles.guideContainer}>
+              {/* Step 1 */}
+              <View style={styles.guideStepCard}>
+                <Text style={styles.stepNumLabel}>Step 1</Text>
+                <Text style={styles.stepDesc}>
+                  Enable primary notifications and ensure the 'Show Live Updates on Live Alerts' toggle switch is fully activated to allow status bar capsule rendering.
+                </Text>
+                <Image
+                  source={require('./src/assets/image_c9314d.jpeg')}
+                  style={styles.guideImage}
+                  resizeMode="contain"
+                />
+              </View>
+
+              {/* Step 2 */}
+              <View style={styles.guideStepCard}>
+                <Text style={styles.stepNumLabel}>Step 2</Text>
+                <Text style={styles.stepDesc}>
+                  Verify that Lock Screen permission is completely checked.
+                </Text>
+                <Image
+                  source={require('./src/assets/image_c93169.jpeg')}
+                  style={styles.guideImage}
+                  resizeMode="contain"
+                />
+              </View>
+
+              {/* Step 3 */}
+              <View style={styles.guideStepCard}>
+                <Text style={styles.stepNumLabel}>Step 3</Text>
+                <Text style={styles.stepDesc}>
+                  Set audio/vibration preferences and consider allowing alerts inside Do Not Disturb profiles for critical countdown consistency.
+                </Text>
+                <Image
+                  source={require('./src/assets/image_c93183.jpeg')}
+                  style={styles.guideImage}
+                  resizeMode="contain"
+                />
+              </View>
+
+              {/* Baseline button */}
+              <Pressable
+                style={({ pressed }) => [
+                  styles.guideCompleteBtn,
+                  { opacity: pressed ? 0.7 : 1.0 }
+                ]}
+                onPress={async () => {
+                  triggerHaptic();
+                  try {
+                    await AsyncStorage.setItem('@isSetupGuideDismissed', 'true');
+                    setIsSetupGuideDismissed(true);
+                    setCurrentScreen('dashboard');
+                  } catch (e) {
+                    console.warn(e);
+                  }
+                }}
+              >
+                <Text style={styles.guideCompleteText}>I have configured these settings</Text>
+              </Pressable>
+            </View>
+          </ScrollView>
+        );
+
       default: // dashboard
         return (
           <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -438,20 +669,24 @@ function DeenPulseApp(): React.JSX.Element {
                 <Text style={styles.subtitle}>Prayer Countdown Monitor</Text>
               </View>
               <View style={styles.headerButtons}>
-                <TouchableOpacity
-                  style={styles.headerButton}
-                  onPress={() => refresh()}
-                  activeOpacity={0.7}
+                <Pressable
+                  style={({ pressed }) => [styles.headerButton, { opacity: pressed ? 0.7 : 1 }]}
+                  onPress={() => {
+                    triggerHaptic();
+                    refresh();
+                  }}
                 >
                   <Icon name="refresh-cw" size={16} color="#00C896" />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.headerButton}
-                  onPress={() => setCurrentScreen('settings')}
-                  activeOpacity={0.7}
+                </Pressable>
+                <Pressable
+                  style={({ pressed }) => [styles.headerButton, { opacity: pressed ? 0.7 : 1 }]}
+                  onPress={() => {
+                    triggerHaptic();
+                    setCurrentScreen('settings');
+                  }}
                 >
                   <Icon name="settings" size={16} color="#00C896" />
-                </TouchableOpacity>
+                </Pressable>
               </View>
             </View>
 
@@ -464,26 +699,51 @@ function DeenPulseApp(): React.JSX.Element {
               </View>
             )}
 
-            {/* Loading / Error States */}
-            {loading && (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#00C896" />
-                <Text style={styles.loadingText}>Fetching calendar timings...</Text>
-              </View>
-            )}
+            {/* Active loading state with Skeleton Animation */}
+            {loading && <SkeletonLoader />}
 
+            {/* Error States */}
             {error && !loading && (
               <View style={styles.errorContainer}>
                 <Text style={styles.errorText}>Error: {error}</Text>
-                <TouchableOpacity style={styles.retryButton} onPress={() => refresh()}>
+                <Pressable
+                  style={({ pressed }) => [styles.retryButton, { opacity: pressed ? 0.7 : 1 }]}
+                  onPress={() => {
+                    triggerHaptic();
+                    refresh();
+                  }}
+                >
                   <Text style={styles.retryText}>Retry</Text>
-                </TouchableOpacity>
+                </Pressable>
               </View>
             )}
 
             {/* Calendar Data Display */}
             {!loading && !error && (
               <View style={styles.dashboardContainer}>
+                {/* Onboarding Setup Guide Card (First-Launch Only) */}
+                {!isSetupGuideDismissed && (
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.setupGuideCard,
+                      { opacity: pressed ? 0.75 : 1.0 }
+                    ]}
+                    onPress={() => {
+                      triggerHaptic();
+                      setCurrentScreen('notification_guide');
+                    }}
+                  >
+                    <View style={styles.setupCardHeader}>
+                      <Icon name="help-circle" size={22} color="#00C896" />
+                      <Text style={styles.setupCardTitle}>Complete Setup Guide</Text>
+                    </View>
+                    <Text style={styles.setupCardDesc}>
+                      Please tap here to configure necessary OS notification settings to allow status bar capsule countdowns.
+                    </Text>
+                    <Icon name="arrow-right" size={16} color="#00C896" style={styles.setupCardArrow} />
+                  </Pressable>
+                )}
+
                 <CountdownDisplay nextPrayer={nextPrayer} />
 
                 <View style={styles.divider}>
@@ -516,7 +776,9 @@ function DeenPulseApp(): React.JSX.Element {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
       
-      {renderScreen()}
+      <Animated.View style={{ flex: 1, opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+        {renderScreen()}
+      </Animated.View>
 
       {/* Juristic Method Picker Modal */}
       <Modal visible={showJuristicPicker} transparent animationType="slide">
@@ -524,16 +786,24 @@ function DeenPulseApp(): React.JSX.Element {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Juristic Method (Asr)</Text>
-              <TouchableOpacity onPress={() => setShowJuristicPicker(false)} style={styles.modalCloseBtn}>
+              <Pressable
+                onPress={() => {
+                  triggerHaptic();
+                  setShowJuristicPicker(false);
+                }}
+                style={({ pressed }) => [styles.modalCloseBtn, { opacity: pressed ? 0.7 : 1 }]}
+              >
                 <Icon name="x" size={16} color="rgba(255, 255, 255, 0.6)" />
-              </TouchableOpacity>
+              </Pressable>
             </View>
-            <TouchableOpacity
-              style={[
+            <Pressable
+              style={({ pressed }) => [
                 styles.modalItem,
                 juristicMethod === 'standard' && styles.modalItemSelected,
+                { opacity: pressed ? 0.8 : 1 }
               ]}
               onPress={async () => {
+                triggerHaptic();
                 setJuristicMethod('standard');
                 await AsyncStorage.setItem('@deenpulse_juristic_method', 'standard');
                 setShowJuristicPicker(false);
@@ -544,13 +814,15 @@ function DeenPulseApp(): React.JSX.Element {
                 juristicMethod === 'standard' && styles.modalItemTextSelected,
               ]}>Standard (Shafi'i, Maliki, Hanbali)</Text>
               {juristicMethod === 'standard' && <Icon name="check" size={16} color="#00C896" />}
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [
                 styles.modalItem,
                 juristicMethod === 'hanafi' && styles.modalItemSelected,
+                { opacity: pressed ? 0.8 : 1 }
               ]}
               onPress={async () => {
+                triggerHaptic();
                 setJuristicMethod('hanafi');
                 await AsyncStorage.setItem('@deenpulse_juristic_method', 'hanafi');
                 setShowJuristicPicker(false);
@@ -561,7 +833,7 @@ function DeenPulseApp(): React.JSX.Element {
                 juristicMethod === 'hanafi' && styles.modalItemTextSelected,
               ]}>Hanafi</Text>
               {juristicMethod === 'hanafi' && <Icon name="check" size={16} color="#00C896" />}
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </View>
       </Modal>
@@ -572,16 +844,24 @@ function DeenPulseApp(): React.JSX.Element {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Calculation Rule</Text>
-              <TouchableOpacity onPress={() => setShowCalculationPicker(false)} style={styles.modalCloseBtn}>
+              <Pressable
+                onPress={() => {
+                  triggerHaptic();
+                  setShowCalculationPicker(false);
+                }}
+                style={({ pressed }) => [styles.modalCloseBtn, { opacity: pressed ? 0.7 : 1 }]}
+              >
                 <Icon name="x" size={16} color="rgba(255, 255, 255, 0.6)" />
-              </TouchableOpacity>
+              </Pressable>
             </View>
-            <TouchableOpacity
-              style={[
+            <Pressable
+              style={({ pressed }) => [
                 styles.modalItem,
                 calculationRule === 'auto' && styles.modalItemSelected,
+                { opacity: pressed ? 0.8 : 1 }
               ]}
               onPress={async () => {
+                triggerHaptic();
                 setCalculationRule('auto');
                 await AsyncStorage.setItem('@deenpulse_calculation_rule', 'auto');
                 setShowCalculationPicker(false);
@@ -592,13 +872,15 @@ function DeenPulseApp(): React.JSX.Element {
                 calculationRule === 'auto' && styles.modalItemTextSelected,
               ]}>Auto-Detect by Region</Text>
               {calculationRule === 'auto' && <Icon name="check" size={16} color="#00C896" />}
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [
                 styles.modalItem,
                 calculationRule === 'karachi' && styles.modalItemSelected,
+                { opacity: pressed ? 0.8 : 1 }
               ]}
               onPress={async () => {
+                triggerHaptic();
                 setCalculationRule('karachi');
                 await AsyncStorage.setItem('@deenpulse_calculation_rule', 'karachi');
                 setShowCalculationPicker(false);
@@ -609,13 +891,15 @@ function DeenPulseApp(): React.JSX.Element {
                 calculationRule === 'karachi' && styles.modalItemTextSelected,
               ]}>University of Islamic Sciences, Karachi</Text>
               {calculationRule === 'karachi' && <Icon name="check" size={16} color="#00C896" />}
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [
                 styles.modalItem,
                 calculationRule === 'isna' && styles.modalItemSelected,
+                { opacity: pressed ? 0.8 : 1 }
               ]}
               onPress={async () => {
+                triggerHaptic();
                 setCalculationRule('isna');
                 await AsyncStorage.setItem('@deenpulse_calculation_rule', 'isna');
                 setShowCalculationPicker(false);
@@ -626,7 +910,7 @@ function DeenPulseApp(): React.JSX.Element {
                 calculationRule === 'isna' && styles.modalItemTextSelected,
               ]}>Islamic Society of North America (ISNA)</Text>
               {calculationRule === 'isna' && <Icon name="check" size={16} color="#00C896" />}
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </View>
       </Modal>
@@ -640,22 +924,27 @@ function DeenPulseApp(): React.JSX.Element {
             
             <View style={styles.alertButtonRow}>
               {alertConfig.onCancel && (
-                <TouchableOpacity
-                  style={[styles.alertButton, styles.alertButtonCancel]}
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.alertButton,
+                    styles.alertButtonCancel,
+                    { opacity: pressed ? 0.7 : 1.0 }
+                  ]}
                   onPress={alertConfig.onCancel}
                 >
                   <Text style={styles.alertButtonTextCancel}>{alertConfig.cancelText || 'Cancel'}</Text>
-                </TouchableOpacity>
+                </Pressable>
               )}
-              <TouchableOpacity
-                style={[
+              <Pressable
+                style={({ pressed }) => [
                   styles.alertButton,
-                  alertConfig.confirmText === 'RESET' ? styles.alertButtonDestructive : styles.alertButtonConfirm
+                  alertConfig.confirmText === 'RESET' ? styles.alertButtonDestructive : styles.alertButtonConfirm,
+                  { opacity: pressed ? 0.7 : 1.0 }
                 ]}
                 onPress={alertConfig.onConfirm}
               >
                 <Text style={styles.alertButtonTextConfirm}>{alertConfig.confirmText || 'OK'}</Text>
-              </TouchableOpacity>
+              </Pressable>
             </View>
           </View>
         </View>
@@ -1053,5 +1342,105 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#FFFFFF',
     fontWeight: '500',
+  },
+  setupGuideCard: {
+    backgroundColor: '#1a1f2c',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    marginHorizontal: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 200, 150, 0.3)',
+  },
+  setupCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  setupCardTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  setupCardDesc: {
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.6)',
+    lineHeight: 18,
+    marginBottom: 8,
+  },
+  setupCardArrow: {
+    alignSelf: 'flex-end',
+  },
+  guideContainer: {
+    paddingHorizontal: 20,
+    marginTop: 8,
+  },
+  guideStepCard: {
+    backgroundColor: '#1a1f2c',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  stepNumLabel: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#00C896',
+    marginBottom: 6,
+  },
+  stepDesc: {
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.7)',
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  guideImage: {
+    width: '100%',
+    height: 180,
+    borderRadius: 8,
+    backgroundColor: '#000000',
+  },
+  guideCompleteBtn: {
+    backgroundColor: '#00C896',
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+    marginBottom: 24,
+  },
+  guideCompleteText: {
+    color: '#000000',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  skeletonContainer: {
+    paddingHorizontal: 20,
+    marginVertical: 12,
+  },
+  skeletonCountdownWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 30,
+    height: 240,
+  },
+  skeletonCountdownRing: {
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+  },
+  skeletonCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderRadius: 16,
+    height: 72,
+    marginVertical: 6,
+    width: '100%',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.02)',
   },
 });

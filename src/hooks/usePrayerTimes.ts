@@ -15,6 +15,7 @@ interface UsePrayerTimesResult {
   error: string | null;
   location: Location | null;
   refresh: () => void;
+  offlineFallback: boolean;
 }
 
 export function usePrayerTimes(
@@ -26,6 +27,7 @@ export function usePrayerTimes(
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [location, setLocation] = useState<Location | null>(null);
+  const [offlineFallback, setOfflineFallback] = useState(false);
   const isFirstRender = useRef(true);
 
   const requestLocationPermission = async (): Promise<boolean> => {
@@ -45,114 +47,165 @@ export function usePrayerTimes(
   };
 
   const loadTimes = useCallback(async (forceRefreshGPS: boolean = false) => {
-    try {
-      setLoading(true);
-      setError(null);
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const year = now.getFullYear();
+    const day = now.getDate();
 
-      const hasPermission = await requestLocationPermission();
-      if (!hasPermission) {
-        setError('Location permission denied.');
-        setLoading(false);
-        setLocation(null);
-        return;
-      }
+    setLoading(true);
+    setError(null);
+    setOfflineFallback(false);
 
-      const performFetch = async (lat: number, lng: number) => {
-        try {
-          const now = new Date();
-          const month = now.getMonth() + 1;
-          const year = now.getFullYear();
-          const day = now.getDate();
+    const hasPermission = await requestLocationPermission();
+    if (!hasPermission) {
+      setError('Location permission denied.');
+      setLoading(false);
+      setLocation(null);
+      return;
+    }
 
-          const cacheKey = `@deenpulse_calendar_${lat.toFixed(4)}_${lng.toFixed(4)}_${month}_${year}`;
-          
-          if (forceRefreshGPS) {
-            console.log("Flushing active AsyncStorage day-cache for key:", cacheKey);
-            await AsyncStorage.removeItem(cacheKey);
-          }
-
-          let calendarDataStr = await AsyncStorage.getItem(cacheKey);
-          let timings: Record<string, string> | null = null;
-
-          if (calendarDataStr) {
-            try {
-              const calendarData = JSON.parse(calendarDataStr);
-              if (calendarData[day - 1]?.timings) {
-                timings = calendarData[day - 1].timings;
-              }
-            } catch (e) {
-              // JSON parse failed
-            }
-          }
-
-          if (!timings) {
-            // Construct API url dynamically based on settings
-            let url = `https://api.aladhan.com/v1/calendar?latitude=${lat}&longitude=${lng}&month=${month}&year=${year}`;
-            
-            if (calculationRule === 'auto') {
-              url += '&method=99';
-            } else if (calculationRule === 'karachi') {
-              url += '&method=1';
-            } else if (calculationRule === 'isna') {
-              url += '&method=2';
-            }
-
-            if (juristicMethod === 'hanafi') {
-              url += '&school=1';
-            } else {
-              url += '&school=0';
-            }
-
-            console.log("Fetching prayer times from URL:", url);
-
-            const response = await fetch(url);
-            const json = await response.json();
-            
-            if (json.code === 200 && json.data) {
-              await AsyncStorage.setItem(cacheKey, JSON.stringify(json.data));
-              if (json.data[day - 1]?.timings) {
-                timings = json.data[day - 1].timings;
-              }
-            }
-          }
-
-          if (timings) {
-            const parsed = parsePrayerTimings(timings);
-            setPrayerTimes(parsed);
-          } else {
-            setError('Failed to load prayer timings');
-          }
-        } catch (err: any) {
-          setError(err.message || 'Failed to fetch calendar');
-        } finally {
-          setLoading(false);
+    const performFetch = async (lat: number, lng: number) => {
+      const cacheKey = `@deenpulse_calendar_${lat.toFixed(4)}_${lng.toFixed(4)}_${month}_${year}`;
+      try {
+        if (forceRefreshGPS) {
+          console.log("Flushing active AsyncStorage day-cache for key:", cacheKey);
+          await AsyncStorage.removeItem(cacheKey);
         }
-      };
 
-      if (locationMode === 'gps' || forceRefreshGPS) {
-        // Query raw hardware GPS coordinates
-        Geolocation.getCurrentPosition(
-          async (position) => {
-            const { latitude, longitude } = position.coords;
-            // Explicitly console.log the raw longitude and latitude numbers immediately upon acquisition
-            console.log("GPS Location Acquired - Lat:", latitude, "Long:", longitude);
-            
-            // Save cache coordinates
-            await AsyncStorage.setItem('@deenpulse_cached_lat', latitude.toString());
-            await AsyncStorage.setItem('@deenpulse_cached_lng', longitude.toString());
-            
-            setLocation({ latitude, longitude });
-            performFetch(latitude, longitude);
-          },
-          (err) => {
+        let calendarDataStr = await AsyncStorage.getItem(cacheKey);
+        let timings: Record<string, string> | null = null;
+
+        if (calendarDataStr) {
+          try {
+            const calendarData = JSON.parse(calendarDataStr);
+            if (calendarData[day - 1]?.timings) {
+              timings = calendarData[day - 1].timings;
+            }
+          } catch (e) {
+            // JSON parse failed
+          }
+        }
+
+        if (!timings) {
+          // Construct API url dynamically based on settings
+          let url = `https://api.aladhan.com/v1/calendar?latitude=${lat}&longitude=${lng}&month=${month}&year=${year}`;
+          
+          if (calculationRule === 'auto') {
+            url += '&method=99';
+          } else if (calculationRule === 'karachi') {
+            url += '&method=1';
+          } else if (calculationRule === 'isna') {
+            url += '&method=2';
+          }
+
+          if (juristicMethod === 'hanafi') {
+            url += '&school=1';
+          } else {
+            url += '&school=0';
+          }
+
+          console.log("Fetching prayer times from URL:", url);
+
+          const response = await fetch(url);
+          if (!response.ok) {
+            throw new Error(`HTTP Error: ${response.status}`);
+          }
+          const json = await response.json();
+          
+          if (json.code === 200 && json.data) {
+            await AsyncStorage.setItem(cacheKey, JSON.stringify(json.data));
+            if (json.data[day - 1]?.timings) {
+              timings = json.data[day - 1].timings;
+            }
+          } else {
+            throw new Error('Invalid API response structure');
+          }
+        }
+
+        if (timings) {
+          const parsed = parsePrayerTimings(timings);
+          setPrayerTimes(parsed);
+        } else {
+          throw new Error('Failed to parse timings');
+        }
+      } catch (err: any) {
+        console.warn('Timings fetch/parse error, trying offline fallback:', err);
+        
+        // Connectivity/Fetch failed: Try to fall back to ANY cached calendar database
+        let fallbackTimings: Record<string, string> | null = null;
+        try {
+          const keys = await AsyncStorage.getAllKeys();
+          const calendarKeys = keys.filter(k => k.startsWith('@deenpulse_calendar_'));
+          if (calendarKeys.length > 0) {
+            // Pick the first available cached calendar
+            const latestKey = calendarKeys[0];
+            const dataStr = await AsyncStorage.getItem(latestKey);
+            if (dataStr) {
+              const calendarData = JSON.parse(dataStr);
+              if (calendarData[day - 1]?.timings) {
+                fallbackTimings = calendarData[day - 1].timings;
+              } else if (calendarData[0]?.timings) {
+                fallbackTimings = calendarData[0].timings;
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('Storage fallback search failed:', e);
+        }
+
+        if (fallbackTimings) {
+          const parsed = parsePrayerTimings(fallbackTimings);
+          setPrayerTimes(parsed);
+          setOfflineFallback(true);
+        } else {
+          setError(err.message || 'Connectivity issue occurred and no cached fallback dataset found.');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (locationMode === 'gps' || forceRefreshGPS) {
+      // Query raw hardware GPS coordinates
+      Geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          console.log("GPS Location Acquired - Lat:", latitude, "Long:", longitude);
+          
+          // Save cache coordinates
+          await AsyncStorage.setItem('@deenpulse_cached_lat', latitude.toString());
+          await AsyncStorage.setItem('@deenpulse_cached_lng', longitude.toString());
+          
+          setLocation({ latitude, longitude });
+          performFetch(latitude, longitude);
+        },
+        async (err) => {
+          console.warn(`Location acquisition failed: ${err.message}. Trying cache fallback...`);
+          // Geolocation failed: try to load cached location and perform fetch
+          try {
+            const cachedLat = await AsyncStorage.getItem('@deenpulse_cached_lat');
+            const cachedLng = await AsyncStorage.getItem('@deenpulse_cached_lng');
+            if (cachedLat && cachedLng) {
+              const lat = parseFloat(cachedLat);
+              const lng = parseFloat(cachedLng);
+              setLocation({ latitude: lat, longitude: lng });
+              performFetch(lat, lng);
+            } else {
+              setError(`Location error: ${err.message}`);
+              setLoading(false);
+              setLocation(null);
+            }
+          } catch (e) {
             setError(`Location error: ${err.message}`);
             setLoading(false);
             setLocation(null);
-          },
-          { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-        );
-      } else {
-        // Use cached coordinates if available
+          }
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+      );
+    } else {
+      // Use cached coordinates if available
+      try {
         const cachedLat = await AsyncStorage.getItem('@deenpulse_cached_lat');
         const cachedLng = await AsyncStorage.getItem('@deenpulse_cached_lng');
         if (cachedLat && cachedLng) {
@@ -182,10 +235,10 @@ export function usePrayerTimes(
             { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
           );
         }
+      } catch (e: any) {
+        setError(e.message || 'Error initializing location request');
+        setLoading(false);
       }
-    } catch (e: any) {
-      setError(e.message || 'Error initializing location request');
-      setLoading(false);
     }
   }, [locationMode, juristicMethod, calculationRule]);
 
@@ -209,5 +262,6 @@ export function usePrayerTimes(
     error,
     location,
     refresh: forceManualRefresh,
+    offlineFallback,
   };
 }

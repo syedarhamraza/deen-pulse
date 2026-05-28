@@ -142,9 +142,6 @@ class PrayerCapsuleForegroundService : Service() {
     }
 
     private fun buildCapsuleNotification(): Notification {
-        // Collapsed status bar pill/capsule outputs ONLY the raw prayer name string
-        val chipText = currentPrayerName
-
         // Create pending intent to open the app when notification is tapped
         val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
         val pendingIntent = PendingIntent.getActivity(
@@ -170,7 +167,7 @@ class PrayerCapsuleForegroundService : Service() {
         )
 
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Next Prayer: $currentPrayerName")
+            .setContentTitle("Next Prayer: " + currentPrayerName)
             .setSmallIcon(R.drawable.ic_stat_prayer)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
@@ -184,15 +181,42 @@ class PrayerCapsuleForegroundService : Service() {
             .addAction(0, "Refresh", refreshPendingIntent)
             .addAction(0, "Close App", closePendingIntent)
 
-        // Set short critical text and request promoted ongoing (Live Alert status bar capsule) via bundle extras
-        builder.extras.putBoolean("android.requestPromotedOngoing", true)
-        builder.extras.putString("android.shortCriticalText", chipText)
+        // Enforce methods for standard Android 15/16 base system compliance
+        try {
+            builder.setRequestPromotedOngoing(true)
+            builder.setShortCriticalText(currentPrayerName)
+        } catch (e: NoSuchMethodError) {
+            // Fallback for older compile environments if any
+            builder.extras.putBoolean("android.requestPromotedOngoing", true)
+            builder.extras.putString("android.shortCriticalText", currentPrayerName)
+        }
 
         val notification = builder.build()
 
-        // ColorOS FLAG_PROMOTED_ONGOING - forces capsule promotion on ColorOS 16.1
-        notification.flags = notification.flags or FLAG_PROMOTED_ONGOING
+        // Inject both '0x40000000' and '0x02000000' bitmask flags to preserve native capsule promotion
+        notification.flags = notification.flags or 0x40000000 or 0x02000000
 
         return notification
     }
+}
+
+// Extension functions to support standard Android 15/16 NotificationCompat.Builder properties on older compile-time libraries
+fun NotificationCompat.Builder.setRequestPromotedOngoing(enabled: Boolean): NotificationCompat.Builder {
+    try {
+        val method = this.javaClass.getMethod("setRequestPromotedOngoing", Boolean::class.javaPrimitiveType)
+        method.invoke(this, enabled)
+    } catch (e: Exception) {
+        this.extras.putBoolean("android.requestPromotedOngoing", enabled)
+    }
+    return this
+}
+
+fun NotificationCompat.Builder.setShortCriticalText(text: CharSequence): NotificationCompat.Builder {
+    try {
+        val method = this.javaClass.getMethod("setShortCriticalText", CharSequence::class.java)
+        method.invoke(this, text)
+    } catch (e: Exception) {
+        this.extras.putString("android.shortCriticalText", text.toString())
+    }
+    return this
 }

@@ -71,8 +71,7 @@ class PrayerCapsuleForegroundService : Service() {
         )
 
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Next Prayer:")
-            .setContentText("$prayerName in ")
+            .setContentTitle("Next Prayer: $prayerName")
             .setSmallIcon(R.drawable.ic_stat_prayer)
             .setContentIntent(pendingIntent)
             .setOngoing(true)

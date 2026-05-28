@@ -236,7 +236,7 @@ function DeenPulseApp(): React.JSX.Element {
           console.warn(e);
         }
       },
-      () => {},
+      () => { },
       'RESET',
       'CANCEL'
     );
@@ -453,9 +453,7 @@ function DeenPulseApp(): React.JSX.Element {
                 }}
               >
                 <Text style={styles.menuDetailLabel}>Allow Notifications</Text>
-                <Text style={styles.menuDetailDesc}>
-                  Deep-links directly to the native Android OS system app notification settings panel to toggle alerts.
-                </Text>
+                <Text style={styles.menuDetailDesc}>For the Live island, enable live alerts in notification settings</Text>
               </Pressable>
             </View>
           </ScrollView>
@@ -560,10 +558,10 @@ function DeenPulseApp(): React.JSX.Element {
               {/* Basic information card */}
               <View style={styles.menuDetailCard}>
                 <Text style={styles.aboutSectionTitle}>Basic Information</Text>
-                
+
                 <View style={styles.infoRow}>
                   <Text style={styles.infoKey}>App Name</Text>
-                  <Text style={styles.infoVal}>DeenPulse</Text>
+                  <Text style={styles.infoVal}>Deen Pulse</Text>
                 </View>
 
                 <View style={styles.infoRow}>
@@ -573,7 +571,7 @@ function DeenPulseApp(): React.JSX.Element {
 
                 <View style={styles.infoRow}>
                   <Text style={styles.infoKey}>Version</Text>
-                  <Text style={styles.infoVal}>1.1.0</Text>
+                  <Text style={styles.infoVal}>1.0.0</Text>
                 </View>
               </View>
             </View>
@@ -775,7 +773,7 @@ function DeenPulseApp(): React.JSX.Element {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-      
+
       <Animated.View style={{ flex: 1, opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
         {renderScreen()}
       </Animated.View>
@@ -921,7 +919,7 @@ function DeenPulseApp(): React.JSX.Element {
           <View style={styles.alertContainer}>
             <Text style={styles.alertTitle}>{alertConfig.title}</Text>
             <Text style={styles.alertMessage}>{alertConfig.message}</Text>
-            
+
             <View style={styles.alertButtonRow}>
               {alertConfig.onCancel && (
                 <Pressable

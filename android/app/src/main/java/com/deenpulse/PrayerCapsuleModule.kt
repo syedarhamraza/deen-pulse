@@ -4,11 +4,26 @@ import android.content.Intent
 import android.provider.AlarmClock
 import androidx.core.content.ContextCompat
 import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.ReactContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
+import com.facebook.react.modules.core.DeviceEventManagerModule
 
 class PrayerCapsuleModule(reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext) {
+
+    companion object {
+        private var instanceContext: ReactContext? = null
+
+        fun sendEvent(eventName: String, params: String?) {
+            instanceContext?.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                ?.emit(eventName, params)
+        }
+    }
+
+    init {
+        instanceContext = reactContext
+    }
 
     override fun getName(): String = "PrayerCapsuleModule"
 

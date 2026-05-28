@@ -11,6 +11,7 @@ import {
   Switch,
   Linking,
   Modal,
+  DeviceEventEmitter,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PermissionsAndroid } from 'react-native';
@@ -68,6 +69,15 @@ function DeenPulseApp(): React.JSX.Element {
   );
 
   const nextPrayer = usePrayerCountdown(prayerTimes, true);
+
+  // Listen to refresh requests from ongoing notification action buttons
+  useEffect(() => {
+    const sub = DeviceEventEmitter.addListener('onRefreshRequested', () => {
+      console.log('Refresh requested from native ongoing notification.');
+      refresh();
+    });
+    return () => sub.remove();
+  }, [refresh]);
 
   // Load settings on startup
   useEffect(() => {

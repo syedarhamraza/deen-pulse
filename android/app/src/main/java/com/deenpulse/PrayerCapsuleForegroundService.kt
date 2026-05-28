@@ -54,8 +54,23 @@ class PrayerCapsuleForegroundService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val newPrayersJson = intent?.getStringExtra("prayersJson")
+        val action = intent?.action
+        if (action != null) {
+            when (action) {
+                "ACTION_REFRESH" -> {
+                    // Emit event to React Native JS thread to trigger location & timings refresh
+                    PrayerCapsuleModule.sendEvent("onRefreshRequested", null)
+                }
+                "ACTION_CLOSE" -> {
+                    // Close the foreground service and exit the application process
+                    stopSelf()
+                    System.exit(0)
+                }
+            }
+            return START_STICKY
+        }
 
+        val newPrayersJson = intent?.getStringExtra("prayersJson")
         if (newPrayersJson != null) {
             try {
                 val jsonArray = JSONArray(newPrayersJson)
@@ -137,6 +152,23 @@ class PrayerCapsuleForegroundService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        // Notification Action Buttons
+        val refreshIntent = Intent(this, PrayerCapsuleForegroundService::class.java).apply {
+            action = "ACTION_REFRESH"
+        }
+        val refreshPendingIntent = PendingIntent.getService(
+            this, 1, refreshIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val closeIntent = Intent(this, PrayerCapsuleForegroundService::class.java).apply {
+            action = "ACTION_CLOSE"
+        }
+        val closePendingIntent = PendingIntent.getService(
+            this, 2, closeIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Next Prayer: $currentPrayerName")
             .setSmallIcon(R.drawable.ic_stat_prayer)
@@ -149,6 +181,8 @@ class PrayerCapsuleForegroundService : Service() {
             .setUsesChronometer(true)
             .setChronometerCountDown(true)
             .setWhen(currentTargetTimestamp)
+            .addAction(0, "Refresh", refreshPendingIntent)
+            .addAction(0, "Close App", closePendingIntent)
 
         // Set short critical text and request promoted ongoing (Live Alert status bar capsule) via bundle extras
         builder.extras.putBoolean("android.requestPromotedOngoing", true)

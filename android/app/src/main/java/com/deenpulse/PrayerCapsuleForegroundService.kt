@@ -9,9 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
 import android.os.IBinder
-import android.os.Looper
 import androidx.core.app.NotificationCompat
 
 class PrayerCapsuleForegroundService : Service() {
@@ -23,20 +21,6 @@ class PrayerCapsuleForegroundService : Service() {
         private const val FLAG_PROMOTED_ONGOING = 0x40000000
     }
 
-    private val handler = Handler(Looper.getMainLooper())
-    private var prayerName = "Next Prayer"
-    private var targetTimestamp = 0L
-    private var isLoopRunning = false
-
-    private val updateRunnable = object : Runnable {
-        override fun run() {
-            updateNotification()
-            val prefs = getSharedPreferences("DeenPulsePrefs", Context.MODE_PRIVATE)
-            val intervalMs = prefs.getLong("updateIntervalMs", 60000L)
-            handler.postDelayed(this, intervalMs)
-        }
-    }
-
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
@@ -45,32 +29,18 @@ class PrayerCapsuleForegroundService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val name = intent?.getStringExtra("prayerName")
-        val timestamp = intent?.getLongExtra("targetTimestamp", 0L) ?: 0L
+        val prayerName = intent?.getStringExtra("prayerName") ?: "Next Prayer"
+        val targetTimestamp = intent?.getLongExtra("targetTimestamp", 0L) ?: 0L
 
-        if (name != null) {
-            prayerName = name
-            targetTimestamp = timestamp
-        }
-
-        // Immediately start foreground with initial notification to prevent ANR
+        // Immediately start/update foreground with the chronometer-driven notification
         val notification = buildCapsuleNotification(prayerName, targetTimestamp)
         startForeground(NOTIFICATION_ID, notification)
-
-        if (!isLoopRunning) {
-            isLoopRunning = true
-            val prefs = getSharedPreferences("DeenPulsePrefs", Context.MODE_PRIVATE)
-            val intervalMs = prefs.getLong("updateIntervalMs", 60000L)
-            handler.postDelayed(updateRunnable, intervalMs)
-        }
 
         return START_STICKY
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        handler.removeCallbacks(updateRunnable)
-        isLoopRunning = false
         stopForeground(STOP_FOREGROUND_REMOVE)
     }
 
@@ -90,27 +60,16 @@ class PrayerCapsuleForegroundService : Service() {
         }
     }
 
-    private fun updateNotification() {
-        val notification = buildCapsuleNotification(prayerName, targetTimestamp)
-        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
-        manager?.notify(NOTIFICATION_ID, notification)
-    }
-
     private fun buildCapsuleNotification(prayerName: String, targetTimestamp: Long): Notification {
         val remainingMs = targetTimestamp - System.currentTimeMillis()
         val remainingSeconds = (remainingMs / 1000).toInt()
-        val remainingMinutes = Math.ceil(remainingMs.toDouble() / 60000.0).toInt()
 
-        val text: String
-        val chipText: String
-
-        if (remainingMinutes <= 0) {
-            text = "$prayerName Active"
-            chipText = "$prayerName Active"
-        } else {
-            text = "$prayerName in ${remainingMinutes}m"
-            chipText = "$prayerName: ${remainingMinutes}m Left"
-        }
+        // Content text: exactly "[PrayerName] in "
+        // The chronometer will automatically append the ticking countdown
+        val contentText = "$prayerName in "
+        
+        // Collapsed capsule text displays ONLY the active prayer name string
+        val chipText = prayerName
 
         // Create pending intent to open the app when notification is tapped
         val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
@@ -119,24 +78,9 @@ class PrayerCapsuleForegroundService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // Add Timer action intent
-        val actionIntent = Intent(this, NotificationActionReceiver::class.java).apply {
-            putExtra("remaining_seconds", remainingSeconds)
-            putExtra("prayer_name", prayerName)
-        }
-        val actionPendingIntent = PendingIntent.getBroadcast(
-            this, 1002, actionIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        val action = NotificationCompat.Action.Builder(
-            android.R.drawable.ic_lock_idle_alarm,
-            "Add Timer",
-            actionPendingIntent
-        ).build()
-
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("DeenPulse Countdown")
-            .setContentText(text)
+            .setContentTitle("Next Prayer:")
+            .setContentText(contentText)
             .setSmallIcon(R.drawable.ic_stat_prayer)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
@@ -144,9 +88,11 @@ class PrayerCapsuleForegroundService : Service() {
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setOnlyAlertOnce(true)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .addAction(action)
+            .setUsesChronometer(true)
+            .setChronometerCountDown(true)
+            .setWhen(targetTimestamp)
 
-        // Android 16+ official Live Update APIs set via Bundle extras to bypass compile-time dependency limitations
+        // Android 16+ official Live Update APIs set via Bundle extras
         builder.extras.putBoolean("android.requestPromotedOngoing", true)
         builder.extras.putString("android.shortCriticalText", chipText)
 

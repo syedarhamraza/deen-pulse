@@ -7,14 +7,6 @@ interface PrayerCardProps {
   nextPrayer: NextPrayerInfo;
 }
 
-const PRAYER_ICONS: Record<string, string> = {
-  Fajr: '🌅',
-  Dhuhr: '☀️',
-  Asr: '🌤️',
-  Maghrib: '🌇',
-  Isha: '🌙',
-};
-
 export const PrayerCard: React.FC<PrayerCardProps> = ({ prayer, nextPrayer }) => {
   const now = new Date();
   const status = getPrayerStatus(prayer, nextPrayer, now);
@@ -36,9 +28,6 @@ export const PrayerCard: React.FC<PrayerCardProps> = ({ prayer, nextPrayer }) =>
         isActive && styles.indicatorActive,
         isPassed && styles.indicatorPassed,
       ]} />
-      <View style={styles.iconContainer}>
-        <Text style={styles.icon}>{PRAYER_ICONS[prayer.name] || '🕌'}</Text>
-      </View>
       <View style={styles.info}>
         <Text style={[
           styles.name,
@@ -59,11 +48,6 @@ export const PrayerCard: React.FC<PrayerCardProps> = ({ prayer, nextPrayer }) =>
       {isActive && (
         <View style={styles.activeBadge}>
           <Text style={styles.activeBadgeText}>Active</Text>
-        </View>
-      )}
-      {isPassed && (
-        <View style={styles.passedBadge}>
-          <Text style={styles.passedBadgeText}>✓</Text>
         </View>
       )}
     </View>

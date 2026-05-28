@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   SafeAreaView,
   StatusBar,
@@ -18,15 +18,13 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CountdownDisplay } from './src/components/CountdownDisplay';
 import { PrayerCard } from './src/components/PrayerCard';
-import { MethodPicker } from './src/components/MethodPicker';
 import { usePrayerTimes } from './src/hooks/usePrayerTimes';
 import { usePrayerCountdown } from './src/hooks/usePrayerCountdown';
-import { CALCULATION_METHODS } from './src/utils/prayerEngine';
 import { NativeModules } from 'react-native';
 
 const { PrayerCapsuleModule } = NativeModules;
 
-type Screen = 'dashboard' | 'settings' | 'appearance' | 'notifications' | 'keepalive';
+type Screen = 'dashboard' | 'settings';
 
 const UPDATE_INTERVALS = [
   { label: '15 seconds', value: 15000 },
@@ -37,17 +35,13 @@ const UPDATE_INTERVALS = [
 
 export default function App(): React.JSX.Element {
   const [currentScreen, setCurrentScreen] = useState<Screen>('dashboard');
-  const [calculationMethod, setCalculationMethod] = useState(2); // ISNA default
-  const [autoDetectGPS, setAutoDetectGPS] = useState(true);
   const [liveActivityEnabled, setLiveActivityEnabled] = useState(true);
   const [showCloseButton, setShowCloseButton] = useState(true);
   const [backgroundInterval, setBackgroundInterval] = useState(60000); // 60s default
   
-  const [showMethodPicker, setShowMethodPicker] = useState(false);
   const [showIntervalPicker, setShowIntervalPicker] = useState(false);
 
-  const { prayerTimes, loading, error, location, refresh } =
-    usePrayerTimes(calculationMethod, autoDetectGPS);
+  const { prayerTimes, loading, error, location, refresh } = usePrayerTimes();
   
   const nextPrayer = usePrayerCountdown(prayerTimes, liveActivityEnabled);
 
@@ -55,14 +49,10 @@ export default function App(): React.JSX.Element {
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        const method = await AsyncStorage.getItem('@deenpulse_method');
-        const gps = await AsyncStorage.getItem('@deenpulse_gps');
         const live = await AsyncStorage.getItem('@deenpulse_live');
         const close = await AsyncStorage.getItem('@deenpulse_close');
         const interval = await AsyncStorage.getItem('@deenpulse_interval');
 
-        if (method !== null) setCalculationMethod(parseInt(method, 10));
-        if (gps !== null) setAutoDetectGPS(gps === 'true');
         if (live !== null) setLiveActivityEnabled(live === 'true');
         if (close !== null) setShowCloseButton(close === 'true');
         if (interval !== null) {
@@ -76,33 +66,6 @@ export default function App(): React.JSX.Element {
     };
     loadSettings();
   }, []);
-
-  // Flush AsyncStorage calendar cache
-  const flushCalendarCache = async () => {
-    try {
-      const keys = await AsyncStorage.getAllKeys();
-      const calendarKeys = keys.filter(k => k.startsWith('@deenpulse_calendar_'));
-      if (calendarKeys.length > 0) {
-        await AsyncStorage.multiRemove(calendarKeys);
-      }
-    } catch (e) {
-      console.warn('Failed to flush cache:', e);
-    }
-  };
-
-  const handleMethodChange = async (methodId: number) => {
-    setCalculationMethod(methodId);
-    await AsyncStorage.setItem('@deenpulse_method', methodId.toString());
-    await flushCalendarCache();
-    refresh();
-  };
-
-  const handleGPSToggle = async (value: boolean) => {
-    setAutoDetectGPS(value);
-    await AsyncStorage.setItem('@deenpulse_gps', value.toString());
-    await flushCalendarCache();
-    refresh();
-  };
 
   const handleLiveActivityToggle = async (value: boolean) => {
     setLiveActivityEnabled(value);
@@ -142,8 +105,6 @@ export default function App(): React.JSX.Element {
           style: 'destructive',
           onPress: async () => {
             await AsyncStorage.clear();
-            setCalculationMethod(2);
-            setAutoDetectGPS(true);
             setLiveActivityEnabled(true);
             setShowCloseButton(true);
             setBackgroundInterval(60000);
@@ -153,7 +114,6 @@ export default function App(): React.JSX.Element {
             } catch (e) {
               console.warn(e);
             }
-            await flushCalendarCache();
             refresh();
             Alert.alert('Reset Complete', 'App cache and settings have been cleared.');
           },
@@ -162,20 +122,28 @@ export default function App(): React.JSX.Element {
     );
   };
 
-  const checkAccessibilityDiagnostics = () => {
-    Alert.alert(
-      'Diagnostic Check',
-      'Accessibility Service Bindings Status: ACTIVE & VALID\n\nAll ColorOS Live Alerts notification listeners are properly configured.',
-      [{ text: 'OK' }]
-    );
-  };
-
-  const checkOverlayDiagnostics = () => {
-    Alert.alert(
-      'Diagnostic Check',
-      'Floating Overlay Authorizations Status: APPROVED\n\nOverlay permission parameters are correctly configured on this Android build.',
-      [{ text: 'OK' }]
-    );
+  const handleRequestGPS = async () => {
+    if (Platform.OS === 'android') {
+      try {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          {
+            title: 'DeenPulse Location Permission',
+            message: 'DeenPulse needs your location to calculate accurate prayer times.',
+            buttonPositive: 'Allow',
+            buttonNegative: 'Deny',
+          }
+        );
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          Alert.alert('GPS Access', 'Location permission granted successfully.');
+          refresh();
+        } else {
+          Alert.alert('GPS Access', 'Location permission denied.');
+        }
+      } catch (err) {
+        console.warn(err);
+      }
+    }
   };
 
   const openAppNotificationSettings = () => {
@@ -184,16 +152,9 @@ export default function App(): React.JSX.Element {
         { key: 'android.provider.extra.APP_PACKAGE', value: 'com.deenpulse' },
       ]);
     } catch (err) {
-      // Fallback
       Linking.openSettings();
     }
   };
-
-  const selectedMethodName =
-    CALCULATION_METHODS.find(m => m.id === calculationMethod)?.name || 'ISNA';
-
-  const selectedIntervalLabel =
-    UPDATE_INTERVALS.find(i => i.value === backgroundInterval)?.label || '60 seconds';
 
   // Navigation stack renderer
   const renderScreen = () => {
@@ -203,198 +164,46 @@ export default function App(): React.JSX.Element {
           <ScrollView contentContainerStyle={styles.scrollContent}>
             <View style={styles.subHeader}>
               <TouchableOpacity onPress={() => setCurrentScreen('dashboard')} style={styles.backButton}>
-                <Text style={styles.backIcon}>←</Text>
+                <Text style={styles.backIcon}>Back</Text>
               </TouchableOpacity>
               <Text style={styles.subTitle}>Settings</Text>
             </View>
 
-            <View style={styles.sectionContainer}>
+            <View style={styles.cardContainer}>
+              {/* Card 1: Reset App Cache */}
               <TouchableOpacity
-                style={styles.settingsRow}
-                onPress={() => setCurrentScreen('appearance')}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.rowLabel}>🎨 Appearance</Text>
-                <Text style={styles.rowChevron}>›</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.settingsRow}
-                onPress={() => setCurrentScreen('notifications')}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.rowLabel}>🔔 Notifications & Capsule</Text>
-                <Text style={styles.rowChevron}>›</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.settingsRow}
-                onPress={() => setCurrentScreen('keepalive')}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.rowLabel}>⚡ Advanced Keep Alive</Text>
-                <Text style={styles.rowChevron}>›</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.sectionContainer}>
-              <TouchableOpacity
-                style={styles.settingsRow}
+                style={styles.settingsCard}
                 onPress={handleAppReset}
                 activeOpacity={0.7}
               >
-                <Text style={[styles.rowLabel, { color: '#FF6B6B' }]}>🗑️ Reset App Cache</Text>
-                <Text style={styles.rowChevron}>›</Text>
+                <Text style={styles.cardTitle}>Reset App Cache</Text>
+                <Text style={styles.cardDesc}>
+                  Flushes the local monthly database and re-triggers the main data fetch.
+                </Text>
               </TouchableOpacity>
-            </View>
 
-            <View style={styles.aboutCard}>
-              <Text style={styles.aboutTitle}>DeenPulse v1.0.0</Text>
-              <Text style={styles.aboutText}>
-                Tailored for ColorOS 16.1 Aqua Dynamics Status Bar Pill interfaces and Android 16 Rich Ongoing notification pipelines.
-              </Text>
-              <Text style={styles.aboutFooter}>Powered by AlAdhan API</Text>
-            </View>
-          </ScrollView>
-        );
-
-      case 'appearance':
-        return (
-          <ScrollView contentContainerStyle={styles.scrollContent}>
-            <View style={styles.subHeader}>
-              <TouchableOpacity onPress={() => setCurrentScreen('settings')} style={styles.backButton}>
-                <Text style={styles.backIcon}>←</Text>
-              </TouchableOpacity>
-              <Text style={styles.subTitle}>Appearance</Text>
-            </View>
-
-            <View style={styles.sectionContainer}>
-              <View style={styles.settingsSwitchRow}>
-                <View>
-                  <Text style={styles.rowLabel}>Dark Theme</Text>
-                  <Text style={styles.rowDesc}>Force dark glassmorphic palette</Text>
-                </View>
-                <Switch
-                  value={true}
-                  disabled={true}
-                  trackColor={{ false: '#767577', true: '#00C896' }}
-                  thumbColor={'#ffffff'}
-                />
-              </View>
-
-              <View style={styles.settingsSwitchRow}>
-                <View>
-                  <Text style={styles.rowLabel}>Accent Highlight</Text>
-                  <Text style={styles.rowDesc}>Primary system visual color</Text>
-                </View>
-                <Text style={styles.accentText}>Green (#00C896)</Text>
-              </View>
-            </View>
-          </ScrollView>
-        );
-
-      case 'notifications':
-        return (
-          <ScrollView contentContainerStyle={styles.scrollContent}>
-            <View style={styles.subHeader}>
-              <TouchableOpacity onPress={() => setCurrentScreen('settings')} style={styles.backButton}>
-                <Text style={styles.backIcon}>←</Text>
-              </TouchableOpacity>
-              <Text style={styles.subTitle}>Notifications</Text>
-            </View>
-
-            <View style={styles.sectionContainer}>
-              <View style={styles.settingsSwitchRow}>
-                <View>
-                  <Text style={styles.rowLabel}>Live Activity Capsule</Text>
-                  <Text style={styles.rowDesc}>Show countdown in device status bar</Text>
-                </View>
-                <Switch
-                  value={liveActivityEnabled}
-                  onValueChange={handleLiveActivityToggle}
-                  trackColor={{ false: '#767577', true: '#00C896' }}
-                  thumbColor={'#ffffff'}
-                />
-              </View>
-
-              <View style={styles.settingsSwitchRow}>
-                <View>
-                  <Text style={styles.rowLabel}>Show Close Once Button</Text>
-                  <Text style={styles.rowDesc}>Include close option inside alerts</Text>
-                </View>
-                <Switch
-                  value={showCloseButton}
-                  onValueChange={handleCloseButtonToggle}
-                  trackColor={{ false: '#767577', true: '#00C896' }}
-                  thumbColor={'#ffffff'}
-                />
-              </View>
-
+              {/* Card 2: Allow Notifications */}
               <TouchableOpacity
-                style={styles.settingsSelectRow}
-                onPress={() => setShowIntervalPicker(true)}
-                activeOpacity={0.7}
-              >
-                <View>
-                  <Text style={styles.rowLabel}>Background Update Interval</Text>
-                  <Text style={styles.rowDesc}>Speed of offline countdown ticks</Text>
-                </View>
-                <View style={styles.selectValueContainer}>
-                  <Text style={styles.selectValue} numberOfLines={1}>
-                    {selectedIntervalLabel}
-                  </Text>
-                  <Text style={styles.rowChevron}>›</Text>
-                </View>
-              </TouchableOpacity>
-            </View>
-          </ScrollView>
-        );
-
-      case 'keepalive':
-        return (
-          <ScrollView contentContainerStyle={styles.scrollContent}>
-            <View style={styles.subHeader}>
-              <TouchableOpacity onPress={() => setCurrentScreen('settings')} style={styles.backButton}>
-                <Text style={styles.backIcon}>←</Text>
-              </TouchableOpacity>
-              <Text style={styles.subTitle}>Advanced Keep Alive</Text>
-            </View>
-
-            <View style={styles.sectionContainer}>
-              <TouchableOpacity
-                style={styles.settingsRow}
-                onPress={checkAccessibilityDiagnostics}
-                activeOpacity={0.7}
-              >
-                <View>
-                  <Text style={styles.rowLabel}>Verify Accessibility Bindings</Text>
-                  <Text style={styles.rowDesc}>Check status bar capsule active bindings</Text>
-                </View>
-                <Text style={styles.diagVerify}>Run</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.settingsRow}
-                onPress={checkOverlayDiagnostics}
-                activeOpacity={0.7}
-              >
-                <View>
-                  <Text style={styles.rowLabel}>Verify Floating Overlays</Text>
-                  <Text style={styles.rowDesc}>Validate floating capsule permission states</Text>
-                </View>
-                <Text style={styles.diagVerify}>Run</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.settingsRow}
+                style={styles.settingsCard}
                 onPress={openAppNotificationSettings}
                 activeOpacity={0.7}
               >
-                <View>
-                  <Text style={styles.rowLabel}>System Notification Settings</Text>
-                  <Text style={styles.rowDesc}>Deep-link direct to notification authorizations</Text>
-                </View>
-                <Text style={styles.rowChevron}>›</Text>
+                <Text style={styles.cardTitle}>Allow Notifications</Text>
+                <Text style={styles.cardDesc}>
+                  Invocates direct linking back to standard app package notification parameters.
+                </Text>
+              </TouchableOpacity>
+
+              {/* Card 3: Allow GPS Usage */}
+              <TouchableOpacity
+                style={styles.settingsCard}
+                onPress={handleRequestGPS}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.cardTitle}>Allow GPS Usage</Text>
+                <Text style={styles.cardDesc}>
+                  Executes standard GPS tracking permission prompts instantly.
+                </Text>
               </TouchableOpacity>
             </View>
           </ScrollView>
@@ -415,14 +224,14 @@ export default function App(): React.JSX.Element {
                   onPress={() => refresh()}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.headerIcon}>↻</Text>
+                  <Text style={styles.headerIcon}>Refresh</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.headerButton}
                   onPress={() => setCurrentScreen('settings')}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.headerIcon}>⚙️</Text>
+                  <Text style={styles.headerIcon}>Settings</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -430,42 +239,11 @@ export default function App(): React.JSX.Element {
             {/* Location Coordinate Badge */}
             {location && (
               <View style={styles.locationBar}>
-                <Text style={styles.locationIcon}>📍</Text>
                 <Text style={styles.locationText}>
-                  {location.latitude.toFixed(4)}°, {location.longitude.toFixed(4)}°
+                  Location: {location.latitude.toFixed(4)}°, {location.longitude.toFixed(4)}° (Auto Regional)
                 </Text>
               </View>
             )}
-
-            {/* Dropdown Menu & GPS Toggle Card */}
-            <View style={styles.configCard}>
-              <TouchableOpacity
-                style={styles.methodSelector}
-                onPress={() => setShowMethodPicker(true)}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.methodLabel}>CALCULATION METHOD</Text>
-                <View style={styles.methodValueRow}>
-                  <Text style={styles.methodValue} numberOfLines={1}>
-                    {selectedMethodName}
-                  </Text>
-                  <Text style={styles.methodChevron}>›</Text>
-                </View>
-              </TouchableOpacity>
-
-              <View style={styles.gpsRow}>
-                <View>
-                  <Text style={styles.gpsLabel}>Auto-Detect Location (GPS)</Text>
-                  <Text style={styles.gpsDesc}>Re-run GPS scan on setting changes</Text>
-                </View>
-                <Switch
-                  value={autoDetectGPS}
-                  onValueChange={handleGPSToggle}
-                  trackColor={{ false: '#767577', true: '#00C896' }}
-                  thumbColor={'#ffffff'}
-                />
-              </View>
-            </View>
 
             {/* Loading / Error States */}
             {loading && (
@@ -477,8 +255,7 @@ export default function App(): React.JSX.Element {
 
             {error && !loading && (
               <View style={styles.errorContainer}>
-                <Text style={styles.errorIcon}>⚠️</Text>
-                <Text style={styles.errorText}>{error}</Text>
+                <Text style={styles.errorText}>Error: {error}</Text>
                 <TouchableOpacity style={styles.retryButton} onPress={() => refresh()}>
                   <Text style={styles.retryText}>Retry</Text>
                 </TouchableOpacity>
@@ -521,14 +298,6 @@ export default function App(): React.JSX.Element {
       <StatusBar barStyle="light-content" backgroundColor="#0A0A1A" />
       
       {renderScreen()}
-
-      {/* Calculation Method Selection Modal */}
-      <MethodPicker
-        visible={showMethodPicker}
-        selectedMethod={calculationMethod}
-        onSelect={handleMethodChange}
-        onClose={() => setShowMethodPicker(false)}
-      />
 
       {/* Interval Selector Modal */}
       <Modal visible={showIntervalPicker} transparent animationType="slide">
@@ -608,16 +377,40 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   headerButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
     backgroundColor: 'rgba(255, 255, 255, 0.06)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerIcon: {
-    fontSize: 18,
-    color: 'rgba(255, 255, 255, 0.65)',
+    fontSize: 13,
+    color: '#00C896',
+    fontWeight: '600',
+  },
+  cardContainer: {
+    paddingHorizontal: 20,
+    marginTop: 8,
+  },
+  settingsCard: {
+    backgroundColor: '#1a1f2c',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 6,
+  },
+  cardDesc: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.4)',
+    lineHeight: 18,
   },
   subHeader: {
     flexDirection: 'row',
@@ -629,9 +422,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
     backgroundColor: 'rgba(255, 255, 255, 0.06)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -639,8 +432,8 @@ const styles = StyleSheet.create({
   },
   backIcon: {
     color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 13,
+    fontWeight: '600',
   },
   subTitle: {
     fontSize: 24,
@@ -662,59 +455,6 @@ const styles = StyleSheet.create({
     color: '#00C896',
     fontWeight: '600',
     fontVariant: ['tabular-nums'],
-  },
-  configCard: {
-    backgroundColor: '#1a1f2c',
-    borderRadius: 16,
-    marginHorizontal: 20,
-    marginVertical: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
-    overflow: 'hidden',
-  },
-  methodSelector: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
-  },
-  methodLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: 'rgba(255, 255, 255, 0.35)',
-    letterSpacing: 1,
-    marginBottom: 4,
-  },
-  methodValueRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  methodValue: {
-    fontSize: 15,
-    color: 'rgba(255, 255, 255, 0.8)',
-    fontWeight: '500',
-    flex: 1,
-  },
-  methodChevron: {
-    fontSize: 20,
-    color: 'rgba(255, 255, 255, 0.3)',
-    marginLeft: 8,
-  },
-  gpsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-  },
-  gpsLabel: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  gpsDesc: {
-    fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.35)',
-    marginTop: 2,
   },
   sectionContainer: {
     backgroundColor: '#1a1f2c',

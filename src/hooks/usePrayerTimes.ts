@@ -17,9 +17,7 @@ interface UsePrayerTimesResult {
   refresh: () => void;
 }
 
-const FALLBACK_LOCATION = { latitude: 33.6844, longitude: 72.8104 }; // Islamabad default
-
-export function usePrayerTimes(method: number = 2, autoDetectGPS: boolean = true): UsePrayerTimesResult {
+export function usePrayerTimes(): UsePrayerTimesResult {
   const [prayerTimes, setPrayerTimes] = useState<PrayerTime[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +49,7 @@ export function usePrayerTimes(method: number = 2, autoDetectGPS: boolean = true
       const year = now.getFullYear();
       const day = now.getDate();
 
-      const cacheKey = `@deenpulse_calendar_${lat.toFixed(4)}_${lng.toFixed(4)}_${method}_${month}_${year}`;
+      const cacheKey = `@deenpulse_calendar_${lat.toFixed(4)}_${lng.toFixed(4)}_${month}_${year}`;
       
       let calendarDataStr = await AsyncStorage.getItem(cacheKey);
       let timings: Record<string, string> | null = null;
@@ -68,8 +66,8 @@ export function usePrayerTimes(method: number = 2, autoDetectGPS: boolean = true
       }
 
       if (!timings) {
-        // Fetch fresh calendar from AlAdhan API
-        const url = `https://api.aladhan.com/v1/calendar?latitude=${lat}&longitude=${lng}&method=${method}&month=${month}&year=${year}`;
+        // Fetch fresh calendar from AlAdhan API (omitting method for regional auto-detection)
+        const url = `https://api.aladhan.com/v1/calendar?latitude=${lat}&longitude=${lng}&month=${month}&year=${year}`;
         const response = await fetch(url);
         const json = await response.json();
         
@@ -92,37 +90,32 @@ export function usePrayerTimes(method: number = 2, autoDetectGPS: boolean = true
     } finally {
       setLoading(false);
     }
-  }, [method]);
+  }, []);
 
   const loadTimes = useCallback(async () => {
-    if (!autoDetectGPS) {
-      setLocation(FALLBACK_LOCATION);
-      getCalendarAndParse(FALLBACK_LOCATION.latitude, FALLBACK_LOCATION.longitude);
-      return;
-    }
-
     const hasPermission = await requestLocationPermission();
     if (!hasPermission) {
-      setError('Location permission denied. Using default Islamabad coordinates.');
-      setLocation(FALLBACK_LOCATION);
-      getCalendarAndParse(FALLBACK_LOCATION.latitude, FALLBACK_LOCATION.longitude);
+      setError('Location permission denied.');
+      setLoading(false);
+      setLocation(null);
       return;
     }
 
     Geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
+        console.log("GPS Location Acquired - Lat:", latitude, "Long:", longitude);
         setLocation({ latitude, longitude });
         getCalendarAndParse(latitude, longitude);
       },
       (err) => {
-        setError(`Location error: ${err.message}. Using default.`);
-        setLocation(FALLBACK_LOCATION);
-        getCalendarAndParse(FALLBACK_LOCATION.latitude, FALLBACK_LOCATION.longitude);
+        setError(`Location error: ${err.message}`);
+        setLoading(false);
+        setLocation(null);
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
     );
-  }, [autoDetectGPS, getCalendarAndParse]);
+  }, [getCalendarAndParse]);
 
   useEffect(() => {
     loadTimes();

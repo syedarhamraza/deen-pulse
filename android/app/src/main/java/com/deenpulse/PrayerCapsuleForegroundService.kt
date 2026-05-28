@@ -8,26 +8,10 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import android.os.Handler
 import android.os.IBinder
-import android.os.Looper
 import androidx.core.app.NotificationCompat
 
 class PrayerCapsuleForegroundService : Service() {
-
-    private var prayerName: String = ""
-    private var targetTimestamp: Long = 0L
-    private val handler = Handler(Looper.getMainLooper())
-    private var isTimerRunning = false
-
-    private val updateRunnable = object : Runnable {
-        override fun run() {
-            if (targetTimestamp > 0L) {
-                updateNotification()
-                handler.postDelayed(this, 1000) // Update every second to ensure timer accuracy
-            }
-        }
-    }
 
     companion object {
         private const val CHANNEL_ID = "deenpulse_capsule"
@@ -44,31 +28,18 @@ class PrayerCapsuleForegroundService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val newPrayerName = intent?.getStringExtra("prayerName")
-        val newTargetTimestamp = intent?.getLongExtra("targetTimestamp", 0L) ?: 0L
+        val prayerName = intent?.getStringExtra("prayerName") ?: "Next Prayer"
+        val targetTimestamp = intent?.getLongExtra("targetTimestamp", 0L) ?: 0L
 
-        if (newPrayerName != null) {
-            prayerName = newPrayerName
-            targetTimestamp = newTargetTimestamp
-            
-            // Immediately build and start foreground to satisfy Android requirements and prevent ANR
-            val notification = buildCapsuleNotification()
-            startForeground(NOTIFICATION_ID, notification)
-
-            // Start ticking timer if it's not already running
-            if (!isTimerRunning) {
-                isTimerRunning = true
-                handler.post(updateRunnable)
-            }
-        }
+        // Immediately build and start/update foreground with the chronometer-driven notification
+        val notification = buildCapsuleNotification(prayerName, targetTimestamp)
+        startForeground(NOTIFICATION_ID, notification)
 
         return START_STICKY
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        handler.removeCallbacks(updateRunnable)
-        isTimerRunning = false
         stopForeground(STOP_FOREGROUND_REMOVE)
     }
 
@@ -88,25 +59,7 @@ class PrayerCapsuleForegroundService : Service() {
         }
     }
 
-    private fun updateNotification() {
-        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
-        val notification = buildCapsuleNotification()
-        manager?.notify(NOTIFICATION_ID, notification)
-    }
-
-    private fun buildCapsuleNotification(): Notification {
-        val remainingMs = targetTimestamp - System.currentTimeMillis()
-        val remainingMins = Math.max(0, (remainingMs + 999) / 60000).toInt() // Round up minutes
-        val hours = remainingMins / 60
-        val mins = remainingMins % 60
-
-        // Expanded dropdown body content text: "[PrayerName] in [X]h [Y]m" or "[PrayerName] in [X]m"
-        val contentText = if (hours > 0) {
-            "$prayerName in ${hours}h ${mins}m"
-        } else {
-            "$prayerName in ${mins}m"
-        }
-
+    private fun buildCapsuleNotification(prayerName: String, targetTimestamp: Long): Notification {
         // Collapsed status bar pill/capsule outputs ONLY the raw prayer name string
         val chipText = prayerName
 
@@ -119,7 +72,7 @@ class PrayerCapsuleForegroundService : Service() {
 
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Next Prayer:")
-            .setContentText(contentText)
+            .setContentText("$prayerName in ")
             .setSmallIcon(R.drawable.ic_stat_prayer)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
@@ -127,6 +80,9 @@ class PrayerCapsuleForegroundService : Service() {
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setOnlyAlertOnce(true)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setUsesChronometer(true)
+            .setChronometerCountDown(true)
+            .setWhen(targetTimestamp)
 
         // Set short critical text and request promoted ongoing (Live Alert status bar capsule) via bundle extras
         builder.extras.putBoolean("android.requestPromotedOngoing", true)

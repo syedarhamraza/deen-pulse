@@ -8,10 +8,36 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import androidx.core.app.NotificationCompat
+import org.json.JSONArray
+
+data class PrayerScheduleItem(val name: String, val timestamp: Long)
 
 class PrayerCapsuleForegroundService : Service() {
+
+    private var prayerList: List<PrayerScheduleItem> = emptyList()
+    private var currentPrayerName: String = ""
+    private var currentTargetTimestamp: Long = 0L
+    private val handler = Handler(Looper.getMainLooper())
+    private var isTimerRunning = false
+
+    private val checkRunnable = object : Runnable {
+        override fun run() {
+            val next = findNextPrayer()
+            if (next != null) {
+                // If the next prayer has changed, update the notification chronometer immediately
+                if (next.name != currentPrayerName || next.timestamp != currentTargetTimestamp) {
+                    currentPrayerName = next.name
+                    currentTargetTimestamp = next.timestamp
+                    updateNotification()
+                }
+            }
+            handler.postDelayed(this, 5000) // Check every 5 seconds to ensure zero-lag transition
+        }
+    }
 
     companion object {
         private const val CHANNEL_ID = "deenpulse_capsule"
@@ -28,19 +54,54 @@ class PrayerCapsuleForegroundService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val prayerName = intent?.getStringExtra("prayerName") ?: "Next Prayer"
-        val targetTimestamp = intent?.getLongExtra("targetTimestamp", 0L) ?: 0L
+        val newPrayersJson = intent?.getStringExtra("prayersJson")
 
-        // Immediately build and start/update foreground with the chronometer-driven notification
-        val notification = buildCapsuleNotification(prayerName, targetTimestamp)
-        startForeground(NOTIFICATION_ID, notification)
+        if (newPrayersJson != null) {
+            try {
+                val jsonArray = JSONArray(newPrayersJson)
+                val list = mutableListOf<PrayerScheduleItem>()
+                for (i in 0 until jsonArray.length()) {
+                    val obj = jsonArray.getJSONObject(i)
+                    val name = obj.getString("name")
+                    val timestamp = obj.getLong("timestamp")
+                    list.add(PrayerScheduleItem(name, timestamp))
+                }
+                prayerList = list
+
+                // Immediately determine next prayer and start/update foreground to prevent ANR
+                val next = findNextPrayer()
+                if (next != null) {
+                    currentPrayerName = next.name
+                    currentTargetTimestamp = next.timestamp
+                    
+                    val notification = buildCapsuleNotification()
+                    startForeground(NOTIFICATION_ID, notification)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
+            // Start background ticker check if it is not already running
+            if (!isTimerRunning) {
+                isTimerRunning = true
+                handler.post(checkRunnable)
+            }
+        }
 
         return START_STICKY
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        handler.removeCallbacks(checkRunnable)
+        isTimerRunning = false
         stopForeground(STOP_FOREGROUND_REMOVE)
+    }
+
+    private fun findNextPrayer(): PrayerScheduleItem? {
+        val now = System.currentTimeMillis()
+        // Sort and find the first prayer that is scheduled in the future
+        return prayerList.sortedBy { it.timestamp }.firstOrNull { it.timestamp > now }
     }
 
     private fun createNotificationChannel() {
@@ -59,9 +120,15 @@ class PrayerCapsuleForegroundService : Service() {
         }
     }
 
-    private fun buildCapsuleNotification(prayerName: String, targetTimestamp: Long): Notification {
+    private fun updateNotification() {
+        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
+        val notification = buildCapsuleNotification()
+        manager?.notify(NOTIFICATION_ID, notification)
+    }
+
+    private fun buildCapsuleNotification(): Notification {
         // Collapsed status bar pill/capsule outputs ONLY the raw prayer name string
-        val chipText = prayerName
+        val chipText = currentPrayerName
 
         // Create pending intent to open the app when notification is tapped
         val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
@@ -71,7 +138,7 @@ class PrayerCapsuleForegroundService : Service() {
         )
 
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Next Prayer: $prayerName")
+            .setContentTitle("Next Prayer: $currentPrayerName")
             .setSmallIcon(R.drawable.ic_stat_prayer)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
@@ -81,7 +148,7 @@ class PrayerCapsuleForegroundService : Service() {
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setUsesChronometer(true)
             .setChronometerCountDown(true)
-            .setWhen(targetTimestamp)
+            .setWhen(currentTargetTimestamp)
 
         // Set short critical text and request promoted ongoing (Live Alert status bar capsule) via bundle extras
         builder.extras.putBoolean("android.requestPromotedOngoing", true)

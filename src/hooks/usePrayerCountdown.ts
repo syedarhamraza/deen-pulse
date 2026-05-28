@@ -12,14 +12,16 @@ export function usePrayerCountdown(prayerTimes: PrayerTime[], liveActivityEnable
   useEffect(() => {
     if (prayerTimes.length === 0) return;
 
+    // Reset comparison refs when settings/prayerTimes update to force instant native module refresh
+    lastPrayerName.current = '';
+    lastTargetMs.current = 0;
+
     if (!liveActivityEnabled) {
       try {
         PrayerCapsuleModule?.stopCapsule();
       } catch (e) {
         console.warn('Failed to stop capsule:', e);
       }
-      lastPrayerName.current = '';
-      lastTargetMs.current = 0;
     }
 
     const updateCountdown = () => {

@@ -13,9 +13,9 @@ import {
   Linking,
   Alert,
   Modal,
-  FlatList,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { PermissionsAndroid } from 'react-native';
 import { CountdownDisplay } from './src/components/CountdownDisplay';
 import { PrayerCard } from './src/components/PrayerCard';
 import { usePrayerTimes } from './src/hooks/usePrayerTimes';
@@ -26,40 +26,34 @@ const { PrayerCapsuleModule } = NativeModules;
 
 type Screen = 'dashboard' | 'settings';
 
-const UPDATE_INTERVALS = [
-  { label: '15 seconds', value: 15000 },
-  { label: '30 seconds', value: 30000 },
-  { label: '60 seconds (Default)', value: 60000 },
-  { label: '120 seconds', value: 120000 },
-];
-
 export default function App(): React.JSX.Element {
   const [currentScreen, setCurrentScreen] = useState<Screen>('dashboard');
-  const [liveActivityEnabled, setLiveActivityEnabled] = useState(true);
-  const [showCloseButton, setShowCloseButton] = useState(true);
-  const [backgroundInterval, setBackgroundInterval] = useState(60000); // 60s default
-  
-  const [showIntervalPicker, setShowIntervalPicker] = useState(false);
+  const [locationMode, setLocationMode] = useState<'gps' | 'cached'>('gps');
+  const [juristicMethod, setJuristicMethod] = useState<'standard' | 'hanafi'>('standard');
+  const [calculationRule, setCalculationRule] = useState<'auto' | 'karachi' | 'isna'>('auto');
 
-  const { prayerTimes, loading, error, location, refresh } = usePrayerTimes();
-  
-  const nextPrayer = usePrayerCountdown(prayerTimes, liveActivityEnabled);
+  const [showJuristicPicker, setShowJuristicPicker] = useState(false);
+  const [showCalculationPicker, setShowCalculationPicker] = useState(false);
 
-  // Load preferences on startup
+  const { prayerTimes, loading, error, location, refresh } = usePrayerTimes(
+    locationMode,
+    juristicMethod,
+    calculationRule
+  );
+
+  const nextPrayer = usePrayerCountdown(prayerTimes, true);
+
+  // Load settings on startup
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        const live = await AsyncStorage.getItem('@deenpulse_live');
-        const close = await AsyncStorage.getItem('@deenpulse_close');
-        const interval = await AsyncStorage.getItem('@deenpulse_interval');
+        const mode = await AsyncStorage.getItem('@deenpulse_location_mode');
+        const juristic = await AsyncStorage.getItem('@deenpulse_juristic_method');
+        const rule = await AsyncStorage.getItem('@deenpulse_calculation_rule');
 
-        if (live !== null) setLiveActivityEnabled(live === 'true');
-        if (close !== null) setShowCloseButton(close === 'true');
-        if (interval !== null) {
-          const val = parseInt(interval, 10);
-          setBackgroundInterval(val);
-          PrayerCapsuleModule?.setBackgroundInterval(val);
-        }
+        if (mode !== null) setLocationMode(mode as 'gps' | 'cached');
+        if (juristic !== null) setJuristicMethod(juristic as 'standard' | 'hanafi');
+        if (rule !== null) setCalculationRule(rule as 'auto' | 'karachi' | 'isna');
       } catch (e) {
         console.warn('Failed to load settings:', e);
       }
@@ -67,55 +61,37 @@ export default function App(): React.JSX.Element {
     loadSettings();
   }, []);
 
-  const handleLiveActivityToggle = async (value: boolean) => {
-    setLiveActivityEnabled(value);
-    await AsyncStorage.setItem('@deenpulse_live', value.toString());
-    if (!value) {
-      try {
-        PrayerCapsuleModule?.stopCapsule();
-      } catch (e) {
-        console.warn('Failed to stop capsule:', e);
-      }
-    }
-  };
-
-  const handleCloseButtonToggle = async (value: boolean) => {
-    setShowCloseButton(value);
-    await AsyncStorage.setItem('@deenpulse_close', value.toString());
-  };
-
-  const handleIntervalChange = async (value: number) => {
-    setBackgroundInterval(value);
-    await AsyncStorage.setItem('@deenpulse_interval', value.toString());
-    try {
-      PrayerCapsuleModule?.setBackgroundInterval(value);
-    } catch (e) {
-      console.warn('Failed to set background interval:', e);
-    }
+  const handleLocationModeChange = async (value: boolean) => {
+    const newMode = value ? 'gps' : 'cached';
+    setLocationMode(newMode);
+    await AsyncStorage.setItem('@deenpulse_location_mode', newMode);
   };
 
   const handleAppReset = async () => {
     Alert.alert(
       'Reset App Cache',
-      'Are you sure you want to clear all cached prayer timings and reset configuration preferences?',
+      'Wipes out local database and forces a fresh GPS positioning and API network fetch loop.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Reset',
           style: 'destructive',
           onPress: async () => {
-            await AsyncStorage.clear();
-            setLiveActivityEnabled(true);
-            setShowCloseButton(true);
-            setBackgroundInterval(60000);
             try {
-              PrayerCapsuleModule?.setBackgroundInterval(60000);
-              PrayerCapsuleModule?.stopCapsule();
+              await AsyncStorage.clear();
+              setLocationMode('gps');
+              setJuristicMethod('standard');
+              setCalculationRule('auto');
+              try {
+                PrayerCapsuleModule?.stopCapsule();
+              } catch (e) {
+                console.warn(e);
+              }
+              // The settings change will auto-trigger fresh GPS & fetch in hook.
+              Alert.alert('Reset Complete', 'Cache cleared. Performing fresh GPS lookup.');
             } catch (e) {
               console.warn(e);
             }
-            refresh();
-            Alert.alert('Reset Complete', 'App cache and settings have been cleared.');
           },
         },
       ]
@@ -128,17 +104,17 @@ export default function App(): React.JSX.Element {
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
           {
-            title: 'DeenPulse Location Permission',
-            message: 'DeenPulse needs your location to calculate accurate prayer times.',
+            title: 'Location Permission Required',
+            message: 'DeenPulse requires device location to calculate correct prayer times.',
             buttonPositive: 'Allow',
             buttonNegative: 'Deny',
           }
         );
         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-          Alert.alert('GPS Access', 'Location permission granted successfully.');
+          Alert.alert('Location Access', 'GPS permission granted.');
           refresh();
         } else {
-          Alert.alert('GPS Access', 'Location permission denied.');
+          Alert.alert('Location Access', 'GPS permission denied.');
         }
       } catch (err) {
         console.warn(err);
@@ -156,12 +132,21 @@ export default function App(): React.JSX.Element {
     }
   };
 
-  // Navigation stack renderer
+  const getJuristicLabel = () => {
+    return juristicMethod === 'standard' ? 'Standard (Shafi\'i, Maliki, Hanbali)' : 'Hanafi';
+  };
+
+  const getCalculationLabel = () => {
+    if (calculationRule === 'auto') return 'Auto-Detect by Region';
+    if (calculationRule === 'karachi') return 'University of Islamic Sciences, Karachi';
+    return 'Islamic Society of North America (ISNA)';
+  };
+
   const renderScreen = () => {
     switch (currentScreen) {
       case 'settings':
         return (
-          <ScrollView contentContainerStyle={styles.scrollContent}>
+          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             <View style={styles.subHeader}>
               <TouchableOpacity onPress={() => setCurrentScreen('dashboard')} style={styles.backButton}>
                 <Text style={styles.backIcon}>Back</Text>
@@ -170,7 +155,47 @@ export default function App(): React.JSX.Element {
             </View>
 
             <View style={styles.cardContainer}>
-              {/* Card 1: Reset App Cache */}
+              {/* Card 1: Location Mode */}
+              <View style={styles.settingsCard}>
+                <View style={styles.cardRow}>
+                  <View style={styles.cardInfo}>
+                    <Text style={styles.cardTitle}>Location Mode</Text>
+                    <Text style={styles.cardDesc}>
+                      {locationMode === 'gps' ? 'Auto-Detect Location (GPS)' : 'Use Cached Location'}
+                    </Text>
+                  </View>
+                  <Switch
+                    value={locationMode === 'gps'}
+                    onValueChange={handleLocationModeChange}
+                    trackColor={{ false: '#2A2E3D', true: '#00C896' }}
+                    thumbColor={Platform.OS === 'android' ? '#FFFFFF' : undefined}
+                  />
+                </View>
+              </View>
+
+              {/* Card 2: Juristic Method (Asr) */}
+              <TouchableOpacity
+                style={styles.settingsCard}
+                onPress={() => setShowJuristicPicker(true)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.cardTitle}>Juristic Method (Asr)</Text>
+                <Text style={styles.cardValue}>{getJuristicLabel()}</Text>
+                <Text style={styles.cardDesc}>Tap to select standard Shafi'i/Maliki/Hanbali or Hanafi math rules.</Text>
+              </TouchableOpacity>
+
+              {/* Card 3: Calculation Rule */}
+              <TouchableOpacity
+                style={styles.settingsCard}
+                onPress={() => setShowCalculationPicker(true)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.cardTitle}>Calculation Rule</Text>
+                <Text style={styles.cardValue}>{getCalculationLabel()}</Text>
+                <Text style={styles.cardDesc}>Select the calculation standard rules for timings.</Text>
+              </TouchableOpacity>
+
+              {/* Card 4: Reset App Cache */}
               <TouchableOpacity
                 style={styles.settingsCard}
                 onPress={handleAppReset}
@@ -178,11 +203,11 @@ export default function App(): React.JSX.Element {
               >
                 <Text style={styles.cardTitle}>Reset App Cache</Text>
                 <Text style={styles.cardDesc}>
-                  Flushes the local monthly database and re-triggers the main data fetch.
+                  Instantly wipes out the local AsyncStorage database and forces fresh GPS positioning and network loop.
                 </Text>
               </TouchableOpacity>
 
-              {/* Card 2: Allow Notifications */}
+              {/* Card 5: Allow Notifications */}
               <TouchableOpacity
                 style={styles.settingsCard}
                 onPress={openAppNotificationSettings}
@@ -190,11 +215,11 @@ export default function App(): React.JSX.Element {
               >
                 <Text style={styles.cardTitle}>Allow Notifications</Text>
                 <Text style={styles.cardDesc}>
-                  Invocates direct linking back to standard app package notification parameters.
+                  Deep-links directly to the native app package notification settings toggle panel.
                 </Text>
               </TouchableOpacity>
 
-              {/* Card 3: Allow GPS Usage */}
+              {/* Card 6: Allow GPS Usage */}
               <TouchableOpacity
                 style={styles.settingsCard}
                 onPress={handleRequestGPS}
@@ -202,7 +227,7 @@ export default function App(): React.JSX.Element {
               >
                 <Text style={styles.cardTitle}>Allow GPS Usage</Text>
                 <Text style={styles.cardDesc}>
-                  Executes standard GPS tracking permission prompts instantly.
+                  Triggers standard system tracking permission dialog prompt.
                 </Text>
               </TouchableOpacity>
             </View>
@@ -240,7 +265,7 @@ export default function App(): React.JSX.Element {
             {location && (
               <View style={styles.locationBar}>
                 <Text style={styles.locationText}>
-                  Location: {location.latitude.toFixed(4)}°, {location.longitude.toFixed(4)}° (Auto Regional)
+                  Location: {location.latitude.toFixed(4)}°, {location.longitude.toFixed(4)}°
                 </Text>
               </View>
             )}
@@ -264,7 +289,7 @@ export default function App(): React.JSX.Element {
 
             {/* Calendar Data Display */}
             {!loading && !error && (
-              <>
+              <View style={styles.dashboardContainer}>
                 <CountdownDisplay nextPrayer={nextPrayer} />
 
                 <View style={styles.divider}>
@@ -278,14 +303,14 @@ export default function App(): React.JSX.Element {
                     <PrayerCard key={prayer.name} prayer={prayer} nextPrayer={nextPrayer} />
                   ) : null
                 )}
-              </>
+              </View>
             )}
 
-            {/* Bottom Capsule Banner */}
-            {!loading && !error && nextPrayer && liveActivityEnabled && (
+            {/* Bottom Status Banner */}
+            {!loading && !error && nextPrayer && (
               <View style={styles.capsuleStatus}>
                 <View style={styles.capsuleDot} />
-                <Text style={styles.capsuleText}>Live Capsule Active • ColorOS status bar</Text>
+                <Text style={styles.capsuleText}>Ongoing Notification Active</Text>
               </View>
             )}
           </ScrollView>
@@ -299,42 +324,115 @@ export default function App(): React.JSX.Element {
       
       {renderScreen()}
 
-      {/* Interval Selector Modal */}
-      <Modal visible={showIntervalPicker} transparent animationType="slide">
+      {/* Juristic Method Picker Modal */}
+      <Modal visible={showJuristicPicker} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Background Interval</Text>
-              <TouchableOpacity onPress={() => setShowIntervalPicker(false)} style={styles.modalCloseBtn}>
+              <Text style={styles.modalTitle}>Juristic Method (Asr)</Text>
+              <TouchableOpacity onPress={() => setShowJuristicPicker(false)} style={styles.modalCloseBtn}>
                 <Text style={styles.modalCloseIcon}>✕</Text>
               </TouchableOpacity>
             </View>
-            <FlatList
-              data={UPDATE_INTERVALS}
-              keyExtractor={item => item.value.toString()}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={[
-                    styles.modalItem,
-                    backgroundInterval === item.value && styles.modalItemSelected,
-                  ]}
-                  onPress={() => {
-                    handleIntervalChange(item.value);
-                    setShowIntervalPicker(false);
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.modalItemText,
-                      backgroundInterval === item.value && styles.modalItemTextSelected,
-                    ]}
-                  >
-                    {item.label}
-                  </Text>
-                  {backgroundInterval === item.value && <Text style={styles.modalCheckmark}>✓</Text>}
-                </TouchableOpacity>
-              )}
-            />
+            <TouchableOpacity
+              style={[
+                styles.modalItem,
+                juristicMethod === 'standard' && styles.modalItemSelected,
+              ]}
+              onPress={async () => {
+                setJuristicMethod('standard');
+                await AsyncStorage.setItem('@deenpulse_juristic_method', 'standard');
+                setShowJuristicPicker(false);
+              }}
+            >
+              <Text style={[
+                styles.modalItemText,
+                juristicMethod === 'standard' && styles.modalItemTextSelected,
+              ]}>Standard (Shafi'i, Maliki, Hanbali)</Text>
+              {juristicMethod === 'standard' && <Text style={styles.modalCheckmark}>✓</Text>}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.modalItem,
+                juristicMethod === 'hanafi' && styles.modalItemSelected,
+              ]}
+              onPress={async () => {
+                setJuristicMethod('hanafi');
+                await AsyncStorage.setItem('@deenpulse_juristic_method', 'hanafi');
+                setShowJuristicPicker(false);
+              }}
+            >
+              <Text style={[
+                styles.modalItemText,
+                juristicMethod === 'hanafi' && styles.modalItemTextSelected,
+              ]}>Hanafi</Text>
+              {juristicMethod === 'hanafi' && <Text style={styles.modalCheckmark}>✓</Text>}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Calculation Rule Picker Modal */}
+      <Modal visible={showCalculationPicker} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Calculation Rule</Text>
+              <TouchableOpacity onPress={() => setShowCalculationPicker(false)} style={styles.modalCloseBtn}>
+                <Text style={styles.modalCloseIcon}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity
+              style={[
+                styles.modalItem,
+                calculationRule === 'auto' && styles.modalItemSelected,
+              ]}
+              onPress={async () => {
+                setCalculationRule('auto');
+                await AsyncStorage.setItem('@deenpulse_calculation_rule', 'auto');
+                setShowCalculationPicker(false);
+              }}
+            >
+              <Text style={[
+                styles.modalItemText,
+                calculationRule === 'auto' && styles.modalItemTextSelected,
+              ]}>Auto-Detect by Region</Text>
+              {calculationRule === 'auto' && <Text style={styles.modalCheckmark}>✓</Text>}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.modalItem,
+                calculationRule === 'karachi' && styles.modalItemSelected,
+              ]}
+              onPress={async () => {
+                setCalculationRule('karachi');
+                await AsyncStorage.setItem('@deenpulse_calculation_rule', 'karachi');
+                setShowCalculationPicker(false);
+              }}
+            >
+              <Text style={[
+                styles.modalItemText,
+                calculationRule === 'karachi' && styles.modalItemTextSelected,
+              ]}>University of Islamic Sciences, Karachi</Text>
+              {calculationRule === 'karachi' && <Text style={styles.modalCheckmark}>✓</Text>}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.modalItem,
+                calculationRule === 'isna' && styles.modalItemSelected,
+              ]}
+              onPress={async () => {
+                setCalculationRule('isna');
+                await AsyncStorage.setItem('@deenpulse_calculation_rule', 'isna');
+                setShowCalculationPicker(false);
+              }}
+            >
+              <Text style={[
+                styles.modalItemText,
+                calculationRule === 'isna' && styles.modalItemTextSelected,
+              ]}>Islamic Society of North America (ISNA)</Text>
+              {calculationRule === 'isna' && <Text style={styles.modalCheckmark}>✓</Text>}
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -346,7 +444,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0A0A1A',
-    // Platform padding top combining currentHeight to fix status bar overlapping
     paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 24) + 8 : 16,
   },
   scrollContent: {
@@ -389,6 +486,15 @@ const styles = StyleSheet.create({
     color: '#00C896',
     fontWeight: '600',
   },
+  dashboardContainer: {
+    backgroundColor: '#1a1f2c',
+    borderRadius: 16,
+    marginHorizontal: 20,
+    paddingVertical: 16,
+    marginVertical: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+  },
   cardContainer: {
     paddingHorizontal: 20,
     marginTop: 8,
@@ -401,10 +507,25 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.05)',
   },
+  cardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  cardInfo: {
+    flex: 1,
+    marginRight: 16,
+  },
   cardTitle: {
     fontSize: 16,
     fontWeight: '700',
     color: '#FFFFFF',
+    marginBottom: 6,
+  },
+  cardValue: {
+    fontSize: 14,
+    color: '#00C896',
+    fontWeight: '600',
     marginBottom: 6,
   },
   cardDesc: {
@@ -446,115 +567,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 6,
   },
-  locationIcon: {
-    fontSize: 12,
-    marginRight: 6,
-  },
   locationText: {
     fontSize: 12,
     color: '#00C896',
     fontWeight: '600',
     fontVariant: ['tabular-nums'],
-  },
-  sectionContainer: {
-    backgroundColor: '#1a1f2c',
-    borderRadius: 16,
-    marginHorizontal: 20,
-    marginVertical: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
-    overflow: 'hidden',
-  },
-  settingsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 18,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
-  },
-  settingsSwitchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
-  },
-  settingsSelectRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-  },
-  rowLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  rowDesc: {
-    fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.35)',
-    marginTop: 2,
-  },
-  rowChevron: {
-    fontSize: 22,
-    color: 'rgba(255, 255, 255, 0.25)',
-  },
-  accentText: {
-    fontSize: 14,
-    color: '#00C896',
-    fontWeight: '600',
-  },
-  selectValueContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  selectValue: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.6)',
-  },
-  diagVerify: {
-    color: '#00C896',
-    fontSize: 14,
-    fontWeight: '600',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    backgroundColor: 'rgba(0, 200, 150, 0.1)',
-    borderRadius: 8,
-  },
-  aboutCard: {
-    marginHorizontal: 20,
-    marginTop: 24,
-    padding: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.02)',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.03)',
-    alignItems: 'center',
-  },
-  aboutTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    marginBottom: 8,
-  },
-  aboutText: {
-    fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.4)',
-    textAlign: 'center',
-    lineHeight: 18,
-  },
-  aboutFooter: {
-    fontSize: 10,
-    color: '#00C896',
-    marginTop: 12,
-    fontWeight: '600',
-    letterSpacing: 0.5,
   },
   loadingContainer: {
     alignItems: 'center',
@@ -571,10 +588,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 60,
     paddingHorizontal: 40,
-  },
-  errorIcon: {
-    fontSize: 32,
-    marginBottom: 12,
   },
   errorText: {
     fontSize: 14,

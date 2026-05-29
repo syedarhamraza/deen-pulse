@@ -4,7 +4,12 @@ import { PrayerTime, getNextPrayer, NextPrayerInfo } from '../utils/prayerEngine
 
 const { PrayerCapsuleModule } = NativeModules;
 
-export function usePrayerCountdown(prayerTimes: PrayerTime[], liveActivityEnabled: boolean = true) {
+export function usePrayerCountdown(
+  prayerTimes: PrayerTime[],
+  liveActivityEnabled: boolean = true,
+  capsuleFormat: string = 'name',
+  notificationStyle: string = 'standard'
+) {
   const [nextPrayer, setNextPrayer] = useState<NextPrayerInfo | null>(null);
 
   // Sync prayer timings schedule to background service whenever they load/change
@@ -27,11 +32,11 @@ export function usePrayerCountdown(prayerTimes: PrayerTime[], liveActivityEnable
         ...prayerTimes.map(p => ({ name: p.name, timestamp: p.date.getTime() + 24 * 60 * 60 * 1000 }))
       ];
       const prayersJson = JSON.stringify(scheduleList);
-      PrayerCapsuleModule?.updateLiveCapsule(prayersJson);
+      PrayerCapsuleModule?.updateLiveCapsule(prayersJson, capsuleFormat, notificationStyle);
     } catch (e) {
       console.warn('Failed to update live capsule:', e);
     }
-  }, [prayerTimes, liveActivityEnabled]);
+  }, [prayerTimes, liveActivityEnabled, capsuleFormat, notificationStyle]);
 
   // Main UI countdown tick
   useEffect(() => {

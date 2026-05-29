@@ -13,6 +13,9 @@ import android.os.IBinder
 import android.os.Looper
 import androidx.core.app.NotificationCompat
 import org.json.JSONArray
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 data class PrayerScheduleItem(val name: String, val timestamp: Long)
 
@@ -23,6 +26,14 @@ class PrayerCapsuleForegroundService : Service() {
     private var currentTargetTimestamp: Long = 0L
     private val handler = Handler(Looper.getMainLooper())
     private var isTimerRunning = false
+    private var capsuleFormat: String = "name"
+    private var notificationStyle: String = "standard"
+
+    private fun formatTime(timestamp: Long): String {
+        if (timestamp == 0L) return ""
+        val sdf = SimpleDateFormat("h:mm a", Locale.getDefault())
+        return sdf.format(Date(timestamp))
+    }
 
     private val checkRunnable = object : Runnable {
         override fun run() {
@@ -54,6 +65,11 @@ class PrayerCapsuleForegroundService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        val format = intent?.getStringExtra("capsuleFormat")
+        val style = intent?.getStringExtra("notificationStyle")
+        if (format != null) capsuleFormat = format
+        if (style != null) notificationStyle = style
+
         val action = intent?.action
         if (action != null) {
             when (action) {
@@ -166,8 +182,22 @@ class PrayerCapsuleForegroundService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        val formattedTime = formatTime(currentTargetTimestamp)
+        
+        val contentTitle = if (notificationStyle == "with_time") {
+            "Next Prayer: $currentPrayerName ($formattedTime)"
+        } else {
+            "Next Prayer: $currentPrayerName"
+        }
+
+        val shortText = when (capsuleFormat) {
+            "name_time" -> "$currentPrayerName ($formattedTime)"
+            "time" -> formattedTime
+            else -> currentPrayerName
+        }
+
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Next Prayer: " + currentPrayerName)
+            .setContentTitle(contentTitle)
             .setSmallIcon(R.drawable.ic_stat_prayer)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
@@ -184,11 +214,11 @@ class PrayerCapsuleForegroundService : Service() {
         // Enforce methods for standard Android 15/16 base system compliance
         try {
             builder.setRequestPromotedOngoing(true)
-            builder.setShortCriticalText(currentPrayerName)
+            builder.setShortCriticalText(shortText)
         } catch (e: NoSuchMethodError) {
             // Fallback for older compile environments if any
             builder.extras.putBoolean("android.requestPromotedOngoing", true)
-            builder.extras.putString("android.shortCriticalText", currentPrayerName)
+            builder.extras.putString("android.shortCriticalText", shortText)
         }
 
         val notification = builder.build()

@@ -28,9 +28,11 @@ class PrayerCapsuleModule(reactContext: ReactApplicationContext) :
     override fun getName(): String = "PrayerCapsuleModule"
 
     @ReactMethod
-    fun updateLiveCapsule(prayersJson: String) {
+    fun updateLiveCapsule(prayersJson: String, capsuleFormat: String, notificationStyle: String) {
         val intent = Intent(reactApplicationContext, PrayerCapsuleForegroundService::class.java).apply {
             putExtra("prayersJson", prayersJson)
+            putExtra("capsuleFormat", capsuleFormat)
+            putExtra("notificationStyle", notificationStyle)
         }
         ContextCompat.startForegroundService(reactApplicationContext, intent)
     }

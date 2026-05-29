@@ -372,6 +372,12 @@ function DeenPulseApp(): React.JSX.Element {
   const [calculationRule, setCalculationRule] = useState<'auto' | 'karachi' | 'isna'>('auto');
   const [isSetupGuideDismissed, setIsSetupGuideDismissed] = useState<boolean>(true);
 
+  const [capsuleFormat, setCapsuleFormat] = useState<'name' | 'name_time' | 'time'>('name');
+  const [notificationStyle, setNotificationStyle] = useState<'standard' | 'with_time'>('standard');
+
+  const [showCapsuleFormatPicker, setShowCapsuleFormatPicker] = useState(false);
+  const [showNotificationStylePicker, setShowNotificationStylePicker] = useState(false);
+
   const [showJuristicPicker, setShowJuristicPicker] = useState(false);
   const [showCalculationPicker, setShowCalculationPicker] = useState(false);
 
@@ -411,7 +417,7 @@ function DeenPulseApp(): React.JSX.Element {
     calculationRule
   );
 
-  const nextPrayer = usePrayerCountdown(prayerTimes, true);
+  const nextPrayer = usePrayerCountdown(prayerTimes, true, capsuleFormat, notificationStyle);
 
   // Load preferences and setup guide state on startup
   useEffect(() => {
@@ -421,10 +427,14 @@ function DeenPulseApp(): React.JSX.Element {
         const juristic = await AsyncStorage.getItem('@deenpulse_juristic_method');
         const rule = await AsyncStorage.getItem('@deenpulse_calculation_rule');
         const guideDismissed = await AsyncStorage.getItem('@isSetupGuideDismissed');
+        const format = await AsyncStorage.getItem('@deenpulse_capsule_format');
+        const style = await AsyncStorage.getItem('@deenpulse_notification_style');
 
         if (mode !== null) setLocationMode(mode as 'gps' | 'cached');
         if (juristic !== null) setJuristicMethod(juristic as 'standard' | 'hanafi');
         if (rule !== null) setCalculationRule(rule as 'auto' | 'karachi' | 'isna');
+        if (format !== null) setCapsuleFormat(format as 'name' | 'name_time' | 'time');
+        if (style !== null) setNotificationStyle(style as 'standard' | 'with_time');
         setIsSetupGuideDismissed(guideDismissed === 'true');
       } catch (e) {
         console.warn('Failed to load settings:', e);
@@ -486,6 +496,8 @@ function DeenPulseApp(): React.JSX.Element {
           setLocationMode('gps');
           setJuristicMethod('standard');
           setCalculationRule('auto');
+          setCapsuleFormat('name');
+          setNotificationStyle('standard');
           setIsSetupGuideDismissed(false);
           try {
             PrayerCapsuleModule?.stopCapsule();
@@ -546,6 +558,17 @@ function DeenPulseApp(): React.JSX.Element {
     if (calculationRule === 'auto') return 'Auto-Detect by Region';
     if (calculationRule === 'karachi') return 'University of Islamic Sciences, Karachi';
     return 'Islamic Society of North America (ISNA)';
+  };
+
+  const getCapsuleFormatLabel = () => {
+    if (capsuleFormat === 'name_time') return 'Name & Time (e.g., Fajr (5:12 AM))';
+    if (capsuleFormat === 'time') return 'Time Only (e.g., 5:12 AM)';
+    return 'Name Only (e.g., Fajr)';
+  };
+
+  const getNotificationStyleLabel = () => {
+    if (notificationStyle === 'with_time') return 'With Time (e.g., Next Prayer: Fajr (5:12 AM))';
+    return 'Standard (e.g., Next Prayer: Fajr)';
   };
 
   // Listen to refresh requests from ongoing notification action buttons
@@ -731,6 +754,32 @@ function DeenPulseApp(): React.JSX.Element {
                 >
                   <Text style={styles.menuDetailLabel}>Allow Notifications</Text>
                   <Text style={styles.menuDetailDesc}>For the Live island, enable live alerts in notification settings</Text>
+                </Pressable>
+
+                {/* Status Bar Capsule Format Choice */}
+                <Pressable
+                  style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
+                  onPress={() => {
+                    triggerHaptic();
+                    setShowCapsuleFormatPicker(true);
+                  }}
+                >
+                  <Text style={styles.menuDetailLabel}>Status Bar Capsule Style</Text>
+                  <Text style={styles.menuDetailValue}>{getCapsuleFormatLabel()}</Text>
+                  <Text style={styles.menuDetailDesc}>Choose what information is displayed directly inside your device's status bar capsule.</Text>
+                </Pressable>
+
+                {/* Notification Title Format Choice */}
+                <Pressable
+                  style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
+                  onPress={() => {
+                    triggerHaptic();
+                    setShowNotificationStylePicker(true);
+                  }}
+                >
+                  <Text style={styles.menuDetailLabel}>Notification Title Style</Text>
+                  <Text style={styles.menuDetailValue}>{getNotificationStyleLabel()}</Text>
+                  <Text style={styles.menuDetailDesc}>Customize the title layout shown in the lock screen and drawer notification banner.</Text>
                 </Pressable>
               </View>
             </ScrollView>
@@ -1081,6 +1130,123 @@ function DeenPulseApp(): React.JSX.Element {
       <Animated.View style={[styles.flex1, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
         {renderScreen()}
       </Animated.View>
+
+      {/* Status Bar Capsule Format Picker Modal */}
+      <FluidModal
+        visible={showCapsuleFormatPicker}
+        onClose={() => {
+          triggerHaptic();
+          setShowCapsuleFormatPicker(false);
+        }}
+        title="Status Bar Capsule Style"
+      >
+        <Pressable
+          style={({ pressed }) => [
+            styles.modalItem,
+            capsuleFormat === 'name' && styles.modalItemSelected,
+            { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
+          ]}
+          onPress={async () => {
+            triggerHaptic();
+            setCapsuleFormat('name');
+            await AsyncStorage.setItem('@deenpulse_capsule_format', 'name');
+            setShowCapsuleFormatPicker(false);
+          }}
+        >
+          <Text style={[
+            styles.modalItemText,
+            capsuleFormat === 'name' && styles.modalItemTextSelected,
+          ]}>Name Only (e.g., Fajr)</Text>
+          {capsuleFormat === 'name' && <Icon name="check" size={16} color="#00E8A2" />}
+        </Pressable>
+        <Pressable
+          style={({ pressed }) => [
+            styles.modalItem,
+            capsuleFormat === 'name_time' && styles.modalItemSelected,
+            { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
+          ]}
+          onPress={async () => {
+            triggerHaptic();
+            setCapsuleFormat('name_time');
+            await AsyncStorage.setItem('@deenpulse_capsule_format', 'name_time');
+            setShowCapsuleFormatPicker(false);
+          }}
+        >
+          <Text style={[
+            styles.modalItemText,
+            capsuleFormat === 'name_time' && styles.modalItemTextSelected,
+          ]}>Name & Time (e.g., Fajr (5:12 AM))</Text>
+          {capsuleFormat === 'name_time' && <Icon name="check" size={16} color="#00E8A2" />}
+        </Pressable>
+        <Pressable
+          style={({ pressed }) => [
+            styles.modalItem,
+            capsuleFormat === 'time' && styles.modalItemSelected,
+            { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
+          ]}
+          onPress={async () => {
+            triggerHaptic();
+            setCapsuleFormat('time');
+            await AsyncStorage.setItem('@deenpulse_capsule_format', 'time');
+            setShowCapsuleFormatPicker(false);
+          }}
+        >
+          <Text style={[
+            styles.modalItemText,
+            capsuleFormat === 'time' && styles.modalItemTextSelected,
+          ]}>Time Only (e.g., 5:12 AM)</Text>
+          {capsuleFormat === 'time' && <Icon name="check" size={16} color="#00E8A2" />}
+        </Pressable>
+      </FluidModal>
+
+      {/* Notification Style Picker Modal */}
+      <FluidModal
+        visible={showNotificationStylePicker}
+        onClose={() => {
+          triggerHaptic();
+          setShowNotificationStylePicker(false);
+        }}
+        title="Notification Title Style"
+      >
+        <Pressable
+          style={({ pressed }) => [
+            styles.modalItem,
+            notificationStyle === 'standard' && styles.modalItemSelected,
+            { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
+          ]}
+          onPress={async () => {
+            triggerHaptic();
+            setNotificationStyle('standard');
+            await AsyncStorage.setItem('@deenpulse_notification_style', 'standard');
+            setShowNotificationStylePicker(false);
+          }}
+        >
+          <Text style={[
+            styles.modalItemText,
+            notificationStyle === 'standard' && styles.modalItemTextSelected,
+          ]}>Standard (e.g., Next Prayer: Fajr)</Text>
+          {notificationStyle === 'standard' && <Icon name="check" size={16} color="#00E8A2" />}
+        </Pressable>
+        <Pressable
+          style={({ pressed }) => [
+            styles.modalItem,
+            notificationStyle === 'with_time' && styles.modalItemSelected,
+            { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
+          ]}
+          onPress={async () => {
+            triggerHaptic();
+            setNotificationStyle('with_time');
+            await AsyncStorage.setItem('@deenpulse_notification_style', 'with_time');
+            setShowNotificationStylePicker(false);
+          }}
+        >
+          <Text style={[
+            styles.modalItemText,
+            notificationStyle === 'with_time' && styles.modalItemTextSelected,
+          ]}>With Time (e.g., Next Prayer: Fajr (5:12 AM))</Text>
+          {notificationStyle === 'with_time' && <Icon name="check" size={16} color="#00E8A2" />}
+        </Pressable>
+      </FluidModal>
 
       {/* Juristic Method Picker Modal */}
       <FluidModal

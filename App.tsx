@@ -902,10 +902,18 @@ function DeenPulseApp(): React.JSX.Element {
                     <Text style={styles.infoVal}>DeenPulse</Text>
                   </View>
 
-                  <View style={styles.infoRow}>
+                  <Pressable
+                    style={({ pressed }) => [styles.infoRow, { opacity: pressed ? 0.7 : 1 }]}
+                    onPress={() => {
+                      triggerHaptic();
+                      Linking.openURL('https://github.com/syedarhamraza').catch(err =>
+                        console.warn('Failed to open URL:', err)
+                      );
+                    }}
+                  >
                     <Text style={styles.infoKey}>Owner</Text>
-                    <Text style={styles.infoVal}>Syed Arham Raza</Text>
-                  </View>
+                    <Text style={styles.infoValLink}>Syed Arham Raza</Text>
+                  </Pressable>
 
                   <View style={[styles.infoRow, styles.infoRowLast]}>
                     <Text style={styles.infoKey}>Version</Text>
@@ -1122,10 +1130,20 @@ function DeenPulseApp(): React.JSX.Element {
 
               {/* Bottom Status Banner */}
               {!loading && !error && nextPrayer && (
-                <View style={styles.capsuleStatus}>
+                <Pressable
+                  style={({ pressed }) => [styles.capsuleStatus, { opacity: pressed ? 0.7 : 1 }]}
+                  onPress={() => {
+                    triggerHaptic();
+                    Linking.openURL('https://github.com/syedarhamraza').catch(err =>
+                      console.warn('Failed to open URL:', err)
+                    );
+                  }}
+                >
                   <PulsingDot />
-                  <Text style={styles.capsuleText}>Made By Syed Arham Raza</Text>
-                </View>
+                  <Text style={styles.capsuleText}>
+                    Made By <Text style={styles.linkTextFooter}>Syed Arham Raza</Text>
+                  </Text>
+                </Pressable>
               )}
             </ScrollView>
           </View>
@@ -1392,6 +1410,17 @@ function DeenPulseApp(): React.JSX.Element {
 const styles = StyleSheet.create({
   flex1: {
     flex: 1,
+  },
+  infoValLink: {
+    fontSize: 14,
+    color: '#00E8A2',
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+  },
+  linkTextFooter: {
+    color: '#00E8A2',
+    fontWeight: '700',
+    textDecorationLine: 'underline',
   },
   appNameContainer: {
     flexDirection: 'row',

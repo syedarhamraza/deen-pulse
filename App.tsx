@@ -834,7 +834,7 @@ function DeenPulseApp(): React.JSX.Element {
               {!loading && !error && nextPrayer && (
                 <View style={styles.capsuleStatus}>
                   <PulsingDot />
-                  <Text style={styles.capsuleText}>Ongoing Notification Active</Text>
+                  <Text style={styles.capsuleText}>Made By Syed Arham Raza</Text>
                 </View>
               )}
             </ScrollView>

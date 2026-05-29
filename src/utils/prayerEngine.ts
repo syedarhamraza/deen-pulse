@@ -41,12 +41,37 @@ export function parseTimeString(timeStr: string): Date {
   return date;
 }
 
+export function formatTo12Hour(timeStr: string): string {
+  if (!timeStr) return '';
+  const parts = timeStr.trim().split(/\s+/);
+  const rawTime = parts[0];
+  const suffix = parts.slice(1).join(' ');
+
+  const timeParts = rawTime.split(':');
+  if (timeParts.length < 2) return timeStr;
+
+  let hours = parseInt(timeParts[0], 10);
+  const minutes = timeParts[1];
+
+  if (isNaN(hours)) return timeStr;
+
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12;
+
+  const formattedTime = `${hours}:${minutes} ${ampm}`;
+  return suffix ? `${formattedTime} ${suffix}` : formattedTime;
+}
+
 export function parsePrayerTimings(timings: Record<string, string>): PrayerTime[] {
-  return PRAYER_NAMES.map(name => ({
-    name,
-    time: timings[name] || '00:00',
-    date: parseTimeString(timings[name] || '00:00'),
-  }));
+  return PRAYER_NAMES.map(name => {
+    const rawTime = timings[name] || '00:00';
+    return {
+      name,
+      time: formatTo12Hour(rawTime),
+      date: parseTimeString(rawTime),
+    };
+  });
 }
 
 export function getNextPrayer(prayers: PrayerTime[], now: Date = new Date()): NextPrayerInfo {

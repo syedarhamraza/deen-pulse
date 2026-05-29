@@ -883,7 +883,7 @@ function DeenPulseApp(): React.JSX.Element {
               <View style={styles.cardContainer}>
                 {/* Highlight header block */}
                 <View style={styles.aboutHeaderBlock}>
-                  <Text style={styles.aboutBranding}>Deen Pulse</Text>
+                  <Text style={styles.aboutBranding}>Deen Pulse Beta</Text>
                   <View style={styles.aboutAccentBar} />
                   <Text style={styles.aboutTagline}>Live tracking on your status bar</Text>
                 </View>
@@ -905,7 +905,7 @@ function DeenPulseApp(): React.JSX.Element {
                   <View style={[styles.infoRow, styles.infoRowLast]}>
                     <Text style={styles.infoKey}>Version</Text>
                     <View style={styles.versionBadge}>
-                      <Text style={styles.versionBadgeText}>1.0.2</Text>
+                      <Text style={styles.versionBadgeText}>1.0.2 Beta</Text>
                     </View>
                   </View>
                 </View>
@@ -1004,7 +1004,12 @@ function DeenPulseApp(): React.JSX.Element {
           <View style={styles.screenContainer}>
             <View style={styles.header}>
               <View>
-                <Text style={styles.appName}>DeenPulse</Text>
+                <View style={styles.appNameContainer}>
+                  <Text style={styles.appName}>DeenPulse</Text>
+                  <View style={styles.betaBadge}>
+                    <Text style={styles.betaBadgeText}>BETA</Text>
+                  </View>
+                </View>
                 <View style={styles.accentBar} />
               </View>
               <View style={styles.headerButtons}>
@@ -1382,6 +1387,26 @@ function DeenPulseApp(): React.JSX.Element {
 const styles = StyleSheet.create({
   flex1: {
     flex: 1,
+  },
+  appNameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  betaBadge: {
+    backgroundColor: 'rgba(0, 232, 162, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 232, 162, 0.25)',
+    alignSelf: 'center',
+  },
+  betaBadgeText: {
+    color: '#00E8A2',
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
   container: {
     flex: 1,

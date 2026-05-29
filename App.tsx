@@ -1409,8 +1409,8 @@ function DeenPulseApp(): React.JSX.Element {
       >
         <View style={styles.modalScrollContainer}>
           <ModalFadeOverlay position="top" />
-          <ScrollView 
-            style={styles.modalScrollView} 
+          <ScrollView
+            style={styles.modalScrollView}
             contentContainerStyle={styles.modalScrollContent}
             showsVerticalScrollIndicator={false}
           >

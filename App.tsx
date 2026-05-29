@@ -114,6 +114,22 @@ function PulsingDot() {
   );
 }
 
+// Smooth feathered gradient overlay to fade out scrolling content under sticky headers
+function HeaderFadeOverlay() {
+  return (
+    <View style={styles.fadeOverlayContainer} pointerEvents="none">
+      <View style={styles.fadeLine1} />
+      <View style={styles.fadeLine2} />
+      <View style={styles.fadeLine3} />
+      <View style={styles.fadeLine4} />
+      <View style={styles.fadeLine5} />
+      <View style={styles.fadeLine6} />
+      <View style={styles.fadeLine7} />
+      <View style={styles.fadeLine8} />
+    </View>
+  );
+}
+
 function SkeletonLoader() {
   return (
     <View style={styles.skeletonContainer}>
@@ -349,6 +365,7 @@ function DeenPulseApp(): React.JSX.Element {
                 <Icon name="arrow-left" size={20} color="#00E8A2" />
               </Pressable>
               <Text style={styles.subTitle}>Settings</Text>
+              <HeaderFadeOverlay />
             </View>
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -419,7 +436,7 @@ function DeenPulseApp(): React.JSX.Element {
                     <Icon name="info" size={18} color="#00E8A2" />
                   </View>
                   <View style={styles.rowInfo}>
-                    <Text style={styles.rowTitle}>About DeenPulse</Text>
+                    <Text style={styles.rowTitle}>About</Text>
                     <Text style={styles.rowDesc}>App information and credits</Text>
                   </View>
                   <Icon name="chevron-right" size={18} color="rgba(0, 232, 162, 0.5)" />
@@ -443,6 +460,7 @@ function DeenPulseApp(): React.JSX.Element {
                 <Icon name="arrow-left" size={20} color="#00E8A2" />
               </Pressable>
               <Text style={styles.subTitle}>Prayer Rules</Text>
+              <HeaderFadeOverlay />
             </View>
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -491,6 +509,7 @@ function DeenPulseApp(): React.JSX.Element {
                 <Icon name="arrow-left" size={20} color="#00E8A2" />
               </Pressable>
               <Text style={styles.subTitle}>Notifications</Text>
+              <HeaderFadeOverlay />
             </View>
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -524,6 +543,7 @@ function DeenPulseApp(): React.JSX.Element {
                 <Icon name="arrow-left" size={20} color="#00E8A2" />
               </Pressable>
               <Text style={styles.subTitle}>Data Management</Text>
+              <HeaderFadeOverlay />
             </View>
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -599,13 +619,14 @@ function DeenPulseApp(): React.JSX.Element {
                 <Icon name="arrow-left" size={20} color="#00E8A2" />
               </Pressable>
               <Text style={styles.subTitle}>About</Text>
+              <HeaderFadeOverlay />
             </View>
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
               <View style={styles.cardContainer}>
                 {/* Highlight header block */}
                 <View style={styles.aboutHeaderBlock}>
-                  <Text style={styles.aboutBranding}>DeenPulse</Text>
+                  <Text style={styles.aboutBranding}>Deen Pulse</Text>
                   <View style={styles.aboutAccentBar} />
                   <Text style={styles.aboutTagline}>Live tracking on your status bar</Text>
                 </View>
@@ -620,14 +641,14 @@ function DeenPulseApp(): React.JSX.Element {
                   </View>
 
                   <View style={styles.infoRow}>
-                    <Text style={styles.infoKey}>Author</Text>
+                    <Text style={styles.infoKey}>Owner</Text>
                     <Text style={styles.infoVal}>Syed Arham Raza</Text>
                   </View>
 
                   <View style={[styles.infoRow, { borderBottomWidth: 0 }]}>
                     <Text style={styles.infoKey}>Version</Text>
                     <View style={styles.versionBadge}>
-                      <Text style={styles.versionBadgeText}>1.0.1</Text>
+                      <Text style={styles.versionBadgeText}>1.0.2</Text>
                     </View>
                   </View>
                 </View>
@@ -650,6 +671,7 @@ function DeenPulseApp(): React.JSX.Element {
                 <Icon name="arrow-left" size={20} color="#00E8A2" />
               </Pressable>
               <Text style={styles.subTitle}>Notification Guide</Text>
+              <HeaderFadeOverlay />
             </View>
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -748,6 +770,7 @@ function DeenPulseApp(): React.JSX.Element {
                   <Icon name="settings" size={16} color="#00E8A2" />
                 </Pressable>
               </View>
+              <HeaderFadeOverlay />
             </View>
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -1101,7 +1124,7 @@ const styles = StyleSheet.create({
   },
   cardContainer: {
     paddingHorizontal: 20,
-    marginTop: 8,
+    marginTop: 24,
   },
   settingsRowCard: {
     backgroundColor: '#111827',
@@ -1183,10 +1206,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 24,
     paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
     backgroundColor: '#080B14',
   },
+  fadeOverlayContainer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: -24,
+    height: 24,
+    zIndex: 10,
+    flexDirection: 'column',
+  },
+  fadeLine1: { height: 3, width: '100%', backgroundColor: 'rgba(8, 11, 20, 0.96)' },
+  fadeLine2: { height: 3, width: '100%', backgroundColor: 'rgba(8, 11, 20, 0.88)' },
+  fadeLine3: { height: 3, width: '100%', backgroundColor: 'rgba(8, 11, 20, 0.76)' },
+  fadeLine4: { height: 3, width: '100%', backgroundColor: 'rgba(8, 11, 20, 0.60)' },
+  fadeLine5: { height: 3, width: '100%', backgroundColor: 'rgba(8, 11, 20, 0.44)' },
+  fadeLine6: { height: 3, width: '100%', backgroundColor: 'rgba(8, 11, 20, 0.28)' },
+  fadeLine7: { height: 3, width: '100%', backgroundColor: 'rgba(8, 11, 20, 0.14)' },
+  fadeLine8: { height: 3, width: '100%', backgroundColor: 'rgba(8, 11, 20, 0.05)' },
   backButton: {
     width: 38,
     height: 38,
@@ -1205,7 +1243,7 @@ const styles = StyleSheet.create({
   },
   scrollHeader: {
     paddingHorizontal: 24,
-    paddingTop: 8,
+    paddingTop: 24,
     paddingBottom: 4,
   },
   scrollLocationBar: {
@@ -1534,7 +1572,7 @@ const styles = StyleSheet.create({
   },
   guideContainer: {
     paddingHorizontal: 20,
-    marginTop: 8,
+    marginTop: 24,
   },
   guideStepCard: {
     backgroundColor: '#111827',

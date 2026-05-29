@@ -39,6 +39,23 @@ interface CustomAlertConfig {
   cancelText?: string;
 }
 
+interface FluidModalProps {
+  visible: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
+}
+
+interface FluidAlertProps {
+  visible: boolean;
+  title: string;
+  message: string;
+  onConfirm?: () => void;
+  onCancel?: () => void;
+  confirmText?: string;
+  cancelText?: string;
+}
+
 // Light tactile device vibration feedback
 const triggerHaptic = () => {
   try {
@@ -130,6 +147,195 @@ function HeaderFadeOverlay() {
   );
 }
 
+// Custom bottom sheet modal with physics-based spring animation and unmount handling
+function FluidModal({ visible, onClose, title, children }: FluidModalProps): React.JSX.Element | null {
+  const [shouldRender, setShouldRender] = useState(visible);
+  const animValue = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (visible) {
+      setShouldRender(true);
+      Animated.spring(animValue, {
+        toValue: 1,
+        damping: 24,
+        mass: 0.9,
+        stiffness: 140,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(animValue, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      }).start(({ finished }) => {
+        if (finished) {
+          setShouldRender(false);
+        }
+      });
+    }
+  }, [visible, animValue]);
+
+  if (!shouldRender) return null;
+
+  const backdropOpacity = animValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1],
+  });
+
+  const translateY = animValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [400, 0],
+  });
+
+  const scale = animValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.95, 1],
+  });
+
+  return (
+    <Modal visible={true} transparent onRequestClose={onClose} animationType="none">
+      <View style={styles.modalOverlay}>
+        <Animated.View
+          style={[
+            styles.modalBackdrop,
+            { opacity: backdropOpacity }
+          ]}
+          pointerEvents="auto"
+        >
+          <Pressable style={styles.flex1} onPress={onClose} />
+        </Animated.View>
+        <Animated.View
+          style={[
+            styles.modalContent,
+            {
+              transform: [{ translateY }, { scale }],
+            },
+          ]}
+        >
+          <View style={styles.modalGrabber}>
+            <View style={styles.grabberBar} />
+          </View>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>{title}</Text>
+            <Pressable
+              onPress={onClose}
+              style={({ pressed }) => [styles.modalCloseBtn, { opacity: pressed ? 0.7 : 1 }]}
+            >
+              <Icon name="x" size={16} color="rgba(255, 255, 255, 0.6)" />
+            </Pressable>
+          </View>
+          {children}
+        </Animated.View>
+      </View>
+    </Modal>
+  );
+}
+
+// Custom dialog alert with scale-in bounce spring animation and unmount handling
+function FluidAlert({
+  visible,
+  title,
+  message,
+  onConfirm,
+  onCancel,
+  confirmText,
+  cancelText,
+}: FluidAlertProps): React.JSX.Element | null {
+  const [shouldRender, setShouldRender] = useState(visible);
+  const animValue = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (visible) {
+      setShouldRender(true);
+      Animated.spring(animValue, {
+        toValue: 1,
+        damping: 20,
+        mass: 0.8,
+        stiffness: 130,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(animValue, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start(({ finished }) => {
+        if (finished) {
+          setShouldRender(false);
+        }
+      });
+    }
+  }, [visible, animValue]);
+
+  if (!shouldRender) return null;
+
+  const backdropOpacity = animValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1],
+  });
+
+  const scale = animValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.85, 1],
+  });
+
+  const opacity = animValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1],
+  });
+
+  return (
+    <Modal visible={true} transparent onRequestClose={onCancel || onConfirm} animationType="none">
+      <View style={styles.alertOverlay}>
+        <Animated.View
+          style={[
+            styles.alertBackdrop,
+            { opacity: backdropOpacity }
+          ]}
+          pointerEvents="auto"
+        />
+        <Animated.View
+          style={[
+            styles.alertContainer,
+            {
+              opacity,
+              transform: [{ scale }],
+            },
+          ]}
+        >
+          <Text style={styles.alertTitle}>{title}</Text>
+          <Text style={styles.alertMessage}>{message}</Text>
+
+          <View style={styles.alertButtonRow}>
+            {onCancel && (
+              <Pressable
+                style={({ pressed }) => [
+                  styles.alertButton,
+                  styles.alertButtonCancel,
+                  { opacity: pressed ? 0.7 : 1.0 }
+                ]}
+                onPress={onCancel}
+              >
+                <Text style={styles.alertButtonTextCancel}>{cancelText || 'Cancel'}</Text>
+              </Pressable>
+            )}
+            <Pressable
+              style={({ pressed }) => [
+                styles.alertButton,
+                confirmText === 'RESET' ? styles.alertButtonDestructive : styles.alertButtonConfirm,
+                { opacity: pressed ? 0.7 : 1.0 }
+              ]}
+              onPress={onConfirm}
+            >
+              <Text style={styles.alertButtonTextConfirm}>{confirmText || 'OK'}</Text>
+            </Pressable>
+          </View>
+        </Animated.View>
+      </View>
+    </Modal>
+  );
+}
+
 function SkeletonLoader() {
   return (
     <View style={styles.skeletonContainer}>
@@ -171,20 +377,22 @@ function DeenPulseApp(): React.JSX.Element {
 
   // Screen transition animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(20)).current;
+  const slideAnim = useRef(new Animated.Value(25)).current;
 
   useEffect(() => {
     fadeAnim.setValue(0);
-    slideAnim.setValue(20);
+    slideAnim.setValue(25);
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 350,
+        duration: 300,
         useNativeDriver: true,
       }),
-      Animated.timing(slideAnim, {
+      Animated.spring(slideAnim, {
         toValue: 0,
-        duration: 350,
+        damping: 24,
+        mass: 0.8,
+        stiffness: 130,
         useNativeDriver: true,
       }),
     ]).start();
@@ -645,7 +853,7 @@ function DeenPulseApp(): React.JSX.Element {
                     <Text style={styles.infoVal}>Syed Arham Raza</Text>
                   </View>
 
-                  <View style={[styles.infoRow, { borderBottomWidth: 0 }]}>
+                  <View style={[styles.infoRow, styles.infoRowLast]}>
                     <Text style={styles.infoKey}>Version</Text>
                     <View style={styles.versionBadge}>
                       <Text style={styles.versionBadgeText}>1.0.2</Text>
@@ -870,190 +1078,145 @@ function DeenPulseApp(): React.JSX.Element {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
-      <Animated.View style={{ flex: 1, opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+      <Animated.View style={[styles.flex1, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
         {renderScreen()}
       </Animated.View>
 
       {/* Juristic Method Picker Modal */}
-      <Modal visible={showJuristicPicker} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalGrabber}>
-              <View style={styles.grabberBar} />
-            </View>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Juristic Method (Asr)</Text>
-              <Pressable
-                onPress={() => {
-                  triggerHaptic();
-                  setShowJuristicPicker(false);
-                }}
-                style={({ pressed }) => [styles.modalCloseBtn, { opacity: pressed ? 0.7 : 1 }]}
-              >
-                <Icon name="x" size={16} color="rgba(255, 255, 255, 0.6)" />
-              </Pressable>
-            </View>
-            <Pressable
-              style={({ pressed }) => [
-                styles.modalItem,
-                juristicMethod === 'standard' && styles.modalItemSelected,
-                { opacity: pressed ? 0.8 : 1 }
-              ]}
-              onPress={async () => {
-                triggerHaptic();
-                setJuristicMethod('standard');
-                await AsyncStorage.setItem('@deenpulse_juristic_method', 'standard');
-                setShowJuristicPicker(false);
-              }}
-            >
-              <Text style={[
-                styles.modalItemText,
-                juristicMethod === 'standard' && styles.modalItemTextSelected,
-              ]}>Standard (Shafi'i, Maliki, Hanbali)</Text>
-              {juristicMethod === 'standard' && <Icon name="check" size={16} color="#00E8A2" />}
-            </Pressable>
-            <Pressable
-              style={({ pressed }) => [
-                styles.modalItem,
-                juristicMethod === 'hanafi' && styles.modalItemSelected,
-                { opacity: pressed ? 0.8 : 1 }
-              ]}
-              onPress={async () => {
-                triggerHaptic();
-                setJuristicMethod('hanafi');
-                await AsyncStorage.setItem('@deenpulse_juristic_method', 'hanafi');
-                setShowJuristicPicker(false);
-              }}
-            >
-              <Text style={[
-                styles.modalItemText,
-                juristicMethod === 'hanafi' && styles.modalItemTextSelected,
-              ]}>Hanafi</Text>
-              {juristicMethod === 'hanafi' && <Icon name="check" size={16} color="#00E8A2" />}
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
+      <FluidModal
+        visible={showJuristicPicker}
+        onClose={() => {
+          triggerHaptic();
+          setShowJuristicPicker(false);
+        }}
+        title="Juristic Method (Asr)"
+      >
+        <Pressable
+          style={({ pressed }) => [
+            styles.modalItem,
+            juristicMethod === 'standard' && styles.modalItemSelected,
+            { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
+          ]}
+          onPress={async () => {
+            triggerHaptic();
+            setJuristicMethod('standard');
+            await AsyncStorage.setItem('@deenpulse_juristic_method', 'standard');
+            setShowJuristicPicker(false);
+          }}
+        >
+          <Text style={[
+            styles.modalItemText,
+            juristicMethod === 'standard' && styles.modalItemTextSelected,
+          ]}>Standard (Shafi'i, Maliki, Hanbali)</Text>
+          {juristicMethod === 'standard' && <Icon name="check" size={16} color="#00E8A2" />}
+        </Pressable>
+        <Pressable
+          style={({ pressed }) => [
+            styles.modalItem,
+            juristicMethod === 'hanafi' && styles.modalItemSelected,
+            { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
+          ]}
+          onPress={async () => {
+            triggerHaptic();
+            setJuristicMethod('hanafi');
+            await AsyncStorage.setItem('@deenpulse_juristic_method', 'hanafi');
+            setShowJuristicPicker(false);
+          }}
+        >
+          <Text style={[
+            styles.modalItemText,
+            juristicMethod === 'hanafi' && styles.modalItemTextSelected,
+          ]}>Hanafi</Text>
+          {juristicMethod === 'hanafi' && <Icon name="check" size={16} color="#00E8A2" />}
+        </Pressable>
+      </FluidModal>
 
       {/* Calculation Rule Picker Modal */}
-      <Modal visible={showCalculationPicker} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalGrabber}>
-              <View style={styles.grabberBar} />
-            </View>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Calculation Rule</Text>
-              <Pressable
-                onPress={() => {
-                  triggerHaptic();
-                  setShowCalculationPicker(false);
-                }}
-                style={({ pressed }) => [styles.modalCloseBtn, { opacity: pressed ? 0.7 : 1 }]}
-              >
-                <Icon name="x" size={16} color="rgba(255, 255, 255, 0.6)" />
-              </Pressable>
-            </View>
-            <Pressable
-              style={({ pressed }) => [
-                styles.modalItem,
-                calculationRule === 'auto' && styles.modalItemSelected,
-                { opacity: pressed ? 0.8 : 1 }
-              ]}
-              onPress={async () => {
-                triggerHaptic();
-                setCalculationRule('auto');
-                await AsyncStorage.setItem('@deenpulse_calculation_rule', 'auto');
-                setShowCalculationPicker(false);
-              }}
-            >
-              <Text style={[
-                styles.modalItemText,
-                calculationRule === 'auto' && styles.modalItemTextSelected,
-              ]}>Auto-Detect by Region</Text>
-              {calculationRule === 'auto' && <Icon name="check" size={16} color="#00E8A2" />}
-            </Pressable>
-            <Pressable
-              style={({ pressed }) => [
-                styles.modalItem,
-                calculationRule === 'karachi' && styles.modalItemSelected,
-                { opacity: pressed ? 0.8 : 1 }
-              ]}
-              onPress={async () => {
-                triggerHaptic();
-                setCalculationRule('karachi');
-                await AsyncStorage.setItem('@deenpulse_calculation_rule', 'karachi');
-                setShowCalculationPicker(false);
-              }}
-            >
-              <Text style={[
-                styles.modalItemText,
-                calculationRule === 'karachi' && styles.modalItemTextSelected,
-              ]}>University of Islamic Sciences, Karachi</Text>
-              {calculationRule === 'karachi' && <Icon name="check" size={16} color="#00E8A2" />}
-            </Pressable>
-            <Pressable
-              style={({ pressed }) => [
-                styles.modalItem,
-                calculationRule === 'isna' && styles.modalItemSelected,
-                { opacity: pressed ? 0.8 : 1 }
-              ]}
-              onPress={async () => {
-                triggerHaptic();
-                setCalculationRule('isna');
-                await AsyncStorage.setItem('@deenpulse_calculation_rule', 'isna');
-                setShowCalculationPicker(false);
-              }}
-            >
-              <Text style={[
-                styles.modalItemText,
-                calculationRule === 'isna' && styles.modalItemTextSelected,
-              ]}>Islamic Society of North America (ISNA)</Text>
-              {calculationRule === 'isna' && <Icon name="check" size={16} color="#00E8A2" />}
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
+      <FluidModal
+        visible={showCalculationPicker}
+        onClose={() => {
+          triggerHaptic();
+          setShowCalculationPicker(false);
+        }}
+        title="Calculation Rule"
+      >
+        <Pressable
+          style={({ pressed }) => [
+            styles.modalItem,
+            calculationRule === 'auto' && styles.modalItemSelected,
+            { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
+          ]}
+          onPress={async () => {
+            triggerHaptic();
+            setCalculationRule('auto');
+            await AsyncStorage.setItem('@deenpulse_calculation_rule', 'auto');
+            setShowCalculationPicker(false);
+          }}
+        >
+          <Text style={[
+            styles.modalItemText,
+            calculationRule === 'auto' && styles.modalItemTextSelected,
+          ]}>Auto-Detect by Region</Text>
+          {calculationRule === 'auto' && <Icon name="check" size={16} color="#00E8A2" />}
+        </Pressable>
+        <Pressable
+          style={({ pressed }) => [
+            styles.modalItem,
+            calculationRule === 'karachi' && styles.modalItemSelected,
+            { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
+          ]}
+          onPress={async () => {
+            triggerHaptic();
+            setCalculationRule('karachi');
+            await AsyncStorage.setItem('@deenpulse_calculation_rule', 'karachi');
+            setShowCalculationPicker(false);
+          }}
+        >
+          <Text style={[
+            styles.modalItemText,
+            calculationRule === 'karachi' && styles.modalItemTextSelected,
+          ]}>University of Islamic Sciences, Karachi</Text>
+          {calculationRule === 'karachi' && <Icon name="check" size={16} color="#00E8A2" />}
+        </Pressable>
+        <Pressable
+          style={({ pressed }) => [
+            styles.modalItem,
+            calculationRule === 'isna' && styles.modalItemSelected,
+            { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
+          ]}
+          onPress={async () => {
+            triggerHaptic();
+            setCalculationRule('isna');
+            await AsyncStorage.setItem('@deenpulse_calculation_rule', 'isna');
+            setShowCalculationPicker(false);
+          }}
+        >
+          <Text style={[
+            styles.modalItemText,
+            calculationRule === 'isna' && styles.modalItemTextSelected,
+          ]}>Islamic Society of North America (ISNA)</Text>
+          {calculationRule === 'isna' && <Icon name="check" size={16} color="#00E8A2" />}
+        </Pressable>
+      </FluidModal>
 
       {/* Beautiful Custom Alert Modal */}
-      <Modal visible={alertConfig.visible} transparent animationType="fade">
-        <View style={styles.alertOverlay}>
-          <View style={styles.alertContainer}>
-            <Text style={styles.alertTitle}>{alertConfig.title}</Text>
-            <Text style={styles.alertMessage}>{alertConfig.message}</Text>
-
-            <View style={styles.alertButtonRow}>
-              {alertConfig.onCancel && (
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.alertButton,
-                    styles.alertButtonCancel,
-                    { opacity: pressed ? 0.7 : 1.0 }
-                  ]}
-                  onPress={alertConfig.onCancel}
-                >
-                  <Text style={styles.alertButtonTextCancel}>{alertConfig.cancelText || 'Cancel'}</Text>
-                </Pressable>
-              )}
-              <Pressable
-                style={({ pressed }) => [
-                  styles.alertButton,
-                  alertConfig.confirmText === 'RESET' ? styles.alertButtonDestructive : styles.alertButtonConfirm,
-                  { opacity: pressed ? 0.7 : 1.0 }
-                ]}
-                onPress={alertConfig.onConfirm}
-              >
-                <Text style={styles.alertButtonTextConfirm}>{alertConfig.confirmText || 'OK'}</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <FluidAlert
+        visible={alertConfig.visible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        onConfirm={alertConfig.onConfirm}
+        onCancel={alertConfig.onCancel}
+        confirmText={alertConfig.confirmText}
+        cancelText={alertConfig.cancelText}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  flex1: {
+    flex: 1,
+  },
   container: {
     flex: 1,
     backgroundColor: '#080B14',
@@ -1348,10 +1511,18 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    backgroundColor: 'transparent',
     justifyContent: 'flex-end',
     paddingHorizontal: 16,
     paddingBottom: 32,
+  },
+  modalBackdrop: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
   },
   modalContent: {
     backgroundColor: '#111827',
@@ -1422,9 +1593,17 @@ const styles = StyleSheet.create({
   },
   alertOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  alertBackdrop: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
   },
   alertContainer: {
     backgroundColor: '#111827',
@@ -1526,6 +1705,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.04)',
+  },
+  infoRowLast: {
+    borderBottomWidth: 0,
   },
   infoKey: {
     fontSize: 14,

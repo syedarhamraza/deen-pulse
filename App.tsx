@@ -12,8 +12,9 @@ import {
   Modal,
   DeviceEventEmitter,
   Vibration,
-  Image,
   Animated,
+  BackHandler,
+  Image,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PermissionsAndroid } from 'react-native';
@@ -21,13 +22,38 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 import Icon from 'react-native-vector-icons/Feather';
 import { CountdownDisplay } from './src/components/CountdownDisplay';
 import { PrayerCard } from './src/components/PrayerCard';
-import { usePrayerTimes } from './src/hooks/usePrayerTimes';
+import { usePrayerTimes, CalculationMethod } from './src/hooks/usePrayerTimes';
 import { usePrayerCountdown } from './src/hooks/usePrayerCountdown';
 import { NativeModules } from 'react-native';
 
 const { PrayerCapsuleModule } = NativeModules;
 
 type Screen = 'dashboard' | 'settings' | 'prayer_rules' | 'notifications' | 'data_management' | 'about' | 'notification_guide';
+
+const CALCULATION_LABELS: Record<CalculationMethod, string> = {
+  auto: 'Auto-Detect by Region',
+  karachi: 'University of Islamic Sciences, Karachi',
+  isna: 'Islamic Society of North America (ISNA)',
+  mwl: 'Muslim World League (MWL)',
+  makkah: 'Umm Al-Qura University, Makkah',
+  egypt: 'Egyptian General Authority of Survey',
+  shia: 'Shia Ithna-Ashari (Jafari)',
+  gulf: 'Gulf Region',
+  kuwait: 'Kuwait',
+  qatar: 'Qatar',
+  singapore: 'Majlis Ugama Islam Singapura, Singapore',
+  france: 'Union Organization Islamic de France',
+  turkey: 'Diyanet İşleri Başkanlığı, Turkey',
+  russia: 'Spiritual Administration of Muslims of Russia',
+  dubai: 'Dubai, UAE',
+  jakim: 'Jabatan Kemajuan Islam Malaysia (JAKIM)',
+  tunisia: 'Tunisia',
+  algeria: 'Algeria',
+  indonesia: 'KEMENAG, Indonesia',
+  morocco: 'Morocco',
+  portugal: 'Comunidade Islamica de Lisboa, Portugal',
+  jordan: 'Ministry of Awqaf, Jordan',
+};
 
 interface CustomAlertConfig {
   visible: boolean;
@@ -143,6 +169,26 @@ function HeaderFadeOverlay() {
       <View style={styles.fadeLine6} />
       <View style={styles.fadeLine7} />
       <View style={styles.fadeLine8} />
+    </View>
+  );
+}
+
+// Feathered gradient overlay to fade out scrolling picker items in modals
+function ModalFadeOverlay({ position }: { position: 'top' | 'bottom' }) {
+  const steps = 24;
+  const lines = [];
+
+  for (let i = 0; i < steps; i++) {
+    const ratio = i / (steps - 1);
+    const easeOpacity = position === 'top' ? Math.pow(1 - ratio, 1.5) : Math.pow(ratio, 1.5);
+    lines.push(easeOpacity.toFixed(3));
+  }
+
+  return (
+    <View style={position === 'top' ? styles.modalFadeOverlayTop : styles.modalFadeOverlayBottom} pointerEvents="none">
+      {lines.map((op, idx) => (
+        <View key={idx} style={{ height: 1, width: '100%', backgroundColor: `rgba(17, 24, 39, ${op})` }} />
+      ))}
     </View>
   );
 }
@@ -369,7 +415,7 @@ function DeenPulseApp(): React.JSX.Element {
   const [currentScreen, setCurrentScreen] = useState<Screen>('dashboard');
   const [locationMode, setLocationMode] = useState<'gps' | 'cached'>('gps');
   const [juristicMethod, setJuristicMethod] = useState<'standard' | 'hanafi'>('standard');
-  const [calculationRule, setCalculationRule] = useState<'auto' | 'karachi' | 'isna'>('auto');
+  const [calculationRule, setCalculationRule] = useState<CalculationMethod>('auto');
   const [isSetupGuideDismissed, setIsSetupGuideDismissed] = useState<boolean>(true);
 
   const [capsuleFormat, setCapsuleFormat] = useState<'name' | 'name_time' | 'time'>('name');
@@ -404,6 +450,35 @@ function DeenPulseApp(): React.JSX.Element {
     ]).start();
   }, [currentScreen, fadeAnim, slideAnim]);
 
+  // Handle Android physical back press & swipe gesture
+  useEffect(() => {
+    const handleBackPress = () => {
+      if (currentScreen === 'dashboard') {
+        return false; // Exit app
+      }
+
+      triggerHaptic();
+
+      if (currentScreen === 'settings') {
+        setCurrentScreen('dashboard');
+      } else if (currentScreen === 'notification_guide') {
+        setCurrentScreen('dashboard');
+      } else if (
+        currentScreen === 'prayer_rules' ||
+        currentScreen === 'notifications' ||
+        currentScreen === 'data_management' ||
+        currentScreen === 'about'
+      ) {
+        setCurrentScreen('settings');
+      }
+
+      return true; // Prevent app exit
+    };
+
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+    return () => backHandler.remove();
+  }, [currentScreen]);
+
   // Custom alert modal config
   const [alertConfig, setAlertConfig] = useState<CustomAlertConfig>({
     visible: false,
@@ -432,7 +507,7 @@ function DeenPulseApp(): React.JSX.Element {
 
         if (mode !== null) setLocationMode(mode as 'gps' | 'cached');
         if (juristic !== null) setJuristicMethod(juristic as 'standard' | 'hanafi');
-        if (rule !== null) setCalculationRule(rule as 'auto' | 'karachi' | 'isna');
+        if (rule !== null) setCalculationRule(rule as CalculationMethod);
         if (format !== null) setCapsuleFormat(format as 'name' | 'name_time' | 'time');
         if (style !== null) setNotificationStyle(style as 'standard' | 'with_time');
         setIsSetupGuideDismissed(guideDismissed === 'true');
@@ -555,9 +630,7 @@ function DeenPulseApp(): React.JSX.Element {
   };
 
   const getCalculationLabel = () => {
-    if (calculationRule === 'auto') return 'Auto-Detect by Region';
-    if (calculationRule === 'karachi') return 'University of Islamic Sciences, Karachi';
-    return 'Islamic Society of North America (ISNA)';
+    return CALCULATION_LABELS[calculationRule] || 'Auto-Detect by Region';
   };
 
   const getCapsuleFormatLabel = () => {
@@ -1334,63 +1407,38 @@ function DeenPulseApp(): React.JSX.Element {
         }}
         title="Calculation Rule"
       >
-        <Pressable
-          style={({ pressed }) => [
-            styles.modalItem,
-            calculationRule === 'auto' && styles.modalItemSelected,
-            { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
-          ]}
-          onPress={async () => {
-            triggerHaptic();
-            setCalculationRule('auto');
-            await AsyncStorage.setItem('@deenpulse_calculation_rule', 'auto');
-            setShowCalculationPicker(false);
-          }}
-        >
-          <Text style={[
-            styles.modalItemText,
-            calculationRule === 'auto' && styles.modalItemTextSelected,
-          ]}>Auto-Detect by Region</Text>
-          {calculationRule === 'auto' && <Icon name="check" size={16} color="#00E8A2" />}
-        </Pressable>
-        <Pressable
-          style={({ pressed }) => [
-            styles.modalItem,
-            calculationRule === 'karachi' && styles.modalItemSelected,
-            { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
-          ]}
-          onPress={async () => {
-            triggerHaptic();
-            setCalculationRule('karachi');
-            await AsyncStorage.setItem('@deenpulse_calculation_rule', 'karachi');
-            setShowCalculationPicker(false);
-          }}
-        >
-          <Text style={[
-            styles.modalItemText,
-            calculationRule === 'karachi' && styles.modalItemTextSelected,
-          ]}>University of Islamic Sciences, Karachi</Text>
-          {calculationRule === 'karachi' && <Icon name="check" size={16} color="#00E8A2" />}
-        </Pressable>
-        <Pressable
-          style={({ pressed }) => [
-            styles.modalItem,
-            calculationRule === 'isna' && styles.modalItemSelected,
-            { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
-          ]}
-          onPress={async () => {
-            triggerHaptic();
-            setCalculationRule('isna');
-            await AsyncStorage.setItem('@deenpulse_calculation_rule', 'isna');
-            setShowCalculationPicker(false);
-          }}
-        >
-          <Text style={[
-            styles.modalItemText,
-            calculationRule === 'isna' && styles.modalItemTextSelected,
-          ]}>Islamic Society of North America (ISNA)</Text>
-          {calculationRule === 'isna' && <Icon name="check" size={16} color="#00E8A2" />}
-        </Pressable>
+        <View style={styles.modalScrollContainer}>
+          <ModalFadeOverlay position="top" />
+          <ScrollView 
+            style={styles.modalScrollView} 
+            contentContainerStyle={styles.modalScrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {Object.entries(CALCULATION_LABELS).map(([key, label]) => (
+              <Pressable
+                key={key}
+                style={({ pressed }) => [
+                  styles.modalItem,
+                  calculationRule === key && styles.modalItemSelected,
+                  { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
+                ]}
+                onPress={async () => {
+                  triggerHaptic();
+                  setCalculationRule(key as CalculationMethod);
+                  await AsyncStorage.setItem('@deenpulse_calculation_rule', key);
+                  setShowCalculationPicker(false);
+                }}
+              >
+                <Text style={[
+                  styles.modalItemText,
+                  calculationRule === key && styles.modalItemTextSelected,
+                ]}>{label}</Text>
+                {calculationRule === key && <Icon name="check" size={16} color="#00E8A2" />}
+              </Pressable>
+            ))}
+          </ScrollView>
+          <ModalFadeOverlay position="bottom" />
+        </View>
       </FluidModal>
 
       {/* Beautiful Custom Alert Modal */}
@@ -2076,5 +2124,32 @@ const styles = StyleSheet.create({
     width: '100%',
     borderWidth: 1,
     borderColor: 'rgba(240, 244, 248, 0.02)',
+  },
+  modalScrollContainer: {
+    position: 'relative',
+    maxHeight: 330,
+    marginVertical: 14,
+  },
+  modalScrollView: {
+    width: '100%',
+  },
+  modalScrollContent: {
+    paddingVertical: 10,
+  },
+  modalFadeOverlayTop: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    height: 24,
+    zIndex: 10,
+  },
+  modalFadeOverlayBottom: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 24,
+    zIndex: 10,
   },
 });

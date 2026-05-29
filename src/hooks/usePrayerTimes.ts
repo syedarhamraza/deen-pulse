@@ -28,10 +28,34 @@ const GPS_LOW_POWER_OPTIONS = {
   maximumAge: 600000,
 };
 
+export type CalculationMethod =
+  | 'auto'
+  | 'karachi'
+  | 'isna'
+  | 'mwl'
+  | 'makkah'
+  | 'egypt'
+  | 'shia'
+  | 'gulf'
+  | 'kuwait'
+  | 'qatar'
+  | 'singapore'
+  | 'france'
+  | 'turkey'
+  | 'russia'
+  | 'dubai'
+  | 'jakim'
+  | 'tunisia'
+  | 'algeria'
+  | 'indonesia'
+  | 'morocco'
+  | 'portugal'
+  | 'jordan';
+
 export function usePrayerTimes(
   locationMode: 'gps' | 'cached',
   juristicMethod: 'standard' | 'hanafi',
-  calculationRule: 'auto' | 'karachi' | 'isna'
+  calculationRule: CalculationMethod
 ): UsePrayerTimesResult {
   const [prayerTimes, setPrayerTimes] = useState<PrayerTime[]>([]);
   const [loading, setLoading] = useState(true);
@@ -104,13 +128,33 @@ export function usePrayerTimes(
         // Construct API url dynamically based on settings
         let url = `https://api.aladhan.com/v1/calendar?latitude=${lat}&longitude=${lng}&month=${month}&year=${year}`;
         
-        if (calculationRule === 'auto') {
-          url += '&method=99';
-        } else if (calculationRule === 'karachi') {
-          url += '&method=1';
-        } else if (calculationRule === 'isna') {
-          url += '&method=2';
-        }
+        const CALCULATION_METHOD_MAP: Record<CalculationMethod, string> = {
+          auto: '99',
+          karachi: '1',
+          isna: '2',
+          mwl: '3',
+          makkah: '4',
+          egypt: '5',
+          shia: '0',
+          gulf: '8',
+          kuwait: '9',
+          qatar: '10',
+          singapore: '11',
+          france: '12',
+          turkey: '13',
+          russia: '14',
+          dubai: '16',
+          jakim: '17',
+          tunisia: '18',
+          algeria: '19',
+          indonesia: '20',
+          morocco: '21',
+          portugal: '22',
+          jordan: '23',
+        };
+
+        const methodCode = CALCULATION_METHOD_MAP[calculationRule] || '99';
+        url += `&method=${methodCode}`;
 
         if (juristicMethod === 'hanafi') {
           url += '&school=1';

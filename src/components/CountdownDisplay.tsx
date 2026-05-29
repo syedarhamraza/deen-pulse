@@ -8,19 +8,20 @@ interface CountdownDisplayProps {
 
 export const CountdownDisplay: React.FC<CountdownDisplayProps> = ({ nextPrayer }) => {
   const pulseAnim = useRef(new Animated.Value(1)).current;
-  const glowAnim = useRef(new Animated.Value(0.3)).current;
+  const glowAnim = useRef(new Animated.Value(0.2)).current;
+  const outerRingAnim = useRef(new Animated.Value(0.15)).current;
 
   useEffect(() => {
     const pulse = Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
-          toValue: 1.05,
-          duration: 2000,
+          toValue: 1.04,
+          duration: 2500,
           useNativeDriver: true,
         }),
         Animated.timing(pulseAnim, {
           toValue: 1,
-          duration: 2000,
+          duration: 2500,
           useNativeDriver: true,
         }),
       ])
@@ -29,13 +30,28 @@ export const CountdownDisplay: React.FC<CountdownDisplayProps> = ({ nextPrayer }
     const glow = Animated.loop(
       Animated.sequence([
         Animated.timing(glowAnim, {
-          toValue: 0.6,
-          duration: 2000,
+          toValue: 0.55,
+          duration: 2500,
           useNativeDriver: true,
         }),
         Animated.timing(glowAnim, {
-          toValue: 0.3,
-          duration: 2000,
+          toValue: 0.2,
+          duration: 2500,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    const outerRing = Animated.loop(
+      Animated.sequence([
+        Animated.timing(outerRingAnim, {
+          toValue: 0.35,
+          duration: 3000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(outerRingAnim, {
+          toValue: 0.15,
+          duration: 3000,
           useNativeDriver: true,
         }),
       ])
@@ -43,12 +59,14 @@ export const CountdownDisplay: React.FC<CountdownDisplayProps> = ({ nextPrayer }
 
     pulse.start();
     glow.start();
+    outerRing.start();
 
     return () => {
       pulse.stop();
       glow.stop();
+      outerRing.stop();
     };
-  }, []);
+  }, [glowAnim, outerRingAnim, pulseAnim]);
 
   if (!nextPrayer) {
     return (
@@ -62,11 +80,16 @@ export const CountdownDisplay: React.FC<CountdownDisplayProps> = ({ nextPrayer }
 
   return (
     <Animated.View style={[styles.container, { transform: [{ scale: pulseAnim }] }]}>
+      {/* Decorative outer ring */}
+      <Animated.View style={[styles.outerDecoRing, { opacity: outerRingAnim }]} />
+      {/* Glow ring */}
       <Animated.View style={[styles.glowRing, { opacity: glowAnim }]} />
+      {/* Main circle */}
       <View style={styles.innerCircle}>
         <Text style={styles.label}>NEXT PRAYER</Text>
         <Text style={styles.prayerName}>{nextPrayer.name}</Text>
         <Text style={styles.countdown}>{countdownText}</Text>
+        <Text style={styles.remainingLabel}>remaining</Text>
         <Text style={styles.timeLabel}>at {nextPrayer.time}</Text>
       </View>
     </Animated.View>
@@ -79,52 +102,77 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginVertical: 30,
   },
+  outerDecoRing: {
+    position: 'absolute',
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 232, 162, 0.12)',
+    borderStyle: 'dashed',
+  },
   glowRing: {
     position: 'absolute',
-    width: 240,
-    height: 240,
-    borderRadius: 120,
-    borderWidth: 2,
-    borderColor: '#00C896',
-    backgroundColor: 'rgba(0, 200, 150, 0.05)',
+    width: 275,
+    height: 275,
+    borderRadius: 137.5,
+    borderWidth: 1.5,
+    borderColor: 'rgba(0, 232, 162, 0.15)',
+    backgroundColor: 'rgba(0, 232, 162, 0.02)',
   },
   innerCircle: {
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: 'rgba(0, 200, 150, 0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(0, 200, 150, 0.2)',
+    width: 250,
+    height: 250,
+    borderRadius: 125,
+    backgroundColor: '#111827',
+    borderWidth: 1.5,
+    borderColor: 'rgba(0, 232, 162, 0.25)',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#00E8A2',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 4,
   },
   label: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: 'rgba(0, 200, 150, 0.7)',
-    letterSpacing: 2,
-    marginBottom: 4,
+    fontSize: 10,
+    fontWeight: '700',
+    color: 'rgba(0, 232, 162, 0.6)',
+    letterSpacing: 4,
+    marginBottom: 6,
   },
   prayerName: {
-    fontSize: 28,
+    fontSize: 34,
     fontWeight: '800',
     color: '#FFFFFF',
-    letterSpacing: 1,
+    letterSpacing: 1.5,
   },
   countdown: {
-    fontSize: 36,
-    fontWeight: '200',
-    color: '#00C896',
+    fontSize: 44,
+    fontWeight: '300',
+    color: '#00E8A2',
     marginTop: 4,
     fontVariant: ['tabular-nums'],
+    textShadowColor: 'rgba(0, 232, 162, 0.35)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
+  },
+  remainingLabel: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: 'rgba(240, 244, 248, 0.4)',
+    letterSpacing: 1.5,
+    marginTop: 2,
+    textTransform: 'uppercase',
   },
   timeLabel: {
     fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.4)',
-    marginTop: 4,
+    color: 'rgba(240, 244, 248, 0.35)',
+    marginTop: 6,
   },
   loading: {
     fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.4)',
+    color: 'rgba(240, 244, 248, 0.4)',
   },
 });

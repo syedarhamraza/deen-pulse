@@ -6,7 +6,6 @@ import {
   View,
   ScrollView,
   Pressable,
-  ActivityIndicator,
   Platform,
   Switch,
   Linking,
@@ -44,36 +43,74 @@ interface CustomAlertConfig {
 const triggerHaptic = () => {
   try {
     Vibration.vibrate(15);
-  } catch (e) {
+  } catch {
     // Ignore if not supported on the device
   }
 };
 
+// Time-of-day greeting
+const getGreeting = (): string => {
+  const hour = new Date().getHours();
+  if (hour < 5) return 'Peace be upon you';
+  if (hour < 12) return 'Good Morning';
+  if (hour < 17) return 'Good Afternoon';
+  if (hour < 21) return 'Good Evening';
+  return 'Peace be upon you';
+};
+
 // Shimmer card loading placeholders
 function SkeletonCard() {
-  const shimmerAnim = useRef(new Animated.Value(0.15)).current;
+  const shimmerAnim = useRef(new Animated.Value(0.08)).current;
 
   useEffect(() => {
     const animation = Animated.loop(
       Animated.sequence([
         Animated.timing(shimmerAnim, {
-          toValue: 0.35,
-          duration: 1000,
+          toValue: 0.25,
+          duration: 1200,
           useNativeDriver: true,
         }),
         Animated.timing(shimmerAnim, {
-          toValue: 0.15,
-          duration: 1000,
+          toValue: 0.08,
+          duration: 1200,
           useNativeDriver: true,
         }),
       ])
     );
     animation.start();
     return () => animation.stop();
-  }, []);
+  }, [shimmerAnim]);
 
   return (
     <Animated.View style={[styles.skeletonCard, { opacity: shimmerAnim }]} />
+  );
+}
+
+// Pulsing notification dot
+function PulsingDot() {
+  const dotAnim = useRef(new Animated.Value(0.4)).current;
+
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(dotAnim, {
+          toValue: 1,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(dotAnim, {
+          toValue: 0.4,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [dotAnim]);
+
+  return (
+    <Animated.View style={[styles.capsuleDot, { opacity: dotAnim }]} />
   );
 }
 
@@ -118,24 +155,24 @@ function DeenPulseApp(): React.JSX.Element {
 
   // Screen transition animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(15)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
 
   useEffect(() => {
     fadeAnim.setValue(0);
-    slideAnim.setValue(15);
+    slideAnim.setValue(20);
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 250,
+        duration: 350,
         useNativeDriver: true,
       }),
       Animated.timing(slideAnim, {
         toValue: 0,
-        duration: 250,
+        duration: 350,
         useNativeDriver: true,
       }),
     ]).start();
-  }, [currentScreen]);
+  }, [currentScreen, fadeAnim, slideAnim]);
 
   // Custom alert modal config
   const [alertConfig, setAlertConfig] = useState<CustomAlertConfig>({
@@ -272,7 +309,7 @@ function DeenPulseApp(): React.JSX.Element {
       Linking.sendIntent('android.settings.APP_NOTIFICATION_SETTINGS', [
         { key: 'android.provider.extra.APP_PACKAGE', value: 'com.deenpulse' },
       ]);
-    } catch (err) {
+    } catch {
       Linking.openSettings();
     }
   };
@@ -300,91 +337,101 @@ function DeenPulseApp(): React.JSX.Element {
     switch (currentScreen) {
       case 'settings':
         return (
-          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <View style={styles.screenContainer}>
             <View style={styles.subHeader}>
               <Pressable
                 onPress={() => {
                   triggerHaptic();
                   setCurrentScreen('dashboard');
                 }}
-                style={({ pressed }) => [styles.backButton, { opacity: pressed ? 0.7 : 1 }]}
+                style={({ pressed }) => [styles.backButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
               >
-                <Icon name="arrow-left" size={20} color="#FFFFFF" />
+                <Icon name="arrow-left" size={20} color="#00E8A2" />
               </Pressable>
               <Text style={styles.subTitle}>Settings</Text>
             </View>
 
-            <View style={styles.cardContainer}>
-              {/* Row 1: Prayer Rules */}
-              <Pressable
-                style={({ pressed }) => [styles.settingsRowCard, { opacity: pressed ? 0.75 : 1 }]}
-                onPress={() => {
-                  triggerHaptic();
-                  setCurrentScreen('prayer_rules');
-                }}
-              >
-                <Icon name="book-open" size={20} color="#00C896" style={styles.rowIcon} />
-                <View style={styles.rowInfo}>
-                  <Text style={styles.rowTitle}>Prayer Rules</Text>
-                  <Text style={styles.rowDesc}>Juristic settings and calculation methods</Text>
-                </View>
-                <Icon name="chevron-right" size={18} color="rgba(255, 255, 255, 0.3)" />
-              </Pressable>
+            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+              <View style={styles.cardContainer}>
+                {/* Row 1: Prayer Rules */}
+                <Pressable
+                  style={({ pressed }) => [styles.settingsRowCard, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
+                  onPress={() => {
+                    triggerHaptic();
+                    setCurrentScreen('prayer_rules');
+                  }}
+                >
+                  <View style={styles.rowIconContainer}>
+                    <Icon name="book-open" size={18} color="#00E8A2" />
+                  </View>
+                  <View style={styles.rowInfo}>
+                    <Text style={styles.rowTitle}>Prayer Rules</Text>
+                    <Text style={styles.rowDesc}>Juristic settings and calculation methods</Text>
+                  </View>
+                  <Icon name="chevron-right" size={18} color="rgba(0, 232, 162, 0.5)" />
+                </Pressable>
 
-              {/* Row 2: Notifications */}
-              <Pressable
-                style={({ pressed }) => [styles.settingsRowCard, { opacity: pressed ? 0.75 : 1 }]}
-                onPress={() => {
-                  triggerHaptic();
-                  setCurrentScreen('notifications');
-                }}
-              >
-                <Icon name="bell" size={20} color="#00C896" style={styles.rowIcon} />
-                <View style={styles.rowInfo}>
-                  <Text style={styles.rowTitle}>Notifications</Text>
-                  <Text style={styles.rowDesc}>Configure system alert permissions</Text>
-                </View>
-                <Icon name="chevron-right" size={18} color="rgba(255, 255, 255, 0.3)" />
-              </Pressable>
+                {/* Row 2: Notifications */}
+                <Pressable
+                  style={({ pressed }) => [styles.settingsRowCard, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
+                  onPress={() => {
+                    triggerHaptic();
+                    setCurrentScreen('notifications');
+                  }}
+                >
+                  <View style={styles.rowIconContainer}>
+                    <Icon name="bell" size={18} color="#00E8A2" />
+                  </View>
+                  <View style={styles.rowInfo}>
+                    <Text style={styles.rowTitle}>Notifications</Text>
+                    <Text style={styles.rowDesc}>Configure system alert permissions</Text>
+                  </View>
+                  <Icon name="chevron-right" size={18} color="rgba(0, 232, 162, 0.5)" />
+                </Pressable>
 
-              {/* Row 3: Data Management */}
-              <Pressable
-                style={({ pressed }) => [styles.settingsRowCard, { opacity: pressed ? 0.75 : 1 }]}
-                onPress={() => {
-                  triggerHaptic();
-                  setCurrentScreen('data_management');
-                }}
-              >
-                <Icon name="database" size={20} color="#00C896" style={styles.rowIcon} />
-                <View style={styles.rowInfo}>
-                  <Text style={styles.rowTitle}>Data Management</Text>
-                  <Text style={styles.rowDesc}>Storage, cache, and GPS positioning</Text>
-                </View>
-                <Icon name="chevron-right" size={18} color="rgba(255, 255, 255, 0.3)" />
-              </Pressable>
+                {/* Row 3: Data Management */}
+                <Pressable
+                  style={({ pressed }) => [styles.settingsRowCard, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
+                  onPress={() => {
+                    triggerHaptic();
+                    setCurrentScreen('data_management');
+                  }}
+                >
+                  <View style={styles.rowIconContainer}>
+                    <Icon name="database" size={18} color="#00E8A2" />
+                  </View>
+                  <View style={styles.rowInfo}>
+                    <Text style={styles.rowTitle}>Data Management</Text>
+                    <Text style={styles.rowDesc}>Storage, cache, and GPS positioning</Text>
+                  </View>
+                  <Icon name="chevron-right" size={18} color="rgba(0, 232, 162, 0.5)" />
+                </Pressable>
 
-              {/* Row 4: About DeenPulse */}
-              <Pressable
-                style={({ pressed }) => [styles.settingsRowCard, { opacity: pressed ? 0.75 : 1 }]}
-                onPress={() => {
-                  triggerHaptic();
-                  setCurrentScreen('about');
-                }}
-              >
-                <Icon name="info" size={20} color="#00C896" style={styles.rowIcon} />
-                <View style={styles.rowInfo}>
-                  <Text style={styles.rowTitle}>About DeenPulse</Text>
-                  <Text style={styles.rowDesc}>App information and credits</Text>
-                </View>
-                <Icon name="chevron-right" size={18} color="rgba(255, 255, 255, 0.3)" />
-              </Pressable>
-            </View>
-          </ScrollView>
+                {/* Row 4: About DeenPulse */}
+                <Pressable
+                  style={({ pressed }) => [styles.settingsRowCard, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
+                  onPress={() => {
+                    triggerHaptic();
+                    setCurrentScreen('about');
+                  }}
+                >
+                  <View style={styles.rowIconContainer}>
+                    <Icon name="info" size={18} color="#00E8A2" />
+                  </View>
+                  <View style={styles.rowInfo}>
+                    <Text style={styles.rowTitle}>About DeenPulse</Text>
+                    <Text style={styles.rowDesc}>App information and credits</Text>
+                  </View>
+                  <Icon name="chevron-right" size={18} color="rgba(0, 232, 162, 0.5)" />
+                </Pressable>
+              </View>
+            </ScrollView>
+          </View>
         );
 
       case 'prayer_rules':
         return (
-          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <View style={styles.screenContainer}>
             <View style={styles.subHeader}>
               <Pressable
                 onPress={() => {
@@ -393,44 +440,46 @@ function DeenPulseApp(): React.JSX.Element {
                 }}
                 style={({ pressed }) => [styles.backButton, { opacity: pressed ? 0.7 : 1 }]}
               >
-                <Icon name="arrow-left" size={20} color="#FFFFFF" />
+                <Icon name="arrow-left" size={20} color="#00E8A2" />
               </Pressable>
               <Text style={styles.subTitle}>Prayer Rules</Text>
             </View>
 
-            <View style={styles.cardContainer}>
-              {/* Card 1: Juristic Method */}
-              <Pressable
-                style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
-                onPress={() => {
-                  triggerHaptic();
-                  setShowJuristicPicker(true);
-                }}
-              >
-                <Text style={styles.menuDetailLabel}>Juristic Method (Asr)</Text>
-                <Text style={styles.menuDetailValue}>{getJuristicLabel()}</Text>
-                <Text style={styles.menuDetailDesc}>Select Standard (Shafi'i, Maliki, Hanbali) or Hanafi school rules.</Text>
-              </Pressable>
+            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+              <View style={styles.cardContainer}>
+                {/* Card 1: Juristic Method */}
+                <Pressable
+                  style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
+                  onPress={() => {
+                    triggerHaptic();
+                    setShowJuristicPicker(true);
+                  }}
+                >
+                  <Text style={styles.menuDetailLabel}>Juristic Method (Asr)</Text>
+                  <Text style={styles.menuDetailValue}>{getJuristicLabel()}</Text>
+                  <Text style={styles.menuDetailDesc}>Select Standard (Shafi'i, Maliki, Hanbali) or Hanafi school rules.</Text>
+                </Pressable>
 
-              {/* Card 2: Calculation Rule */}
-              <Pressable
-                style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
-                onPress={() => {
-                  triggerHaptic();
-                  setShowCalculationPicker(true);
-                }}
-              >
-                <Text style={styles.menuDetailLabel}>Calculation Rule</Text>
-                <Text style={styles.menuDetailValue}>{getCalculationLabel()}</Text>
-                <Text style={styles.menuDetailDesc}>Choose calculation method rules for regional timing math offsets.</Text>
-              </Pressable>
-            </View>
-          </ScrollView>
+                {/* Card 2: Calculation Rule */}
+                <Pressable
+                  style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
+                  onPress={() => {
+                    triggerHaptic();
+                    setShowCalculationPicker(true);
+                  }}
+                >
+                  <Text style={styles.menuDetailLabel}>Calculation Rule</Text>
+                  <Text style={styles.menuDetailValue}>{getCalculationLabel()}</Text>
+                  <Text style={styles.menuDetailDesc}>Choose calculation method rules for regional timing math offsets.</Text>
+                </Pressable>
+              </View>
+            </ScrollView>
+          </View>
         );
 
       case 'notifications':
         return (
-          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <View style={styles.screenContainer}>
             <View style={styles.subHeader}>
               <Pressable
                 onPress={() => {
@@ -439,29 +488,31 @@ function DeenPulseApp(): React.JSX.Element {
                 }}
                 style={({ pressed }) => [styles.backButton, { opacity: pressed ? 0.7 : 1 }]}
               >
-                <Icon name="arrow-left" size={20} color="#FFFFFF" />
+                <Icon name="arrow-left" size={20} color="#00E8A2" />
               </Pressable>
               <Text style={styles.subTitle}>Notifications</Text>
             </View>
 
-            <View style={styles.cardContainer}>
-              <Pressable
-                style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
-                onPress={() => {
-                  triggerHaptic();
-                  openAppNotificationSettings();
-                }}
-              >
-                <Text style={styles.menuDetailLabel}>Allow Notifications</Text>
-                <Text style={styles.menuDetailDesc}>For the Live island, enable live alerts in notification settings</Text>
-              </Pressable>
-            </View>
-          </ScrollView>
+            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+              <View style={styles.cardContainer}>
+                <Pressable
+                  style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
+                  onPress={() => {
+                    triggerHaptic();
+                    openAppNotificationSettings();
+                  }}
+                >
+                  <Text style={styles.menuDetailLabel}>Allow Notifications</Text>
+                  <Text style={styles.menuDetailDesc}>For the Live island, enable live alerts in notification settings</Text>
+                </Pressable>
+              </View>
+            </ScrollView>
+          </View>
         );
 
       case 'data_management':
         return (
-          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <View style={styles.screenContainer}>
             <View style={styles.subHeader}>
               <Pressable
                 onPress={() => {
@@ -470,298 +521,324 @@ function DeenPulseApp(): React.JSX.Element {
                 }}
                 style={({ pressed }) => [styles.backButton, { opacity: pressed ? 0.7 : 1 }]}
               >
-                <Icon name="arrow-left" size={20} color="#FFFFFF" />
+                <Icon name="arrow-left" size={20} color="#00E8A2" />
               </Pressable>
               <Text style={styles.subTitle}>Data Management</Text>
             </View>
 
-            <View style={styles.cardContainer}>
-              {/* Location Mode */}
-              <View style={styles.menuDetailCard}>
-                <View style={styles.switchRow}>
-                  <View style={styles.switchInfo}>
-                    <Text style={styles.menuDetailLabel}>Location Mode</Text>
-                    <Text style={styles.menuDetailDesc}>
-                      {locationMode === 'gps' ? 'Auto-Detect Location (GPS)' : 'Use Cached Location'}
-                    </Text>
+            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+              <View style={styles.cardContainer}>
+                {/* Location Mode */}
+                <View style={styles.menuDetailCard}>
+                  <View style={styles.switchRow}>
+                    <View style={styles.switchInfo}>
+                      <Text style={styles.menuDetailLabel}>Location Mode</Text>
+                      <Text style={styles.menuDetailDesc}>
+                        {locationMode === 'gps' ? 'Auto-Detect Location (GPS)' : 'Use Cached Location'}
+                      </Text>
+                    </View>
+                    <Switch
+                      value={locationMode === 'gps'}
+                      onValueChange={(val) => {
+                        triggerHaptic();
+                        handleLocationModeChange(val);
+                      }}
+                      trackColor={{ false: '#2A2E3D', true: '#00E8A2' }}
+                      thumbColor={Platform.OS === 'android' ? '#FFFFFF' : undefined}
+                    />
                   </View>
-                  <Switch
-                    value={locationMode === 'gps'}
-                    onValueChange={(val) => {
-                      triggerHaptic();
-                      handleLocationModeChange(val);
-                    }}
-                    trackColor={{ false: '#2A2E3D', true: '#00C896' }}
-                    thumbColor={Platform.OS === 'android' ? '#FFFFFF' : undefined}
-                  />
                 </View>
+
+                {/* Force GPS Permission Request */}
+                <Pressable
+                  style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
+                  onPress={() => {
+                    triggerHaptic();
+                    handleRequestGPS();
+                  }}
+                >
+                  <Text style={styles.menuDetailLabel}>Request GPS Permission</Text>
+                  <Text style={styles.menuDetailDesc}>
+                    Manually trigger system location permission dialog to authorize GPS coordinates tracking.
+                  </Text>
+                </Pressable>
+
+                {/* Reset Cache / Reset History */}
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.menuDetailCard,
+                    styles.destructiveBorder,
+                    { opacity: pressed ? 0.75 : 1 }
+                  ]}
+                  onPress={() => {
+                    triggerHaptic();
+                    handleAppReset();
+                  }}
+                >
+                  <Text style={[styles.menuDetailLabel, styles.destructiveText]}>Clear Cache / Reset History</Text>
+                  <Text style={styles.menuDetailDesc}>
+                    Wipes out all stored calculation rules, caching tables, and restarts positioning loop.
+                  </Text>
+                </Pressable>
               </View>
-
-              {/* Force GPS Permission Request */}
-              <Pressable
-                style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
-                onPress={() => {
-                  triggerHaptic();
-                  handleRequestGPS();
-                }}
-              >
-                <Text style={styles.menuDetailLabel}>Request GPS Permission</Text>
-                <Text style={styles.menuDetailDesc}>
-                  Manually trigger system location permission dialog to authorize GPS coordinates tracking.
-                </Text>
-              </Pressable>
-
-              {/* Reset Cache / Reset History */}
-              <Pressable
-                style={({ pressed }) => [
-                  styles.menuDetailCard,
-                  styles.destructiveBorder,
-                  { opacity: pressed ? 0.75 : 1 }
-                ]}
-                onPress={() => {
-                  triggerHaptic();
-                  handleAppReset();
-                }}
-              >
-                <Text style={[styles.menuDetailLabel, styles.destructiveText]}>Clear Cache / Reset History</Text>
-                <Text style={styles.menuDetailDesc}>
-                  Wipes out all stored calculation rules, caching tables, and restarts positioning loop.
-                </Text>
-              </Pressable>
-            </View>
-          </ScrollView>
+            </ScrollView>
+          </View>
         );
 
       case 'about':
         return (
-          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <View style={styles.screenContainer}>
             <View style={styles.subHeader}>
               <Pressable
                 onPress={() => {
                   triggerHaptic();
                   setCurrentScreen('settings');
                 }}
-                style={({ pressed }) => [styles.backButton, { opacity: pressed ? 0.7 : 1 }]}
+                style={({ pressed }) => [styles.backButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
               >
-                <Icon name="arrow-left" size={20} color="#FFFFFF" />
+                <Icon name="arrow-left" size={20} color="#00E8A2" />
               </Pressable>
               <Text style={styles.subTitle}>About</Text>
             </View>
 
-            <View style={styles.cardContainer}>
-              {/* Highlight header block */}
-              <View style={styles.aboutHeaderBlock}>
-                <Text style={styles.aboutBranding}>DeenPulse</Text>
-                <Text style={styles.aboutTagline}>Live tracking on your status bar</Text>
+            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+              <View style={styles.cardContainer}>
+                {/* Highlight header block */}
+                <View style={styles.aboutHeaderBlock}>
+                  <Text style={styles.aboutBranding}>DeenPulse</Text>
+                  <View style={styles.aboutAccentBar} />
+                  <Text style={styles.aboutTagline}>Live tracking on your status bar</Text>
+                </View>
+
+                {/* Basic information card */}
+                <View style={styles.menuDetailCard}>
+                  <Text style={styles.aboutSectionTitle}>Basic Information</Text>
+
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoKey}>App Name</Text>
+                    <Text style={styles.infoVal}>Deen Pulse</Text>
+                  </View>
+
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoKey}>Author</Text>
+                    <Text style={styles.infoVal}>Syed Arham Raza</Text>
+                  </View>
+
+                  <View style={[styles.infoRow, { borderBottomWidth: 0 }]}>
+                    <Text style={styles.infoKey}>Version</Text>
+                    <View style={styles.versionBadge}>
+                      <Text style={styles.versionBadgeText}>1.0.1</Text>
+                    </View>
+                  </View>
+                </View>
               </View>
-
-              {/* Basic information card */}
-              <View style={styles.menuDetailCard}>
-                <Text style={styles.aboutSectionTitle}>Basic Information</Text>
-
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoKey}>App Name</Text>
-                  <Text style={styles.infoVal}>Deen Pulse</Text>
-                </View>
-
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoKey}>Author</Text>
-                  <Text style={styles.infoVal}>Syed Arham Raza</Text>
-                </View>
-
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoKey}>Version</Text>
-                  <Text style={styles.infoVal}>1.0.0</Text>
-                </View>
-              </View>
-            </View>
-          </ScrollView>
+            </ScrollView>
+          </View>
         );
 
       case 'notification_guide':
         return (
-          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <View style={styles.screenContainer}>
             <View style={styles.subHeader}>
               <Pressable
                 onPress={() => {
                   triggerHaptic();
                   setCurrentScreen('dashboard');
                 }}
-                style={({ pressed }) => [styles.backButton, { opacity: pressed ? 0.7 : 1 }]}
+                style={({ pressed }) => [styles.backButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
               >
-                <Icon name="arrow-left" size={20} color="#FFFFFF" />
+                <Icon name="arrow-left" size={20} color="#00E8A2" />
               </Pressable>
               <Text style={styles.subTitle}>Notification Guide</Text>
             </View>
 
-            <View style={styles.guideContainer}>
-              {/* Step 1 */}
-              <View style={styles.guideStepCard}>
-                <Text style={styles.stepNumLabel}>Step 1</Text>
-                <Text style={styles.stepDesc}>
-                  Enable primary notifications and ensure the 'Show Live Updates on Live Alerts' toggle switch is fully activated to allow status bar capsule rendering.
-                </Text>
-                <Image
-                  source={require('./src/assets/image_c9314d.jpeg')}
-                  style={styles.guideImage}
-                />
-              </View>
+            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+              <View style={styles.guideContainer}>
+                {/* Step 1 */}
+                <View style={styles.guideStepCard}>
+                  <View style={styles.stepBadge}>
+                    <Text style={styles.stepBadgeText}>1</Text>
+                  </View>
+                  <Text style={styles.stepDesc}>
+                    Enable primary notifications and ensure the 'Show Live Updates on Live Alerts' toggle switch is fully activated to allow status bar capsule rendering.
+                  </Text>
+                  <Image
+                    source={require('./src/assets/image_c9314d.jpeg')}
+                    style={styles.guideImage}
+                  />
+                </View>
 
-              {/* Step 2 */}
-              <View style={styles.guideStepCard}>
-                <Text style={styles.stepNumLabel}>Step 2</Text>
-                <Text style={styles.stepDesc}>
-                  Verify that Lock Screen permission is completely checked.
-                </Text>
-                <Image
-                  source={require('./src/assets/image_c93169.jpeg')}
-                  style={styles.guideImage}
-                />
-              </View>
+                {/* Step 2 */}
+                <View style={styles.guideStepCard}>
+                  <View style={styles.stepBadge}>
+                    <Text style={styles.stepBadgeText}>2</Text>
+                  </View>
+                  <Text style={styles.stepDesc}>
+                    Verify that Lock Screen permission is completely checked.
+                  </Text>
+                  <Image
+                    source={require('./src/assets/image_c93169.jpeg')}
+                    style={styles.guideImage}
+                  />
+                </View>
 
-              {/* Step 3 */}
-              <View style={styles.guideStepCard}>
-                <Text style={styles.stepNumLabel}>Step 3</Text>
-                <Text style={styles.stepDesc}>
-                  Set audio/vibration preferences and consider allowing alerts inside Do Not Disturb profiles for critical countdown consistency.
-                </Text>
-                <Image
-                  source={require('./src/assets/image_c93183.jpeg')}
-                  style={styles.guideImage}
-                />
-              </View>
+                {/* Step 3 */}
+                <View style={styles.guideStepCard}>
+                  <View style={styles.stepBadge}>
+                    <Text style={styles.stepBadgeText}>3</Text>
+                  </View>
+                  <Text style={styles.stepDesc}>
+                    Set audio/vibration preferences and consider allowing alerts inside Do Not Disturb profiles for critical countdown consistency.
+                  </Text>
+                  <Image
+                    source={require('./src/assets/image_c93183.jpeg')}
+                    style={styles.guideImage}
+                  />
+                </View>
 
-              {/* Baseline button */}
-              <Pressable
-                style={({ pressed }) => [
-                  styles.guideCompleteBtn,
-                  { opacity: pressed ? 0.7 : 1.0 }
-                ]}
-                onPress={async () => {
-                  triggerHaptic();
-                  try {
-                    await AsyncStorage.setItem('@isSetupGuideDismissed', 'true');
-                    setIsSetupGuideDismissed(true);
-                    setCurrentScreen('dashboard');
-                  } catch (e) {
-                    console.warn(e);
-                  }
-                }}
-              >
-                <Text style={styles.guideCompleteText}>I have configured these settings</Text>
-              </Pressable>
-            </View>
-          </ScrollView>
+                {/* Baseline button */}
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.guideCompleteBtn,
+                    { transform: [{ scale: pressed ? 0.97 : 1 }] }
+                  ]}
+                  onPress={async () => {
+                    triggerHaptic();
+                    try {
+                      await AsyncStorage.setItem('@isSetupGuideDismissed', 'true');
+                      setIsSetupGuideDismissed(true);
+                      setCurrentScreen('dashboard');
+                    } catch (e) {
+                      console.warn(e);
+                    }
+                  }}
+                >
+                  <Text style={styles.guideCompleteText}>I have configured these settings</Text>
+                </Pressable>
+              </View>
+            </ScrollView>
+          </View>
         );
 
       default: // dashboard
         return (
-          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-            {/* Header */}
+          <View style={styles.screenContainer}>
             <View style={styles.header}>
               <View>
                 <Text style={styles.appName}>DeenPulse</Text>
-                <Text style={styles.subtitle}>Prayer Countdown Monitor</Text>
+                <View style={styles.accentBar} />
               </View>
               <View style={styles.headerButtons}>
                 <Pressable
-                  style={({ pressed }) => [styles.headerButton, { opacity: pressed ? 0.7 : 1 }]}
+                  style={({ pressed }) => [styles.headerButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
                   onPress={() => {
                     triggerHaptic();
                     refresh();
                   }}
                 >
-                  <Icon name="refresh-cw" size={16} color="#00C896" />
+                  <Icon name="refresh-cw" size={16} color="#00E8A2" />
                 </Pressable>
                 <Pressable
-                  style={({ pressed }) => [styles.headerButton, { opacity: pressed ? 0.7 : 1 }]}
+                  style={({ pressed }) => [styles.headerButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
                   onPress={() => {
                     triggerHaptic();
                     setCurrentScreen('settings');
                   }}
                 >
-                  <Icon name="settings" size={16} color="#00C896" />
+                  <Icon name="settings" size={16} color="#00E8A2" />
                 </Pressable>
               </View>
             </View>
 
-            {/* Location Coordinate Badge */}
-            {location && (
-              <View style={styles.locationBar}>
-                <Text style={styles.locationText}>
-                  Location: {location.latitude.toFixed(4)}°, {location.longitude.toFixed(4)}°
-                </Text>
+            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+              {/* Greeting - scrolls with content */}
+              <View style={styles.scrollHeader}>
+                <Text style={styles.greeting}>{getGreeting()}</Text>
               </View>
-            )}
-            {/* Onboarding Setup Guide Card (First-Launch Only) */}
-            {!isSetupGuideDismissed && (
-              <Pressable
-                style={({ pressed }) => [
-                  styles.setupGuideCard,
-                  { opacity: pressed ? 0.75 : 1.0 }
-                ]}
-                onPress={() => {
-                  triggerHaptic();
-                  setCurrentScreen('notification_guide');
-                }}
-              >
-                <View style={styles.setupCardHeader}>
-                  <Icon name="help-circle" size={22} color="#00C896" />
-                  <Text style={styles.setupCardTitle}>Complete Setup Guide</Text>
+
+              {/* Location Coordinate Badge */}
+              {location && (
+                <View style={styles.scrollLocationBar}>
+                  <Icon name="map-pin" size={12} color="#00E8A2" />
+                  <Text style={styles.locationText}>
+                    {location.latitude.toFixed(4)}°, {location.longitude.toFixed(4)}°
+                  </Text>
                 </View>
-                <Text style={styles.setupCardDesc}>
-                  Please tap here to configure necessary OS notification settings to allow status bar capsule countdowns.
-                </Text>
-                <Icon name="arrow-right" size={16} color="#00C896" style={styles.setupCardArrow} />
-              </Pressable>
-            )}
+              )}
 
-            {/* Active loading state with Skeleton Animation */}
-            {loading && <SkeletonLoader />}
-
-            {/* Error States */}
-            {error && !loading && (
-              <View style={styles.errorContainer}>
-                <Text style={styles.errorText}>Error: {error}</Text>
+              {/* Onboarding Setup Guide Card (First-Launch Only) */}
+              {!isSetupGuideDismissed && (
                 <Pressable
-                  style={({ pressed }) => [styles.retryButton, { opacity: pressed ? 0.7 : 1 }]}
+                  style={({ pressed }) => [
+                    styles.setupGuideCard,
+                    { transform: [{ scale: pressed ? 0.98 : 1 }] }
+                  ]}
                   onPress={() => {
                     triggerHaptic();
-                    refresh();
+                    setCurrentScreen('notification_guide');
                   }}
                 >
-                  <Text style={styles.retryText}>Retry</Text>
+                  <View style={styles.setupCardHeader}>
+                    <Icon name="help-circle" size={22} color="#00E8A2" />
+                    <Text style={styles.setupCardTitle}>Complete Setup Guide</Text>
+                  </View>
+                  <Text style={styles.setupCardDesc}>
+                    Please tap here to configure necessary OS notification settings to allow status bar capsule countdowns.
+                  </Text>
+                  <Icon name="chevron-right" size={16} color="#00E8A2" style={styles.setupCardArrow} />
                 </Pressable>
-              </View>
-            )}
+              )}
 
-            {/* Calendar Data Display */}
-            {!loading && !error && (
-              <View style={styles.dashboardContainer}>
-                <CountdownDisplay nextPrayer={nextPrayer} />
+              {/* Active loading state with Skeleton Animation */}
+              {loading && <SkeletonLoader />}
 
-                <View style={styles.divider}>
-                  <View style={styles.dividerLine} />
-                  <Text style={styles.dividerText}>TODAY'S PRAYERS</Text>
-                  <View style={styles.dividerLine} />
+              {/* Error States */}
+              {error && !loading && (
+                <View style={styles.errorContainer}>
+                  <Icon name="alert-circle" size={40} color="rgba(255, 107, 107, 0.6)" />
+                  <Text style={styles.errorTitle}>Something went wrong</Text>
+                  <Text style={styles.errorText}>{error}</Text>
+                  <Pressable
+                    style={({ pressed }) => [styles.retryButton, { transform: [{ scale: pressed ? 0.95 : 1 }] }]}
+                    onPress={() => {
+                      triggerHaptic();
+                      refresh();
+                    }}
+                  >
+                    <Icon name="refresh-cw" size={14} color="#00E8A2" />
+                    <Text style={styles.retryText}>Try Again</Text>
+                  </Pressable>
                 </View>
+              )}
 
-                {prayerTimes.map(prayer =>
-                  nextPrayer ? (
-                    <PrayerCard key={prayer.name} prayer={prayer} nextPrayer={nextPrayer} />
-                  ) : null
-                )}
-              </View>
-            )}
+              {/* Calendar Data Display */}
+              {!loading && !error && (
+                <View>
+                  <CountdownDisplay nextPrayer={nextPrayer} />
 
-            {/* Bottom Status Banner */}
-            {!loading && !error && nextPrayer && (
-              <View style={styles.capsuleStatus}>
-                <View style={styles.capsuleDot} />
-                <Text style={styles.capsuleText}>Ongoing Notification Active</Text>
-              </View>
-            )}
-          </ScrollView>
+                  <View style={styles.divider}>
+                    <View style={styles.dividerLine} />
+                    <Text style={styles.dividerText}>TODAY'S PRAYERS</Text>
+                    <View style={styles.dividerLine} />
+                  </View>
+
+                  {prayerTimes.map(prayer =>
+                    nextPrayer ? (
+                      <PrayerCard key={prayer.name} prayer={prayer} nextPrayer={nextPrayer} />
+                    ) : null
+                  )}
+                </View>
+              )}
+
+              {/* Bottom Status Banner */}
+              {!loading && !error && nextPrayer && (
+                <View style={styles.capsuleStatus}>
+                  <PulsingDot />
+                  <Text style={styles.capsuleText}>Ongoing Notification Active</Text>
+                </View>
+              )}
+            </ScrollView>
+          </View>
         );
     }
   };
@@ -778,6 +855,9 @@ function DeenPulseApp(): React.JSX.Element {
       <Modal visible={showJuristicPicker} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
+            <View style={styles.modalGrabber}>
+              <View style={styles.grabberBar} />
+            </View>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Juristic Method (Asr)</Text>
               <Pressable
@@ -807,7 +887,7 @@ function DeenPulseApp(): React.JSX.Element {
                 styles.modalItemText,
                 juristicMethod === 'standard' && styles.modalItemTextSelected,
               ]}>Standard (Shafi'i, Maliki, Hanbali)</Text>
-              {juristicMethod === 'standard' && <Icon name="check" size={16} color="#00C896" />}
+              {juristicMethod === 'standard' && <Icon name="check" size={16} color="#00E8A2" />}
             </Pressable>
             <Pressable
               style={({ pressed }) => [
@@ -826,7 +906,7 @@ function DeenPulseApp(): React.JSX.Element {
                 styles.modalItemText,
                 juristicMethod === 'hanafi' && styles.modalItemTextSelected,
               ]}>Hanafi</Text>
-              {juristicMethod === 'hanafi' && <Icon name="check" size={16} color="#00C896" />}
+              {juristicMethod === 'hanafi' && <Icon name="check" size={16} color="#00E8A2" />}
             </Pressable>
           </View>
         </View>
@@ -836,6 +916,9 @@ function DeenPulseApp(): React.JSX.Element {
       <Modal visible={showCalculationPicker} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
+            <View style={styles.modalGrabber}>
+              <View style={styles.grabberBar} />
+            </View>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Calculation Rule</Text>
               <Pressable
@@ -865,7 +948,7 @@ function DeenPulseApp(): React.JSX.Element {
                 styles.modalItemText,
                 calculationRule === 'auto' && styles.modalItemTextSelected,
               ]}>Auto-Detect by Region</Text>
-              {calculationRule === 'auto' && <Icon name="check" size={16} color="#00C896" />}
+              {calculationRule === 'auto' && <Icon name="check" size={16} color="#00E8A2" />}
             </Pressable>
             <Pressable
               style={({ pressed }) => [
@@ -884,7 +967,7 @@ function DeenPulseApp(): React.JSX.Element {
                 styles.modalItemText,
                 calculationRule === 'karachi' && styles.modalItemTextSelected,
               ]}>University of Islamic Sciences, Karachi</Text>
-              {calculationRule === 'karachi' && <Icon name="check" size={16} color="#00C896" />}
+              {calculationRule === 'karachi' && <Icon name="check" size={16} color="#00E8A2" />}
             </Pressable>
             <Pressable
               style={({ pressed }) => [
@@ -903,7 +986,7 @@ function DeenPulseApp(): React.JSX.Element {
                 styles.modalItemText,
                 calculationRule === 'isna' && styles.modalItemTextSelected,
               ]}>Islamic Society of North America (ISNA)</Text>
-              {calculationRule === 'isna' && <Icon name="check" size={16} color="#00C896" />}
+              {calculationRule === 'isna' && <Icon name="check" size={16} color="#00E8A2" />}
             </Pressable>
           </View>
         </View>
@@ -950,7 +1033,11 @@ function DeenPulseApp(): React.JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0A1A',
+    backgroundColor: '#080B14',
+  },
+  screenContainer: {
+    flex: 1,
+    backgroundColor: '#080B14',
   },
   scrollContent: {
     paddingBottom: 40,
@@ -962,12 +1049,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 16,
     paddingBottom: 8,
+    backgroundColor: '#080B14',
   },
   appName: {
     fontSize: 32,
     fontWeight: '800',
     color: '#FFFFFF',
     letterSpacing: -0.5,
+  },
+  accentBar: {
+    width: 32,
+    height: 3,
+    backgroundColor: '#00E8A2',
+    borderRadius: 1.5,
+    marginTop: 4,
+    marginBottom: 6,
+  },
+  greeting: {
+    fontSize: 14,
+    color: 'rgba(240, 244, 248, 0.5)',
+    marginTop: 4,
   },
   subtitle: {
     fontSize: 13,
@@ -983,32 +1084,43 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    backgroundColor: 'rgba(0, 232, 162, 0.08)',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 232, 162, 0.15)',
   },
   dashboardContainer: {
-    backgroundColor: '#1a1f2c',
-    borderRadius: 16,
+    backgroundColor: '#111827',
+    borderRadius: 20,
     marginHorizontal: 20,
     paddingVertical: 16,
     marginVertical: 12,
     borderWidth: 1,
-    borderColor: 'rgba(0, 200, 150, 0.3)',
+    borderColor: 'rgba(0, 232, 162, 0.2)',
   },
   cardContainer: {
     paddingHorizontal: 20,
     marginTop: 8,
   },
   settingsRowCard: {
-    backgroundColor: '#1a1f2c',
-    borderRadius: 12,
+    backgroundColor: '#111827',
+    borderRadius: 16,
     padding: 16,
     marginBottom: 12,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: 'rgba(0, 232, 162, 0.2)',
+  },
+  rowIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(0, 232, 162, 0.08)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
   },
   rowIcon: {
     marginRight: 16,
@@ -1027,12 +1139,12 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   menuDetailCard: {
-    backgroundColor: '#1a1f2c',
-    borderRadius: 12,
+    backgroundColor: '#111827',
+    borderRadius: 16,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: 'rgba(0, 232, 162, 0.2)',
   },
   menuDetailLabel: {
     fontSize: 16,
@@ -1042,7 +1154,7 @@ const styles = StyleSheet.create({
   },
   menuDetailValue: {
     fontSize: 14,
-    color: '#00C896',
+    color: '#00E8A2',
     fontWeight: '600',
     marginBottom: 6,
   },
@@ -1052,10 +1164,10 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   destructiveBorder: {
-    borderColor: 'rgba(235, 87, 87, 0.2)',
+    borderColor: 'rgba(255, 107, 107, 0.2)',
   },
   destructiveText: {
-    color: '#EB5757',
+    color: '#FF6B6B',
   },
   switchRow: {
     flexDirection: 'row',
@@ -1073,15 +1185,17 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.05)',
-    marginBottom: 16,
+    backgroundColor: '#080B14',
   },
   backButton: {
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    backgroundColor: 'rgba(0, 232, 162, 0.08)',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 232, 162, 0.15)',
     marginRight: 16,
   },
   subTitle: {
@@ -1089,15 +1203,28 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFFFFF',
   },
+  scrollHeader: {
+    paddingHorizontal: 24,
+    paddingTop: 8,
+    paddingBottom: 4,
+  },
+  scrollLocationBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 6,
+    gap: 6,
+  },
   locationBar: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 24,
     paddingVertical: 6,
+    backgroundColor: '#080B14',
   },
   locationText: {
     fontSize: 12,
-    color: '#00C896',
+    color: '#00E8A2',
     fontWeight: '600',
     fontVariant: ['tabular-nums'],
   },
@@ -1117,6 +1244,13 @@ const styles = StyleSheet.create({
     paddingVertical: 60,
     paddingHorizontal: 40,
   },
+  errorTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginTop: 12,
+    marginBottom: 6,
+  },
   errorText: {
     fontSize: 14,
     color: 'rgba(255, 200, 150, 0.7)',
@@ -1125,15 +1259,18 @@ const styles = StyleSheet.create({
   },
   retryButton: {
     marginTop: 16,
-    backgroundColor: 'rgba(0, 200, 150, 0.15)',
+    backgroundColor: 'rgba(0, 232, 162, 0.15)',
     paddingHorizontal: 24,
     paddingVertical: 10,
     borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   retryText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#00C896',
+    color: '#00E8A2',
   },
   divider: {
     flexDirection: 'row',
@@ -1164,11 +1301,11 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#00C896',
+    backgroundColor: '#00E8A2',
   },
   capsuleText: {
     fontSize: 12,
-    color: 'rgba(0, 200, 150, 0.6)',
+    color: 'rgba(0, 232, 162, 0.6)',
     letterSpacing: 0.3,
   },
   modalOverlay: {
@@ -1177,15 +1314,25 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#161920',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    backgroundColor: '#111827',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     width: '100%',
     paddingBottom: 34,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: 'rgba(0, 232, 162, 0.2)',
     margin: 0,
     bottom: 0,
+  },
+  modalGrabber: {
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  grabberBar: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(240, 244, 248, 0.2)',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1217,7 +1364,7 @@ const styles = StyleSheet.create({
     borderBottomColor: 'rgba(255, 255, 255, 0.04)',
   },
   modalItemSelected: {
-    backgroundColor: 'rgba(0, 200, 150, 0.06)',
+    backgroundColor: 'rgba(0, 232, 162, 0.08)',
   },
   modalItemText: {
     flex: 1,
@@ -1225,7 +1372,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.7)',
   },
   modalItemTextSelected: {
-    color: '#00C896',
+    color: '#00E8A2',
     fontWeight: '600',
   },
   alertOverlay: {
@@ -1235,13 +1382,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   alertContainer: {
-    backgroundColor: '#1f2538',
+    backgroundColor: '#111827',
     borderRadius: 16,
     padding: 24,
     width: '85%',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    shadowColor: '#000',
+    borderColor: 'rgba(0, 232, 162, 0.2)',
+    shadowColor: '#00E8A2',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
@@ -1278,10 +1425,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.06)',
   },
   alertButtonConfirm: {
-    backgroundColor: 'rgba(0, 200, 150, 0.15)',
+    backgroundColor: 'rgba(0, 232, 162, 0.15)',
   },
   alertButtonDestructive: {
-    backgroundColor: 'rgba(235, 87, 87, 0.15)',
+    backgroundColor: 'rgba(255, 107, 107, 0.15)',
   },
   alertButtonTextCancel: {
     color: 'rgba(255, 255, 255, 0.6)',
@@ -1290,19 +1437,26 @@ const styles = StyleSheet.create({
     letterSpacing: -0.1,
   },
   alertButtonTextConfirm: {
-    color: '#00C896',
+    color: '#00E8A2',
     fontWeight: '700',
     fontSize: 14,
     letterSpacing: -0.1,
   },
   aboutHeaderBlock: {
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-    borderRadius: 12,
+    backgroundColor: '#111827',
+    borderRadius: 16,
     padding: 24,
     alignItems: 'center',
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: 'rgba(0, 232, 162, 0.2)',
+  },
+  aboutAccentBar: {
+    width: 40,
+    height: 3,
+    backgroundColor: '#00E8A2',
+    borderRadius: 1.5,
+    marginVertical: 10,
   },
   aboutBranding: {
     fontSize: 28,
@@ -1337,15 +1491,26 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '500',
   },
+  versionBadge: {
+    backgroundColor: 'rgba(0, 232, 162, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  versionBadgeText: {
+    color: '#00E8A2',
+    fontSize: 12,
+    fontWeight: '700',
+  },
   setupGuideCard: {
-    backgroundColor: '#1a1f2c',
+    backgroundColor: '#111827',
     borderRadius: 16,
     padding: 16,
     marginBottom: 8,
     marginTop: 8,
     marginHorizontal: 20,
     borderWidth: 1,
-    borderColor: 'rgba(0, 200, 150, 0.3)',
+    borderColor: 'rgba(0, 232, 162, 0.2)',
   },
   setupCardHeader: {
     flexDirection: 'row',
@@ -1372,17 +1537,31 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   guideStepCard: {
-    backgroundColor: '#1a1f2c',
+    backgroundColor: '#111827',
     borderRadius: 22,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: 'rgba(0, 232, 162, 0.2)',
+  },
+  stepBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(0, 232, 162, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  stepBadgeText: {
+    color: '#00E8A2',
+    fontWeight: '800',
+    fontSize: 14,
   },
   stepNumLabel: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#00C896',
+    color: '#00E8A2',
     marginBottom: 6,
   },
   stepDesc: {
@@ -1399,7 +1578,7 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
   },
   guideCompleteBtn: {
-    backgroundColor: '#00C896',
+    backgroundColor: '#00E8A2',
     borderRadius: 18,
     borderColor: '#00ffc4ff',
     borderWidth: 1,
@@ -1429,16 +1608,16 @@ const styles = StyleSheet.create({
     height: 220,
     borderRadius: 110,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: 'rgba(0, 232, 162, 0.1)',
     backgroundColor: 'rgba(255, 255, 255, 0.02)',
   },
   skeletonCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.04)',
-    borderRadius: 16,
+    borderRadius: 20,
     height: 72,
     marginVertical: 6,
     width: '100%',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.02)',
+    borderColor: 'rgba(240, 244, 248, 0.02)',
   },
 });

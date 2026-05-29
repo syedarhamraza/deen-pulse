@@ -883,7 +883,12 @@ function DeenPulseApp(): React.JSX.Element {
               <View style={styles.cardContainer}>
                 {/* Highlight header block */}
                 <View style={styles.aboutHeaderBlock}>
-                  <Text style={styles.aboutBranding}>Deen Pulse Beta</Text>
+                  <View style={styles.aboutBrandingContainer}>
+                    <Text style={styles.aboutBranding}>DeenPulse</Text>
+                    <View style={styles.betaBadge}>
+                      <Text style={styles.betaBadgeText}>BETA</Text>
+                    </View>
+                  </View>
                   <View style={styles.aboutAccentBar} />
                   <Text style={styles.aboutTagline}>Live tracking on your status bar</Text>
                 </View>
@@ -894,7 +899,7 @@ function DeenPulseApp(): React.JSX.Element {
 
                   <View style={styles.infoRow}>
                     <Text style={styles.infoKey}>App Name</Text>
-                    <Text style={styles.infoVal}>Deen Pulse</Text>
+                    <Text style={styles.infoVal}>DeenPulse</Text>
                   </View>
 
                   <View style={styles.infoRow}>
@@ -1389,6 +1394,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   appNameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  aboutBrandingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,

@@ -604,7 +604,6 @@ function DeenPulseApp(): React.JSX.Element {
                 <Image
                   source={require('./src/assets/image_c9314d.jpeg')}
                   style={styles.guideImage}
-                  resizeMode="contain"
                 />
               </View>
 
@@ -617,7 +616,6 @@ function DeenPulseApp(): React.JSX.Element {
                 <Image
                   source={require('./src/assets/image_c93169.jpeg')}
                   style={styles.guideImage}
-                  resizeMode="contain"
                 />
               </View>
 
@@ -630,7 +628,6 @@ function DeenPulseApp(): React.JSX.Element {
                 <Image
                   source={require('./src/assets/image_c93183.jpeg')}
                   style={styles.guideImage}
-                  resizeMode="contain"
                 />
               </View>
 
@@ -696,6 +693,28 @@ function DeenPulseApp(): React.JSX.Element {
                 </Text>
               </View>
             )}
+            {/* Onboarding Setup Guide Card (First-Launch Only) */}
+            {!isSetupGuideDismissed && (
+              <Pressable
+                style={({ pressed }) => [
+                  styles.setupGuideCard,
+                  { opacity: pressed ? 0.75 : 1.0 }
+                ]}
+                onPress={() => {
+                  triggerHaptic();
+                  setCurrentScreen('notification_guide');
+                }}
+              >
+                <View style={styles.setupCardHeader}>
+                  <Icon name="help-circle" size={22} color="#00C896" />
+                  <Text style={styles.setupCardTitle}>Complete Setup Guide</Text>
+                </View>
+                <Text style={styles.setupCardDesc}>
+                  Please tap here to configure necessary OS notification settings to allow status bar capsule countdowns.
+                </Text>
+                <Icon name="arrow-right" size={16} color="#00C896" style={styles.setupCardArrow} />
+              </Pressable>
+            )}
 
             {/* Active loading state with Skeleton Animation */}
             {loading && <SkeletonLoader />}
@@ -719,29 +738,6 @@ function DeenPulseApp(): React.JSX.Element {
             {/* Calendar Data Display */}
             {!loading && !error && (
               <View style={styles.dashboardContainer}>
-                {/* Onboarding Setup Guide Card (First-Launch Only) */}
-                {!isSetupGuideDismissed && (
-                  <Pressable
-                    style={({ pressed }) => [
-                      styles.setupGuideCard,
-                      { opacity: pressed ? 0.75 : 1.0 }
-                    ]}
-                    onPress={() => {
-                      triggerHaptic();
-                      setCurrentScreen('notification_guide');
-                    }}
-                  >
-                    <View style={styles.setupCardHeader}>
-                      <Icon name="help-circle" size={22} color="#00C896" />
-                      <Text style={styles.setupCardTitle}>Complete Setup Guide</Text>
-                    </View>
-                    <Text style={styles.setupCardDesc}>
-                      Please tap here to configure necessary OS notification settings to allow status bar capsule countdowns.
-                    </Text>
-                    <Icon name="arrow-right" size={16} color="#00C896" style={styles.setupCardArrow} />
-                  </Pressable>
-                )}
-
                 <CountdownDisplay nextPrayer={nextPrayer} />
 
                 <View style={styles.divider}>
@@ -998,7 +994,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     marginVertical: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: 'rgba(0, 200, 150, 0.3)',
   },
   cardContainer: {
     paddingHorizontal: 20,
@@ -1345,7 +1341,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#1a1f2c',
     borderRadius: 16,
     padding: 16,
-    marginBottom: 16,
+    marginBottom: 8,
+    marginTop: 8,
     marginHorizontal: 20,
     borderWidth: 1,
     borderColor: 'rgba(0, 200, 150, 0.3)',
@@ -1376,7 +1373,7 @@ const styles = StyleSheet.create({
   },
   guideStepCard: {
     backgroundColor: '#1a1f2c',
-    borderRadius: 12,
+    borderRadius: 22,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
@@ -1397,12 +1394,15 @@ const styles = StyleSheet.create({
   guideImage: {
     width: '100%',
     height: 180,
-    borderRadius: 8,
+    borderRadius: 12,
     backgroundColor: '#000000',
+    resizeMode: 'cover',
   },
   guideCompleteBtn: {
     backgroundColor: '#00C896',
-    borderRadius: 12,
+    borderRadius: 18,
+    borderColor: '#00ffc4ff',
+    borderWidth: 1,
     paddingVertical: 16,
     alignItems: 'center',
     justifyContent: 'center',

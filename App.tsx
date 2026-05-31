@@ -1127,15 +1127,7 @@ function DeenPulseApp(): React.JSX.Element {
                 <Text style={styles.greeting}>{getGreeting()}</Text>
               </View>
 
-              {/* Location Coordinate Badge */}
-              {location && (
-                <View style={styles.scrollLocationBar}>
-                  <Icon name="map-pin" size={12} color="#00E8A2" />
-                  <Text style={styles.locationText}>
-                    {location.latitude.toFixed(4)}°, {location.longitude.toFixed(4)}°
-                  </Text>
-                </View>
-              )}
+
 
               {/* Onboarding Setup Guide Card (First-Launch Only) */}
               {!isSetupGuideDismissed && (

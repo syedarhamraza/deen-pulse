@@ -492,7 +492,7 @@ function DeenPulseApp(): React.JSX.Element {
     calculationRule
   );
 
-  const nextPrayer = usePrayerCountdown(prayerTimes, true, capsuleFormat, notificationStyle);
+  const nextPrayer = usePrayerCountdown(prayerTimes, true, capsuleFormat, notificationStyle, location);
 
   // Load preferences and setup guide state on startup
   useEffect(() => {

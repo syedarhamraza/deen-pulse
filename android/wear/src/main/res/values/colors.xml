@@ -1,0 +1,5 @@
+<resources>
+    <color name="ic_launcher_bg">#000000</color>
+    <color name="accent">#FF00E8A2</color>
+    <color name="surface_dim">#FF0A0F1A</color>
+</resources>

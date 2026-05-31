@@ -8,7 +8,8 @@ export function usePrayerCountdown(
   prayerTimes: PrayerTime[],
   liveActivityEnabled: boolean = true,
   capsuleFormat: string = 'name',
-  notificationStyle: string = 'standard'
+  notificationStyle: string = 'standard',
+  location: { latitude: number; longitude: number } | null = null
 ) {
   const [nextPrayer, setNextPrayer] = useState<NextPrayerInfo | null>(null);
 
@@ -33,10 +34,15 @@ export function usePrayerCountdown(
       ];
       const prayersJson = JSON.stringify(scheduleList);
       PrayerCapsuleModule?.updateLiveCapsule(prayersJson, capsuleFormat, notificationStyle);
+
+      // Sync to Wear OS watch if location coordinates are available
+      if (location) {
+        PrayerCapsuleModule?.syncToWear(prayersJson, location.latitude, location.longitude);
+      }
     } catch (e) {
-      console.warn('Failed to update live capsule:', e);
+      console.warn('Failed to update live capsule or sync to wear:', e);
     }
-  }, [prayerTimes, liveActivityEnabled, capsuleFormat, notificationStyle]);
+  }, [prayerTimes, liveActivityEnabled, capsuleFormat, notificationStyle, location]);
 
   // Main UI countdown tick
   useEffect(() => {

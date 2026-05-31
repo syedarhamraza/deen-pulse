@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">DeenPulse</string>
+    <string name="tile_label">Prayer Countdown</string>
+    <string name="complication_label">Next Prayer</string>
+    <string name="no_data_title">Waiting for Sync</string>
+    <string name="no_data_message">Open DeenPulse on your phone</string>
+</resources>

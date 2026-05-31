@@ -111,6 +111,16 @@ dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
 
+    // Shared prayer math + Data Layer constants (used by both phone and watch)
+    implementation project(':shared')
+
+    // Wearable Data Layer API for phone ↔ watch communication
+    implementation 'com.google.android.gms:play-services-wearable:19.0.0'
+
+    // Coroutines for async Data Layer operations
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.9.0'
+
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
     } else {

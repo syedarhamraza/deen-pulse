@@ -79,4 +79,13 @@ class PrayerCapsuleModule(reactContext: ReactApplicationContext) :
         val prefs = reactApplicationContext.getSharedPreferences("DeenPulsePrefs", android.content.Context.MODE_PRIVATE)
         prefs.edit().putLong("updateIntervalMs", intervalMs.toLong()).apply()
     }
+
+    /**
+     * Push prayer timetable + coordinates to connected Wear OS watch.
+     * Called from React Native after prayer times are loaded/refreshed.
+     */
+    @ReactMethod
+    fun syncToWear(prayersJson: String, lat: Double, lng: Double) {
+        WearDataSyncService.pushTimetableToWear(reactApplicationContext, prayersJson, lat, lng)
+    }
 }

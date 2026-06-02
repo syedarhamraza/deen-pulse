@@ -49,8 +49,7 @@ data class PrayerTime(
 data class NextPrayerInfo(
     val name: String,
     val timeStr: String,
-    val remainingMs: Long,
-    val isActive: Boolean
+    val remainingMs: Long
 )
 
 /**

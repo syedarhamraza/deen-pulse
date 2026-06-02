@@ -9,35 +9,30 @@ export interface NextPrayerInfo {
   time: string;
   remainingMinutes: number;
   remainingSeconds: number;
-  isActive: boolean; // true if this prayer time has just passed (within 15 min window)
 }
 
 export const PRAYER_NAMES = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'] as const;
 export type PrayerName = typeof PRAYER_NAMES[number];
 
-// Calculation method options for AlAdhan API
-export const CALCULATION_METHODS: { id: number; name: string; }[] = [
-  { id: 1, name: 'University of Islamic Sciences, Karachi' },
-  { id: 2, name: 'Islamic Society of North America (ISNA)' },
-  { id: 3, name: 'Muslim World League' },
-  { id: 4, name: 'Umm Al-Qura University, Makkah' },
-  { id: 5, name: 'Egyptian General Authority of Survey' },
-  { id: 7, name: 'Institute of Geophysics, University of Tehran' },
-  { id: 8, name: 'Gulf Region' },
-  { id: 9, name: 'Kuwait' },
-  { id: 10, name: 'Qatar' },
-  { id: 11, name: 'Majlis Ugama Islam Singapura' },
-  { id: 12, name: 'UOIF (France)' },
-  { id: 13, name: 'Diyanet İşleri Başkanlığı (Turkey)' },
-  { id: 14, name: 'Spiritual Administration of Muslims of Russia' },
-  { id: 15, name: 'Moonsighting Committee Worldwide' },
-];
 
-export function parseTimeString(timeStr: string): Date {
+export function parseTimeString(timeStr: string, timezone: string = ''): Date {
   const cleanTimeStr = timeStr.split(' ')[0];
   const [hours, minutes] = cleanTimeStr.split(':').map(Number);
   const now = new Date();
   const date = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0);
+
+  if (timezone) {
+    try {
+      const tzString = date.toLocaleString('en-US', { timeZone: timezone });
+      const localString = date.toLocaleString('en-US');
+      const diffMs = Date.parse(localString) - Date.parse(tzString);
+      if (!isNaN(diffMs)) {
+        return new Date(date.getTime() + diffMs);
+      }
+    } catch (e) {
+      console.warn('Timezone offset calculation failed for:', timezone, e);
+    }
+  }
   return date;
 }
 
@@ -63,13 +58,13 @@ export function formatTo12Hour(timeStr: string): string {
   return suffix ? `${formattedTime} ${suffix}` : formattedTime;
 }
 
-export function parsePrayerTimings(timings: Record<string, string>): PrayerTime[] {
+export function parsePrayerTimings(timings: Record<string, string>, timezone: string = ''): PrayerTime[] {
   return PRAYER_NAMES.map(name => {
     const rawTime = timings[name] || '00:00';
     return {
       name,
       time: formatTo12Hour(rawTime),
-      date: parseTimeString(rawTime),
+      date: parseTimeString(rawTime, timezone),
     };
   });
 }
@@ -86,7 +81,6 @@ export function getNextPrayer(prayers: PrayerTime[], now: Date = new Date()): Ne
         time: prayer.time,
         remainingMinutes,
         remainingSeconds,
-        isActive: false,
       };
     }
   }
@@ -103,7 +97,6 @@ export function getNextPrayer(prayers: PrayerTime[], now: Date = new Date()): Ne
     time: fajr.time,
     remainingMinutes,
     remainingSeconds,
-    isActive: false,
   };
 }
 

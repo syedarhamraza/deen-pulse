@@ -30,7 +30,11 @@ export function usePrayerCountdown(
       // Pass today's and tomorrow's timings to the Kotlin service
       const scheduleList = [
         ...prayerTimes.map(p => ({ name: p.name, timestamp: p.date.getTime() })),
-        ...prayerTimes.map(p => ({ name: p.name, timestamp: p.date.getTime() + 24 * 60 * 60 * 1000 }))
+        ...prayerTimes.map(p => {
+          const tomorrowDate = new Date(p.date.getTime());
+          tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+          return { name: p.name, timestamp: tomorrowDate.getTime() };
+        })
       ];
       const prayersJson = JSON.stringify(scheduleList);
       PrayerCapsuleModule?.updateLiveCapsule(prayersJson, capsuleFormat, notificationStyle);

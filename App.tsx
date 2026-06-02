@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   StatusBar,
   StyleSheet,
@@ -7,28 +7,34 @@ import {
   ScrollView,
   Pressable,
   Platform,
-  Switch,
   Linking,
-  Modal,
   DeviceEventEmitter,
   Vibration,
   Animated,
   BackHandler,
-  Image,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PermissionsAndroid } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Feather';
-import { CountdownDisplay } from './src/components/CountdownDisplay';
-import { PrayerCard } from './src/components/PrayerCard';
 import { usePrayerTimes, CalculationMethod } from './src/hooks/usePrayerTimes';
 import { usePrayerCountdown } from './src/hooks/usePrayerCountdown';
 import { NativeModules } from 'react-native';
 
+// Imported components & screens
+import { FluidModal, ModalFadeOverlay } from './src/components/FluidModal';
+import { FluidAlert } from './src/components/FluidAlert';
+import { DashboardScreen } from './src/screens/DashboardScreen';
+import { SettingsScreen } from './src/screens/SettingsScreen';
+import { PrayerRulesScreen } from './src/screens/PrayerRulesScreen';
+import { NotificationsScreen } from './src/screens/NotificationsScreen';
+import { DataManagementScreen } from './src/screens/DataManagementScreen';
+import { AboutScreen } from './src/screens/AboutScreen';
+import { NotificationGuideScreen } from './src/screens/NotificationGuideScreen';
+
 const { PrayerCapsuleModule } = NativeModules;
 
-type Screen = 'dashboard' | 'settings' | 'prayer_rules' | 'notifications' | 'data_management' | 'about' | 'notification_guide';
+export type Screen = 'dashboard' | 'settings' | 'prayer_rules' | 'notifications' | 'data_management' | 'about' | 'notification_guide';
 
 const CALCULATION_LABELS: Record<CalculationMethod, string> = {
   auto: 'Auto-Detect by Region',
@@ -65,25 +71,10 @@ interface CustomAlertConfig {
   cancelText?: string;
 }
 
-interface FluidModalProps {
-  visible: boolean;
-  onClose: () => void;
-  title: string;
-  children: React.ReactNode;
-}
 
-interface FluidAlertProps {
-  visible: boolean;
-  title: string;
-  message: string;
-  onConfirm?: () => void;
-  onCancel?: () => void;
-  confirmText?: string;
-  cancelText?: string;
-}
 
 // Light tactile device vibration feedback
-const triggerHaptic = () => {
+export const triggerHaptic = () => {
   try {
     Vibration.vibrate(15);
   } catch {
@@ -91,74 +82,11 @@ const triggerHaptic = () => {
   }
 };
 
-// Time-of-day greeting
-const getGreeting = (): string => {
-  const hour = new Date().getHours();
-  if (hour < 5) return 'Peace be upon you';
-  if (hour < 12) return 'Good Morning';
-  if (hour < 17) return 'Good Afternoon';
-  if (hour < 21) return 'Good Evening';
-  return 'Peace be upon you';
-};
 
-// Shimmer card loading placeholders
-function SkeletonCard() {
-  const shimmerAnim = useRef(new Animated.Value(0.08)).current;
 
-  useEffect(() => {
-    const animation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(shimmerAnim, {
-          toValue: 0.25,
-          duration: 1200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(shimmerAnim, {
-          toValue: 0.08,
-          duration: 1200,
-          useNativeDriver: true,
-        }),
-      ])
-    );
-    animation.start();
-    return () => animation.stop();
-  }, [shimmerAnim]);
-
-  return (
-    <Animated.View style={[styles.skeletonCard, { opacity: shimmerAnim }]} />
-  );
-}
-
-// Pulsing notification dot
-function PulsingDot() {
-  const dotAnim = useRef(new Animated.Value(0.4)).current;
-
-  useEffect(() => {
-    const animation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(dotAnim, {
-          toValue: 1,
-          duration: 1500,
-          useNativeDriver: true,
-        }),
-        Animated.timing(dotAnim, {
-          toValue: 0.4,
-          duration: 1500,
-          useNativeDriver: true,
-        }),
-      ])
-    );
-    animation.start();
-    return () => animation.stop();
-  }, [dotAnim]);
-
-  return (
-    <Animated.View style={[styles.capsuleDot, { opacity: dotAnim }]} />
-  );
-}
 
 // Smooth feathered gradient overlay to fade out scrolling content under sticky headers
-function HeaderFadeOverlay() {
+export function HeaderFadeOverlay() {
   return (
     <View style={styles.fadeOverlayContainer} pointerEvents="none">
       <View style={styles.fadeLine1} />
@@ -173,234 +101,6 @@ function HeaderFadeOverlay() {
   );
 }
 
-// Feathered gradient overlay to fade out scrolling picker items in modals
-function ModalFadeOverlay({ position }: { position: 'top' | 'bottom' }) {
-  const steps = 24;
-  const lines = [];
-
-  for (let i = 0; i < steps; i++) {
-    const ratio = i / (steps - 1);
-    const easeOpacity = position === 'top' ? Math.pow(1 - ratio, 1.5) : Math.pow(ratio, 1.5);
-    lines.push(easeOpacity.toFixed(3));
-  }
-
-  return (
-    <View style={position === 'top' ? styles.modalFadeOverlayTop : styles.modalFadeOverlayBottom} pointerEvents="none">
-      {lines.map((op, idx) => (
-        <View key={idx} style={{ height: 1, width: '100%', backgroundColor: `rgba(17, 24, 39, ${op})` }} />
-      ))}
-    </View>
-  );
-}
-
-// Custom bottom sheet modal with physics-based spring animation and unmount handling
-function FluidModal({ visible, onClose, title, children }: FluidModalProps): React.JSX.Element | null {
-  const [shouldRender, setShouldRender] = useState(visible);
-  const animValue = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    if (visible) {
-      setShouldRender(true);
-      Animated.spring(animValue, {
-        toValue: 1,
-        damping: 24,
-        mass: 0.9,
-        stiffness: 140,
-        useNativeDriver: true,
-      }).start();
-    } else {
-      Animated.timing(animValue, {
-        toValue: 0,
-        duration: 250,
-        useNativeDriver: true,
-      }).start(({ finished }) => {
-        if (finished) {
-          setShouldRender(false);
-        }
-      });
-    }
-  }, [visible, animValue]);
-
-  if (!shouldRender) return null;
-
-  const backdropOpacity = animValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 1],
-  });
-
-  const translateY = animValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: [400, 0],
-  });
-
-  const scale = animValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.95, 1],
-  });
-
-  return (
-    <Modal visible={true} transparent onRequestClose={onClose} animationType="none">
-      <View style={styles.modalOverlay}>
-        <Animated.View
-          style={[
-            styles.modalBackdrop,
-            { opacity: backdropOpacity }
-          ]}
-          pointerEvents="auto"
-        >
-          <Pressable style={styles.flex1} onPress={onClose} />
-        </Animated.View>
-        <Animated.View
-          style={[
-            styles.modalContent,
-            {
-              transform: [{ translateY }, { scale }],
-            },
-          ]}
-        >
-          <View style={styles.modalGrabber}>
-            <View style={styles.grabberBar} />
-          </View>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>{title}</Text>
-            <Pressable
-              onPress={onClose}
-              style={({ pressed }) => [styles.modalCloseBtn, { opacity: pressed ? 0.7 : 1 }]}
-            >
-              <Icon name="x" size={16} color="rgba(255, 255, 255, 0.6)" />
-            </Pressable>
-          </View>
-          {children}
-        </Animated.View>
-      </View>
-    </Modal>
-  );
-}
-
-// Custom dialog alert with scale-in bounce spring animation and unmount handling
-function FluidAlert({
-  visible,
-  title,
-  message,
-  onConfirm,
-  onCancel,
-  confirmText,
-  cancelText,
-}: FluidAlertProps): React.JSX.Element | null {
-  const [shouldRender, setShouldRender] = useState(visible);
-  const animValue = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    if (visible) {
-      setShouldRender(true);
-      Animated.spring(animValue, {
-        toValue: 1,
-        damping: 20,
-        mass: 0.8,
-        stiffness: 130,
-        useNativeDriver: true,
-      }).start();
-    } else {
-      Animated.timing(animValue, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }).start(({ finished }) => {
-        if (finished) {
-          setShouldRender(false);
-        }
-      });
-    }
-  }, [visible, animValue]);
-
-  if (!shouldRender) return null;
-
-  const backdropOpacity = animValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 1],
-  });
-
-  const scale = animValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.85, 1],
-  });
-
-  const opacity = animValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 1],
-  });
-
-  return (
-    <Modal visible={true} transparent onRequestClose={onCancel || onConfirm} animationType="none">
-      <View style={styles.alertOverlay}>
-        <Animated.View
-          style={[
-            styles.alertBackdrop,
-            { opacity: backdropOpacity }
-          ]}
-          pointerEvents="auto"
-        />
-        <Animated.View
-          style={[
-            styles.alertContainer,
-            {
-              opacity,
-              transform: [{ scale }],
-            },
-          ]}
-        >
-          <Text style={styles.alertTitle}>{title}</Text>
-          <Text style={styles.alertMessage}>{message}</Text>
-
-          <View style={styles.alertButtonRow}>
-            {onCancel && (
-              <Pressable
-                style={({ pressed }) => [
-                  styles.alertButton,
-                  styles.alertButtonCancel,
-                  { opacity: pressed ? 0.7 : 1.0 }
-                ]}
-                onPress={onCancel}
-              >
-                <Text style={styles.alertButtonTextCancel}>{cancelText || 'Cancel'}</Text>
-              </Pressable>
-            )}
-            <Pressable
-              style={({ pressed }) => [
-                styles.alertButton,
-                confirmText === 'RESET' ? styles.alertButtonDestructive : styles.alertButtonConfirm,
-                { opacity: pressed ? 0.7 : 1.0 }
-              ]}
-              onPress={onConfirm}
-            >
-              <Text style={styles.alertButtonTextConfirm}>{confirmText || 'OK'}</Text>
-            </Pressable>
-          </View>
-        </Animated.View>
-      </View>
-    </Modal>
-  );
-}
-
-function SkeletonLoader() {
-  return (
-    <View style={styles.skeletonContainer}>
-      <View style={styles.skeletonCountdownWrapper}>
-        <Animated.View style={styles.skeletonCountdownRing} />
-      </View>
-      <View style={styles.divider}>
-        <View style={styles.dividerLine} />
-        <Text style={styles.dividerText}>TODAY'S PRAYERS</Text>
-        <View style={styles.dividerLine} />
-      </View>
-      <SkeletonCard />
-      <SkeletonCard />
-      <SkeletonCard />
-      <SkeletonCard />
-      <SkeletonCard />
-    </View>
-  );
-}
 
 export default function App(): React.JSX.Element {
   return (
@@ -486,6 +186,8 @@ function DeenPulseApp(): React.JSX.Element {
     message: '',
   });
 
+  const offlineAlertShown = useRef(false);
+
   const { prayerTimes, loading, error, location, refresh, offlineFallback } = usePrayerTimes(
     locationMode,
     juristicMethod,
@@ -518,17 +220,7 @@ function DeenPulseApp(): React.JSX.Element {
     loadSettings();
   }, []);
 
-  // Monitor network connectivity failure warning
-  useEffect(() => {
-    if (offlineFallback) {
-      showAlert(
-        'Offline Fallback',
-        'Unable to connect to the network. The system is relying on cached fallback datasets for your prayer times.'
-      );
-    }
-  }, [offlineFallback]);
-
-  const showAlert = (
+  const showAlert = useCallback((
     title: string,
     message: string,
     onConfirm?: () => void,
@@ -553,12 +245,42 @@ function DeenPulseApp(): React.JSX.Element {
       confirmText,
       cancelText,
     });
-  };
+  }, []);
+
+  // Monitor network connectivity failure warning
+  useEffect(() => {
+    if (offlineFallback && !offlineAlertShown.current) {
+      showAlert(
+        'Offline Fallback',
+        'Unable to connect to the network. The system is relying on cached fallback datasets for your prayer times.'
+      );
+      offlineAlertShown.current = true;
+    } else if (!offlineFallback) {
+      offlineAlertShown.current = false;
+    }
+  }, [offlineFallback, showAlert]);
 
   const handleLocationModeChange = async (value: boolean) => {
     const newMode = value ? 'gps' : 'cached';
-    setLocationMode(newMode);
-    await AsyncStorage.setItem('@deenpulse_location_mode', newMode);
+    try {
+      await AsyncStorage.setItem('@deenpulse_location_mode', newMode);
+      setLocationMode(newMode);
+    } catch (e: any) {
+      console.warn('Failed to save location mode preference:', e);
+      showAlert('Error', 'Failed to save location mode preference.');
+    }
+  };
+
+  const updateSetting = async (key: string, value: string, setter: (val: any) => void, closePicker: () => void) => {
+    try {
+      await AsyncStorage.setItem(key, value);
+      setter(value);
+    } catch (e: any) {
+      console.warn(`Failed to save setting ${key}:`, e);
+      showAlert('Error', 'Failed to save setting preference.');
+    } finally {
+      closePicker();
+    }
   };
 
   const handleAppReset = () => {
@@ -657,561 +379,74 @@ function DeenPulseApp(): React.JSX.Element {
     switch (currentScreen) {
       case 'settings':
         return (
-          <View style={styles.screenContainer}>
-            <View style={styles.subHeader}>
-              <Pressable
-                onPress={() => {
-                  triggerHaptic();
-                  setCurrentScreen('dashboard');
-                }}
-                style={({ pressed }) => [styles.backButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
-              >
-                <Icon name="arrow-left" size={20} color="#00E8A2" />
-              </Pressable>
-              <Text style={styles.subTitle}>Settings</Text>
-              <HeaderFadeOverlay />
-            </View>
-
-            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-              <View style={styles.cardContainer}>
-                {/* Row 1: Prayer Rules */}
-                <Pressable
-                  style={({ pressed }) => [styles.settingsRowCard, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
-                  onPress={() => {
-                    triggerHaptic();
-                    setCurrentScreen('prayer_rules');
-                  }}
-                >
-                  <View style={styles.rowIconContainer}>
-                    <Icon name="book-open" size={18} color="#00E8A2" />
-                  </View>
-                  <View style={styles.rowInfo}>
-                    <Text style={styles.rowTitle}>Prayer Rules</Text>
-                    <Text style={styles.rowDesc}>Juristic settings and calculation methods</Text>
-                  </View>
-                  <Icon name="chevron-right" size={18} color="rgba(0, 232, 162, 0.5)" />
-                </Pressable>
-
-                {/* Row 2: Notifications */}
-                <Pressable
-                  style={({ pressed }) => [styles.settingsRowCard, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
-                  onPress={() => {
-                    triggerHaptic();
-                    setCurrentScreen('notifications');
-                  }}
-                >
-                  <View style={styles.rowIconContainer}>
-                    <Icon name="bell" size={18} color="#00E8A2" />
-                  </View>
-                  <View style={styles.rowInfo}>
-                    <Text style={styles.rowTitle}>Notifications</Text>
-                    <Text style={styles.rowDesc}>Configure system alert permissions</Text>
-                  </View>
-                  <Icon name="chevron-right" size={18} color="rgba(0, 232, 162, 0.5)" />
-                </Pressable>
-
-                {/* Row 3: Data Management */}
-                <Pressable
-                  style={({ pressed }) => [styles.settingsRowCard, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
-                  onPress={() => {
-                    triggerHaptic();
-                    setCurrentScreen('data_management');
-                  }}
-                >
-                  <View style={styles.rowIconContainer}>
-                    <Icon name="database" size={18} color="#00E8A2" />
-                  </View>
-                  <View style={styles.rowInfo}>
-                    <Text style={styles.rowTitle}>Data Management</Text>
-                    <Text style={styles.rowDesc}>Storage, cache, and GPS positioning</Text>
-                  </View>
-                  <Icon name="chevron-right" size={18} color="rgba(0, 232, 162, 0.5)" />
-                </Pressable>
-
-                {/* Row 4: About DeenPulse */}
-                <Pressable
-                  style={({ pressed }) => [styles.settingsRowCard, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
-                  onPress={() => {
-                    triggerHaptic();
-                    setCurrentScreen('about');
-                  }}
-                >
-                  <View style={styles.rowIconContainer}>
-                    <Icon name="info" size={18} color="#00E8A2" />
-                  </View>
-                  <View style={styles.rowInfo}>
-                    <Text style={styles.rowTitle}>About</Text>
-                    <Text style={styles.rowDesc}>App information and credits</Text>
-                  </View>
-                  <Icon name="chevron-right" size={18} color="rgba(0, 232, 162, 0.5)" />
-                </Pressable>
-              </View>
-            </ScrollView>
-          </View>
+          <SettingsScreen
+            onBack={() => setCurrentScreen('dashboard')}
+            onNavigate={(screen) => setCurrentScreen(screen)}
+          />
         );
-
       case 'prayer_rules':
         return (
-          <View style={styles.screenContainer}>
-            <View style={styles.subHeader}>
-              <Pressable
-                onPress={() => {
-                  triggerHaptic();
-                  setCurrentScreen('settings');
-                }}
-                style={({ pressed }) => [styles.backButton, { opacity: pressed ? 0.7 : 1 }]}
-              >
-                <Icon name="arrow-left" size={20} color="#00E8A2" />
-              </Pressable>
-              <Text style={styles.subTitle}>Prayer Rules</Text>
-              <HeaderFadeOverlay />
-            </View>
-
-            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-              <View style={styles.cardContainer}>
-                {/* Card 1: Juristic Method */}
-                <Pressable
-                  style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
-                  onPress={() => {
-                    triggerHaptic();
-                    setShowJuristicPicker(true);
-                  }}
-                >
-                  <Text style={styles.menuDetailLabel}>Juristic Method (Asr)</Text>
-                  <Text style={styles.menuDetailValue}>{getJuristicLabel()}</Text>
-                  <Text style={styles.menuDetailDesc}>Select Standard (Shafi'i, Maliki, Hanbali) or Hanafi school rules.</Text>
-                </Pressable>
-
-                {/* Card 2: Calculation Rule */}
-                <Pressable
-                  style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
-                  onPress={() => {
-                    triggerHaptic();
-                    setShowCalculationPicker(true);
-                  }}
-                >
-                  <Text style={styles.menuDetailLabel}>Calculation Rule</Text>
-                  <Text style={styles.menuDetailValue}>{getCalculationLabel()}</Text>
-                  <Text style={styles.menuDetailDesc}>Choose calculation method rules for regional timing math offsets.</Text>
-                </Pressable>
-              </View>
-            </ScrollView>
-          </View>
+          <PrayerRulesScreen
+            onBack={() => setCurrentScreen('settings')}
+            onJuristicMethodPress={() => setShowJuristicPicker(true)}
+            onCalculationRulePress={() => setShowCalculationPicker(true)}
+            juristicMethodLabel={getJuristicLabel()}
+            calculationRuleLabel={getCalculationLabel()}
+          />
         );
-
       case 'notifications':
         return (
-          <View style={styles.screenContainer}>
-            <View style={styles.subHeader}>
-              <Pressable
-                onPress={() => {
-                  triggerHaptic();
-                  setCurrentScreen('settings');
-                }}
-                style={({ pressed }) => [styles.backButton, { opacity: pressed ? 0.7 : 1 }]}
-              >
-                <Icon name="arrow-left" size={20} color="#00E8A2" />
-              </Pressable>
-              <Text style={styles.subTitle}>Notifications</Text>
-              <HeaderFadeOverlay />
-            </View>
-
-            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-              <View style={styles.cardContainer}>
-                <Pressable
-                  style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
-                  onPress={() => {
-                    triggerHaptic();
-                    openAppNotificationSettings();
-                  }}
-                >
-                  <Text style={styles.menuDetailLabel}>Allow Notifications</Text>
-                  <Text style={styles.menuDetailDesc}>For the Live island, enable live alerts in notification settings</Text>
-                </Pressable>
-
-                {/* Status Bar Capsule Format Choice */}
-                <Pressable
-                  style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
-                  onPress={() => {
-                    triggerHaptic();
-                    setShowCapsuleFormatPicker(true);
-                  }}
-                >
-                  <Text style={styles.menuDetailLabel}>Status Bar Capsule Style</Text>
-                  <Text style={styles.menuDetailValue}>{getCapsuleFormatLabel()}</Text>
-                  <Text style={styles.menuDetailDesc}>Choose what information is displayed directly inside your device's status bar capsule.</Text>
-                </Pressable>
-
-                {/* Notification Title Format Choice */}
-                <Pressable
-                  style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
-                  onPress={() => {
-                    triggerHaptic();
-                    setShowNotificationStylePicker(true);
-                  }}
-                >
-                  <Text style={styles.menuDetailLabel}>Notification Title Style</Text>
-                  <Text style={styles.menuDetailValue}>{getNotificationStyleLabel()}</Text>
-                  <Text style={styles.menuDetailDesc}>Customize the title layout shown in the lock screen and drawer notification banner.</Text>
-                </Pressable>
-              </View>
-            </ScrollView>
-          </View>
+          <NotificationsScreen
+            onBack={() => setCurrentScreen('settings')}
+            onAllowNotificationsPress={() => openAppNotificationSettings()}
+            onCapsuleFormatPress={() => setShowCapsuleFormatPicker(true)}
+            onNotificationStylePress={() => setShowNotificationStylePicker(true)}
+            capsuleFormatLabel={getCapsuleFormatLabel()}
+            notificationStyleLabel={getNotificationStyleLabel()}
+          />
         );
-
       case 'data_management':
         return (
-          <View style={styles.screenContainer}>
-            <View style={styles.subHeader}>
-              <Pressable
-                onPress={() => {
-                  triggerHaptic();
-                  setCurrentScreen('settings');
-                }}
-                style={({ pressed }) => [styles.backButton, { opacity: pressed ? 0.7 : 1 }]}
-              >
-                <Icon name="arrow-left" size={20} color="#00E8A2" />
-              </Pressable>
-              <Text style={styles.subTitle}>Data Management</Text>
-              <HeaderFadeOverlay />
-            </View>
-
-            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-              <View style={styles.cardContainer}>
-                {/* Location Mode */}
-                <View style={styles.menuDetailCard}>
-                  <View style={styles.switchRow}>
-                    <View style={styles.switchInfo}>
-                      <Text style={styles.menuDetailLabel}>Location Mode</Text>
-                      <Text style={styles.menuDetailDesc}>
-                        {locationMode === 'gps' ? 'Auto-Detect Location (GPS)' : 'Use Cached Location'}
-                      </Text>
-                    </View>
-                    <Switch
-                      value={locationMode === 'gps'}
-                      onValueChange={(val) => {
-                        triggerHaptic();
-                        handleLocationModeChange(val);
-                      }}
-                      trackColor={{ false: '#2A2E3D', true: '#00E8A2' }}
-                      thumbColor={Platform.OS === 'android' ? '#FFFFFF' : undefined}
-                    />
-                  </View>
-                </View>
-
-                {/* Force GPS Permission Request */}
-                <Pressable
-                  style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
-                  onPress={() => {
-                    triggerHaptic();
-                    handleRequestGPS();
-                  }}
-                >
-                  <Text style={styles.menuDetailLabel}>Request GPS Permission</Text>
-                  <Text style={styles.menuDetailDesc}>
-                    Manually trigger system location permission dialog to authorize GPS coordinates tracking.
-                  </Text>
-                </Pressable>
-
-                {/* Reset Cache / Reset History */}
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.menuDetailCard,
-                    styles.destructiveBorder,
-                    { opacity: pressed ? 0.75 : 1 }
-                  ]}
-                  onPress={() => {
-                    triggerHaptic();
-                    handleAppReset();
-                  }}
-                >
-                  <Text style={[styles.menuDetailLabel, styles.destructiveText]}>Clear Cache / Reset History</Text>
-                  <Text style={styles.menuDetailDesc}>
-                    Wipes out all stored calculation rules, caching tables, and restarts positioning loop.
-                  </Text>
-                </Pressable>
-              </View>
-            </ScrollView>
-          </View>
+          <DataManagementScreen
+            onBack={() => setCurrentScreen('settings')}
+            locationMode={locationMode}
+            onLocationModeChange={(val) => handleLocationModeChange(val)}
+            onRequestGPS={() => handleRequestGPS()}
+            onClearCacheReset={() => handleAppReset()}
+          />
         );
-
       case 'about':
         return (
-          <View style={styles.screenContainer}>
-            <View style={styles.subHeader}>
-              <Pressable
-                onPress={() => {
-                  triggerHaptic();
-                  setCurrentScreen('settings');
-                }}
-                style={({ pressed }) => [styles.backButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
-              >
-                <Icon name="arrow-left" size={20} color="#00E8A2" />
-              </Pressable>
-              <Text style={styles.subTitle}>About</Text>
-              <HeaderFadeOverlay />
-            </View>
-
-            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-              <View style={styles.cardContainer}>
-                {/* Highlight header block */}
-                <View style={styles.aboutHeaderBlock}>
-                  <View style={styles.aboutBrandingContainer}>
-                    <Text style={styles.aboutBranding}>DeenPulse</Text>
-                    <View style={styles.betaBadge}>
-                      <Text style={styles.betaBadgeText}>BETA</Text>
-                    </View>
-                  </View>
-                  <View style={styles.aboutAccentBar} />
-                  <Text style={styles.aboutTagline}>Live tracking on your status bar</Text>
-                </View>
-
-                {/* Basic information card */}
-                <View style={styles.menuDetailCard}>
-                  <Text style={styles.aboutSectionTitle}>Basic Information</Text>
-
-                  <View style={styles.infoRow}>
-                    <Text style={styles.infoKey}>App Name</Text>
-                    <Text style={styles.infoVal}>DeenPulse</Text>
-                  </View>
-
-                  <Pressable
-                    style={({ pressed }) => [styles.infoRow, { opacity: pressed ? 0.7 : 1 }]}
-                    onPress={() => {
-                      triggerHaptic();
-                      Linking.openURL('https://github.com/syedarhamraza').catch(err =>
-                        console.warn('Failed to open URL:', err)
-                      );
-                    }}
-                  >
-                    <Text style={styles.infoKey}>Owner</Text>
-                    <Text style={styles.infoValLink}>Syed Arham Raza</Text>
-                  </Pressable>
-
-                  <View style={[styles.infoRow, styles.infoRowLast]}>
-                    <Text style={styles.infoKey}>Version</Text>
-                    <View style={styles.versionBadge}>
-                      <Text style={styles.versionBadgeText}>1.0.2 Beta</Text>
-                    </View>
-                  </View>
-                </View>
-              </View>
-            </ScrollView>
-          </View>
+          <AboutScreen
+            onBack={() => setCurrentScreen('settings')}
+          />
         );
-
       case 'notification_guide':
         return (
-          <View style={styles.screenContainer}>
-            <View style={styles.subHeader}>
-              <Pressable
-                onPress={() => {
-                  triggerHaptic();
-                  setCurrentScreen('dashboard');
-                }}
-                style={({ pressed }) => [styles.backButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
-              >
-                <Icon name="arrow-left" size={20} color="#00E8A2" />
-              </Pressable>
-              <Text style={styles.subTitle}>Notification Guide</Text>
-              <HeaderFadeOverlay />
-            </View>
-
-            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-              <View style={styles.guideContainer}>
-                {/* Step 1 */}
-                <View style={styles.guideStepCard}>
-                  <View style={styles.stepBadge}>
-                    <Text style={styles.stepBadgeText}>1</Text>
-                  </View>
-                  <Text style={styles.stepDesc}>
-                    Enable primary notifications and ensure the 'Show Live Updates on Live Alerts' toggle switch is fully activated to allow status bar capsule rendering.
-                  </Text>
-                  <Image
-                    source={require('./src/assets/image_c9314d.jpeg')}
-                    style={styles.guideImage}
-                  />
-                </View>
-
-                {/* Step 2 */}
-                <View style={styles.guideStepCard}>
-                  <View style={styles.stepBadge}>
-                    <Text style={styles.stepBadgeText}>2</Text>
-                  </View>
-                  <Text style={styles.stepDesc}>
-                    Verify that Lock Screen permission is completely checked.
-                  </Text>
-                  <Image
-                    source={require('./src/assets/image_c93169.jpeg')}
-                    style={styles.guideImage}
-                  />
-                </View>
-
-                {/* Step 3 */}
-                <View style={styles.guideStepCard}>
-                  <View style={styles.stepBadge}>
-                    <Text style={styles.stepBadgeText}>3</Text>
-                  </View>
-                  <Text style={styles.stepDesc}>
-                    Set audio/vibration preferences and consider allowing alerts inside Do Not Disturb profiles for critical countdown consistency.
-                  </Text>
-                  <Image
-                    source={require('./src/assets/image_c93183.jpeg')}
-                    style={styles.guideImage}
-                  />
-                </View>
-
-                {/* Baseline button */}
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.guideCompleteBtn,
-                    { transform: [{ scale: pressed ? 0.97 : 1 }] }
-                  ]}
-                  onPress={async () => {
-                    triggerHaptic();
-                    try {
-                      await AsyncStorage.setItem('@isSetupGuideDismissed', 'true');
-                      setIsSetupGuideDismissed(true);
-                      setCurrentScreen('dashboard');
-                    } catch (e) {
-                      console.warn(e);
-                    }
-                  }}
-                >
-                  <Text style={styles.guideCompleteText}>I have configured these settings</Text>
-                </Pressable>
-              </View>
-            </ScrollView>
-          </View>
+          <NotificationGuideScreen
+            onBack={() => setCurrentScreen('dashboard')}
+            onComplete={async () => {
+              try {
+                await AsyncStorage.setItem('@isSetupGuideDismissed', 'true');
+                setIsSetupGuideDismissed(true);
+                setCurrentScreen('dashboard');
+              } catch (e) {
+                console.warn(e);
+              }
+            }}
+          />
         );
-
       default: // dashboard
         return (
-          <View style={styles.screenContainer}>
-            <View style={styles.header}>
-              <View>
-                <View style={styles.appNameContainer}>
-                  <Text style={styles.appName}>DeenPulse</Text>
-                  <View style={styles.betaBadge}>
-                    <Text style={styles.betaBadgeText}>BETA</Text>
-                  </View>
-                </View>
-                <View style={styles.accentBar} />
-              </View>
-              <View style={styles.headerButtons}>
-                <Pressable
-                  style={({ pressed }) => [styles.headerButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
-                  onPress={() => {
-                    triggerHaptic();
-                    refresh();
-                  }}
-                >
-                  <Icon name="refresh-cw" size={16} color="#00E8A2" />
-                </Pressable>
-                <Pressable
-                  style={({ pressed }) => [styles.headerButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
-                  onPress={() => {
-                    triggerHaptic();
-                    setCurrentScreen('settings');
-                  }}
-                >
-                  <Icon name="settings" size={16} color="#00E8A2" />
-                </Pressable>
-              </View>
-              <HeaderFadeOverlay />
-            </View>
-
-            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-              {/* Greeting - scrolls with content */}
-              <View style={styles.scrollHeader}>
-                <Text style={styles.greeting}>{getGreeting()}</Text>
-              </View>
-
-
-
-              {/* Onboarding Setup Guide Card (First-Launch Only) */}
-              {!isSetupGuideDismissed && (
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.setupGuideCard,
-                    { transform: [{ scale: pressed ? 0.98 : 1 }] }
-                  ]}
-                  onPress={() => {
-                    triggerHaptic();
-                    setCurrentScreen('notification_guide');
-                  }}
-                >
-                  <View style={styles.setupCardHeader}>
-                    <Icon name="help-circle" size={22} color="#00E8A2" />
-                    <Text style={styles.setupCardTitle}>Complete Setup Guide</Text>
-                  </View>
-                  <Text style={styles.setupCardDesc}>
-                    Please tap here to configure necessary OS notification settings to allow status bar capsule countdowns.
-                  </Text>
-                  <Icon name="chevron-right" size={16} color="#00E8A2" style={styles.setupCardArrow} />
-                </Pressable>
-              )}
-
-              {/* Active loading state with Skeleton Animation */}
-              {loading && <SkeletonLoader />}
-
-              {/* Error States */}
-              {error && !loading && (
-                <View style={styles.errorContainer}>
-                  <Icon name="alert-circle" size={40} color="rgba(255, 107, 107, 0.6)" />
-                  <Text style={styles.errorTitle}>Something went wrong</Text>
-                  <Text style={styles.errorText}>{error}</Text>
-                  <Pressable
-                    style={({ pressed }) => [styles.retryButton, { transform: [{ scale: pressed ? 0.95 : 1 }] }]}
-                    onPress={() => {
-                      triggerHaptic();
-                      refresh();
-                    }}
-                  >
-                    <Icon name="refresh-cw" size={14} color="#00E8A2" />
-                    <Text style={styles.retryText}>Try Again</Text>
-                  </Pressable>
-                </View>
-              )}
-
-              {/* Calendar Data Display */}
-              {!loading && !error && (
-                <View>
-                  <CountdownDisplay nextPrayer={nextPrayer} />
-
-                  <View style={styles.divider}>
-                    <View style={styles.dividerLine} />
-                    <Text style={styles.dividerText}>TODAY'S PRAYERS</Text>
-                    <View style={styles.dividerLine} />
-                  </View>
-
-                  {prayerTimes.map(prayer =>
-                    nextPrayer ? (
-                      <PrayerCard key={prayer.name} prayer={prayer} nextPrayer={nextPrayer} />
-                    ) : null
-                  )}
-                </View>
-              )}
-
-              {/* Bottom Status Banner */}
-              {!loading && !error && nextPrayer && (
-                <Pressable
-                  style={({ pressed }) => [styles.capsuleStatus, { opacity: pressed ? 0.7 : 1 }]}
-                  onPress={() => {
-                    triggerHaptic();
-                    Linking.openURL('https://github.com/syedarhamraza').catch(err =>
-                      console.warn('Failed to open URL:', err)
-                    );
-                  }}
-                >
-                  <PulsingDot />
-                  <Text style={styles.capsuleText}>
-                    Made By <Text style={styles.linkTextFooter}>Syed Arham Raza</Text>
-                  </Text>
-                </Pressable>
-              )}
-            </ScrollView>
-          </View>
+          <DashboardScreen
+            onNavigate={(screen) => setCurrentScreen(screen)}
+            onRefresh={() => refresh()}
+            isSetupGuideDismissed={isSetupGuideDismissed}
+            loading={loading}
+            error={error}
+            prayerTimes={prayerTimes}
+            nextPrayer={nextPrayer}
+          />
         );
     }
   };
@@ -1239,11 +474,9 @@ function DeenPulseApp(): React.JSX.Element {
             capsuleFormat === 'name' && styles.modalItemSelected,
             { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
           ]}
-          onPress={async () => {
+          onPress={() => {
             triggerHaptic();
-            setCapsuleFormat('name');
-            await AsyncStorage.setItem('@deenpulse_capsule_format', 'name');
-            setShowCapsuleFormatPicker(false);
+            updateSetting('@deenpulse_capsule_format', 'name', setCapsuleFormat, () => setShowCapsuleFormatPicker(false));
           }}
         >
           <Text style={[
@@ -1258,11 +491,9 @@ function DeenPulseApp(): React.JSX.Element {
             capsuleFormat === 'name_time' && styles.modalItemSelected,
             { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
           ]}
-          onPress={async () => {
+          onPress={() => {
             triggerHaptic();
-            setCapsuleFormat('name_time');
-            await AsyncStorage.setItem('@deenpulse_capsule_format', 'name_time');
-            setShowCapsuleFormatPicker(false);
+            updateSetting('@deenpulse_capsule_format', 'name_time', setCapsuleFormat, () => setShowCapsuleFormatPicker(false));
           }}
         >
           <Text style={[
@@ -1277,11 +508,9 @@ function DeenPulseApp(): React.JSX.Element {
             capsuleFormat === 'time' && styles.modalItemSelected,
             { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
           ]}
-          onPress={async () => {
+          onPress={() => {
             triggerHaptic();
-            setCapsuleFormat('time');
-            await AsyncStorage.setItem('@deenpulse_capsule_format', 'time');
-            setShowCapsuleFormatPicker(false);
+            updateSetting('@deenpulse_capsule_format', 'time', setCapsuleFormat, () => setShowCapsuleFormatPicker(false));
           }}
         >
           <Text style={[
@@ -1307,11 +536,9 @@ function DeenPulseApp(): React.JSX.Element {
             notificationStyle === 'standard' && styles.modalItemSelected,
             { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
           ]}
-          onPress={async () => {
+          onPress={() => {
             triggerHaptic();
-            setNotificationStyle('standard');
-            await AsyncStorage.setItem('@deenpulse_notification_style', 'standard');
-            setShowNotificationStylePicker(false);
+            updateSetting('@deenpulse_notification_style', 'standard', setNotificationStyle, () => setShowNotificationStylePicker(false));
           }}
         >
           <Text style={[
@@ -1326,11 +553,9 @@ function DeenPulseApp(): React.JSX.Element {
             notificationStyle === 'with_time' && styles.modalItemSelected,
             { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
           ]}
-          onPress={async () => {
+          onPress={() => {
             triggerHaptic();
-            setNotificationStyle('with_time');
-            await AsyncStorage.setItem('@deenpulse_notification_style', 'with_time');
-            setShowNotificationStylePicker(false);
+            updateSetting('@deenpulse_notification_style', 'with_time', setNotificationStyle, () => setShowNotificationStylePicker(false));
           }}
         >
           <Text style={[
@@ -1356,11 +581,9 @@ function DeenPulseApp(): React.JSX.Element {
             juristicMethod === 'standard' && styles.modalItemSelected,
             { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
           ]}
-          onPress={async () => {
+          onPress={() => {
             triggerHaptic();
-            setJuristicMethod('standard');
-            await AsyncStorage.setItem('@deenpulse_juristic_method', 'standard');
-            setShowJuristicPicker(false);
+            updateSetting('@deenpulse_juristic_method', 'standard', setJuristicMethod, () => setShowJuristicPicker(false));
           }}
         >
           <Text style={[
@@ -1375,11 +598,9 @@ function DeenPulseApp(): React.JSX.Element {
             juristicMethod === 'hanafi' && styles.modalItemSelected,
             { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
           ]}
-          onPress={async () => {
+          onPress={() => {
             triggerHaptic();
-            setJuristicMethod('hanafi');
-            await AsyncStorage.setItem('@deenpulse_juristic_method', 'hanafi');
-            setShowJuristicPicker(false);
+            updateSetting('@deenpulse_juristic_method', 'hanafi', setJuristicMethod, () => setShowJuristicPicker(false));
           }}
         >
           <Text style={[
@@ -1414,11 +635,9 @@ function DeenPulseApp(): React.JSX.Element {
                   calculationRule === key && styles.modalItemSelected,
                   { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
                 ]}
-                onPress={async () => {
+                onPress={() => {
                   triggerHaptic();
-                  setCalculationRule(key as CalculationMethod);
-                  await AsyncStorage.setItem('@deenpulse_calculation_rule', key);
-                  setShowCalculationPicker(false);
+                  updateSetting('@deenpulse_calculation_rule', key, setCalculationRule as any, () => setShowCalculationPicker(false));
                 }}
               >
                 <Text style={[
@@ -1447,7 +666,7 @@ function DeenPulseApp(): React.JSX.Element {
   );
 }
 
-const styles = StyleSheet.create({
+export const styles = StyleSheet.create({
   flex1: {
     flex: 1,
   },

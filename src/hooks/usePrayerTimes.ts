@@ -112,14 +112,16 @@ export function usePrayerTimes(
 
       let calendarDataStr = await AsyncStorage.getItem(cacheKey);
       let timings: Record<string, string> | null = null;
+      let timezone = '';
 
       if (calendarDataStr) {
         try {
           const calendarData = JSON.parse(calendarDataStr);
           if (calendarData[day - 1]?.timings) {
             timings = calendarData[day - 1].timings;
+            timezone = calendarData[day - 1]?.meta?.timezone || '';
           }
-        } catch (e) {
+        } catch {
           // JSON parse failed — will re-fetch below
         }
       }
@@ -179,6 +181,7 @@ export function usePrayerTimes(
 
           if (json.data[day - 1]?.timings) {
             timings = json.data[day - 1].timings;
+            timezone = json.data[day - 1]?.meta?.timezone || '';
           }
         } else {
           throw new Error('Invalid API response structure');
@@ -186,7 +189,7 @@ export function usePrayerTimes(
       }
 
       if (timings) {
-        const parsed = parsePrayerTimings(timings);
+        const parsed = parsePrayerTimings(timings, timezone);
         setPrayerTimes(parsed);
       } else {
         throw new Error('Failed to parse timings');
@@ -196,6 +199,7 @@ export function usePrayerTimes(
       
       // Connectivity/Fetch failed: Try to fall back to ANY cached calendar database
       let fallbackTimings: Record<string, string> | null = null;
+      let fallbackTimezone = '';
       try {
         const keys = await AsyncStorage.getAllKeys();
         const calendarKeys = keys.filter(k => k.startsWith('@deenpulse_calendar_'));
@@ -207,8 +211,10 @@ export function usePrayerTimes(
             const calendarData = JSON.parse(dataStr);
             if (calendarData[day - 1]?.timings) {
               fallbackTimings = calendarData[day - 1].timings;
+              fallbackTimezone = calendarData[day - 1]?.meta?.timezone || '';
             } else if (calendarData[0]?.timings) {
               fallbackTimings = calendarData[0].timings;
+              fallbackTimezone = calendarData[0]?.meta?.timezone || '';
             }
           }
         }
@@ -217,7 +223,7 @@ export function usePrayerTimes(
       }
 
       if (fallbackTimings) {
-        const parsed = parsePrayerTimings(fallbackTimings);
+        const parsed = parsePrayerTimings(fallbackTimings, fallbackTimezone);
         setPrayerTimes(parsed);
         setOfflineFallback(true);
       } else {
@@ -290,7 +296,7 @@ export function usePrayerTimes(
         if (cachedLat && cachedLng) {
           const lat = parseFloat(cachedLat);
           const lng = parseFloat(cachedLng);
-          const cacheKey = `@deenpulse_calendar_${lat.toFixed(4)}_${lng.toFixed(4)}_${month}_${year}`;
+          const cacheKey = await buildStableCacheKey(lat, lng, month, year);
 
           // Check if we already have this month's calendar cached
           const calendarDataStr = await AsyncStorage.getItem(cacheKey);
@@ -299,14 +305,15 @@ export function usePrayerTimes(
               const calendarData = JSON.parse(calendarDataStr);
               if (calendarData[day - 1]?.timings) {
                 const timings = calendarData[day - 1].timings;
-                const parsed = parsePrayerTimings(timings);
+                const timezone = calendarData[day - 1]?.meta?.timezone || '';
+                const parsed = parsePrayerTimings(timings, timezone);
                 setPrayerTimes(parsed);
                 setLocation({ latitude: lat, longitude: lng });
                 setLoading(false);
                 console.log("LOCAL CACHE HIT — served from disk. Zero GPS, zero network.");
                 return; // ← Early exit: no GPS, no network, no battery drain
               }
-            } catch (e) {
+            } catch {
               // JSON parse failed — fall through to network path
             }
           }
@@ -377,14 +384,14 @@ export function usePrayerTimes(
             setLoading(false);
             setLocation(null);
           }
-        } catch (e) {
+        } catch {
           setError(`Location error: ${err.message}`);
           setLoading(false);
           setLocation(null);
         }
       }
     );
-  }, [locationMode, juristicMethod, calculationRule, performFetch]);
+  }, [performFetch]);
 
   useEffect(() => {
     if (isFirstRender.current) {
@@ -394,7 +401,7 @@ export function usePrayerTimes(
       console.log("Settings changed. Instantly flushing cache and querying GPS...");
       loadTimes(true);
     }
-  }, [locationMode, juristicMethod, calculationRule]);
+  }, [loadTimes]);
 
   const forceManualRefresh = useCallback(() => {
     loadTimes(true);

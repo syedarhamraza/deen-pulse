@@ -21,20 +21,25 @@ import com.deenpulse.shared.PrayerEngine
 import com.deenpulse.wear.data.PrayerRepository
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.guava.future
 
 class DeenPulseTileService : TileService() {
 
+    private val serviceScope = CoroutineScope(Dispatchers.IO)
+
     override fun onTileRequest(requestParams: RequestBuilders.TileRequest): ListenableFuture<TileBuilders.Tile> {
-        val deviceParams = requestParams.deviceConfiguration ?: throw IllegalArgumentException("No device configuration")
-        val repository = PrayerRepository(this)
+        return serviceScope.future {
+            val deviceParams = requestParams.deviceConfiguration ?: throw IllegalArgumentException("No device configuration")
+            val repository = PrayerRepository(this@DeenPulseTileService)
 
-        val tile = if (!repository.hasData()) {
-            buildNoDataTile(deviceParams)
-        } else {
-            buildPrayerTile(deviceParams, repository)
+            if (!repository.hasData()) {
+                buildNoDataTile(deviceParams)
+            } else {
+                buildPrayerTile(deviceParams, repository)
+            }
         }
-
-        return Futures.immediateFuture(tile)
     }
 
     override fun onTileResourcesRequest(requestParams: RequestBuilders.ResourcesRequest): ListenableFuture<ResourceBuilders.Resources> {
@@ -72,7 +77,7 @@ class DeenPulseTileService : TileService() {
             .build()
     }
 
-    private fun buildPrayerTile(deviceParams: DeviceParameters, repository: PrayerRepository): TileBuilders.Tile {
+    private suspend fun buildPrayerTile(deviceParams: DeviceParameters, repository: PrayerRepository): TileBuilders.Tile {
         val prayers = repository.getTodaysPrayers()
         val clockOffset = repository.getClockOffset()
         val nowMs = System.currentTimeMillis() + clockOffset

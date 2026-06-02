@@ -1,0 +1,81 @@
+import React from 'react';
+import { View, Text, ScrollView, Pressable } from 'react-native';
+import Icon from 'react-native-vector-icons/Feather';
+import { styles, triggerHaptic, HeaderFadeOverlay } from '../../App';
+
+interface NotificationsScreenProps {
+  onBack: () => void;
+  onAllowNotificationsPress: () => void;
+  onCapsuleFormatPress: () => void;
+  onNotificationStylePress: () => void;
+  capsuleFormatLabel: string;
+  notificationStyleLabel: string;
+}
+
+export function NotificationsScreen({
+  onBack,
+  onAllowNotificationsPress,
+  onCapsuleFormatPress,
+  onNotificationStylePress,
+  capsuleFormatLabel,
+  notificationStyleLabel,
+}: NotificationsScreenProps) {
+  return (
+    <View style={styles.screenContainer}>
+      <View style={styles.subHeader}>
+        <Pressable
+          onPress={() => {
+            triggerHaptic();
+            onBack();
+          }}
+          style={({ pressed }) => [styles.backButton, { opacity: pressed ? 0.7 : 1 }]}
+        >
+          <Icon name="arrow-left" size={20} color="#00E8A2" />
+        </Pressable>
+        <Text style={styles.subTitle}>Notifications</Text>
+        <HeaderFadeOverlay />
+      </View>
+
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={styles.cardContainer}>
+          <Pressable
+            style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
+            onPress={() => {
+              triggerHaptic();
+              onAllowNotificationsPress();
+            }}
+          >
+            <Text style={styles.menuDetailLabel}>Allow Notifications</Text>
+            <Text style={styles.menuDetailDesc}>For the Live island, enable live alerts in notification settings</Text>
+          </Pressable>
+
+          {/* Status Bar Capsule Format Choice */}
+          <Pressable
+            style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
+            onPress={() => {
+              triggerHaptic();
+              onCapsuleFormatPress();
+            }}
+          >
+            <Text style={styles.menuDetailLabel}>Status Bar Capsule Style</Text>
+            <Text style={styles.menuDetailValue}>{capsuleFormatLabel}</Text>
+            <Text style={styles.menuDetailDesc}>Choose what information is displayed directly inside your device's status bar capsule.</Text>
+          </Pressable>
+
+          {/* Notification Title Format Choice */}
+          <Pressable
+            style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
+            onPress={() => {
+              triggerHaptic();
+              onNotificationStylePress();
+            }}
+          >
+            <Text style={styles.menuDetailLabel}>Notification Title Style</Text>
+            <Text style={styles.menuDetailValue}>{notificationStyleLabel}</Text>
+            <Text style={styles.menuDetailDesc}>Customize the title layout shown in the lock screen and drawer notification banner.</Text>
+          </Pressable>
+        </View>
+      </ScrollView>
+    </View>
+  );
+}

@@ -26,4 +26,7 @@ object DataLayerConstants {
 
     /** Epoch timestamp — forces DataItem change detection on every push */
     const val KEY_TIMESTAMP = "timestamp"
+
+    const val KEY_SCHEMA_VERSION = "schema_version"
+    const val CURRENT_SCHEMA_VERSION = 1
 }

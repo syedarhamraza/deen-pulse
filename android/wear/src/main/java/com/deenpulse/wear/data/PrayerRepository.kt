@@ -4,9 +4,13 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.deenpulse.shared.PrayerSerializer
 import com.deenpulse.shared.PrayerTime
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Calendar
 
 class PrayerRepository(context: Context) {
@@ -26,8 +30,8 @@ class PrayerRepository(context: Context) {
         prefs.edit().putLong("clock_offset", offset).apply()
     }
 
-    fun getClockOffset(): Long {
-        return prefs.getLong("clock_offset", 0L)
+    suspend fun getClockOffset(): Long = withContext(Dispatchers.IO) {
+        prefs.getLong("clock_offset", 0L)
     }
 
     /**
@@ -47,8 +51,8 @@ class PrayerRepository(context: Context) {
      * A prayer belongs to "today" when its epochMs falls between
      * the start and end of the current calendar day.
      */
-    fun getTodaysPrayers(): List<PrayerTime> {
-        val json = prefs.getString(KEY_PRAYERS_JSON, null) ?: return emptyList()
+    suspend fun getTodaysPrayers(): List<PrayerTime> = withContext(Dispatchers.IO) {
+        val json = prefs.getString(KEY_PRAYERS_JSON, null) ?: return@withContext emptyList<PrayerTime>()
         val allPrayers = PrayerSerializer.fromJson(json)
 
         val cal = Calendar.getInstance()
@@ -67,14 +71,14 @@ class PrayerRepository(context: Context) {
         cal.set(Calendar.MILLISECOND, 999)
         val endOfDay = cal.timeInMillis
 
-        return allPrayers.filter { it.epochMs in startOfDay..endOfDay }
+        allPrayers.filter { it.epochMs in startOfDay..endOfDay }
     }
 
     /**
      * Quick check for whether any prayer data has been synced from the phone.
      */
-    fun hasData(): Boolean {
-        return prefs.contains(KEY_PRAYERS_JSON) &&
+    suspend fun hasData(): Boolean = withContext(Dispatchers.IO) {
+        prefs.contains(KEY_PRAYERS_JSON) &&
                 !prefs.getString(KEY_PRAYERS_JSON, null).isNullOrBlank()
     }
 
@@ -84,11 +88,15 @@ class PrayerRepository(context: Context) {
      */
     val prayerTimesFlow: Flow<List<PrayerTime>> = callbackFlow {
         // Emit current data immediately
-        trySend(getTodaysPrayers())
+        launch {
+            trySend(getTodaysPrayers())
+        }
 
         val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
             if (key == KEY_PRAYERS_JSON) {
-                trySend(getTodaysPrayers())
+                launch {
+                    trySend(getTodaysPrayers())
+                }
             }
         }
 
@@ -97,5 +105,5 @@ class PrayerRepository(context: Context) {
         awaitClose {
             prefs.unregisterOnSharedPreferenceChangeListener(listener)
         }
-    }
+    }.flowOn(Dispatchers.IO)
 }

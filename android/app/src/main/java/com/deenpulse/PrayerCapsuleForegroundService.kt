@@ -11,6 +11,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import org.json.JSONArray
 import java.text.SimpleDateFormat
@@ -45,8 +46,15 @@ class PrayerCapsuleForegroundService : Service() {
                     currentTargetTimestamp = next.timestamp
                     updateNotification()
                 }
+                // Schedule next check: every 60 seconds normally, or exactly at transition time if closer
+                val now = System.currentTimeMillis()
+                val timeToNext = if (currentTargetTimestamp > now) currentTargetTimestamp - now else 60000L
+                val delay = timeToNext.coerceIn(1000L, 60000L)
+                handler.postDelayed(this, delay)
+            } else {
+                Log.d("PrayerCapsuleService", "No more upcoming prayers in schedule. Stopping service.")
+                stopSelf()
             }
-            handler.postDelayed(this, 5000) // Check every 5 seconds to ensure zero-lag transition
         }
     }
 
@@ -83,7 +91,7 @@ class PrayerCapsuleForegroundService : Service() {
                     System.exit(0)
                 }
             }
-            return START_STICKY
+            return START_NOT_STICKY
         }
 
         val newPrayersJson = intent?.getStringExtra("prayersJson")
@@ -119,7 +127,7 @@ class PrayerCapsuleForegroundService : Service() {
             }
         }
 
-        return START_STICKY
+        return START_NOT_STICKY
     }
 
     override fun onDestroy() {
@@ -127,6 +135,12 @@ class PrayerCapsuleForegroundService : Service() {
         handler.removeCallbacks(checkRunnable)
         isTimerRunning = false
         stopForeground(STOP_FOREGROUND_REMOVE)
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        Log.d("PrayerCapsuleService", "App task removed. Stopping service.")
+        stopSelf()
     }
 
     private fun findNextPrayer(): PrayerScheduleItem? {
@@ -167,7 +181,7 @@ class PrayerCapsuleForegroundService : Service() {
 
         // Notification Action Buttons
         val refreshIntent = Intent(this, PrayerCapsuleForegroundService::class.java).apply {
-            action = "ACTION_REFRESH"
+            setAction("ACTION_REFRESH")
         }
         val refreshPendingIntent = PendingIntent.getService(
             this, 1, refreshIntent,
@@ -175,7 +189,7 @@ class PrayerCapsuleForegroundService : Service() {
         )
 
         val closeIntent = Intent(this, PrayerCapsuleForegroundService::class.java).apply {
-            action = "ACTION_CLOSE"
+            setAction("ACTION_CLOSE")
         }
         val closePendingIntent = PendingIntent.getService(
             this, 2, closeIntent,

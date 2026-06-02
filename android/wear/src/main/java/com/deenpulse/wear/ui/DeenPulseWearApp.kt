@@ -39,13 +39,17 @@ fun DeenPulseWearApp(isAmbient: Boolean) {
 
     val listState = rememberScalingLazyListState()
     val coroutineScope = rememberCoroutineScope()
-    val clockOffset = remember { repository.getClockOffset() }
+    val clockOffsetState = produceState(initialValue = 0L) {
+        value = repository.getClockOffset()
+    }
+    val clockOffset = clockOffsetState.value
+
     var nowMs by remember { mutableStateOf(System.currentTimeMillis() + clockOffset) }
 
-    LaunchedEffect(isAmbient) {
+    LaunchedEffect(isAmbient, clockOffset) {
         while (true) {
             nowMs = System.currentTimeMillis() + clockOffset
-            delay(if (isAmbient) 60_000L else 1_000L)
+            delay(if (isAmbient) 60_000L else 10_000L)
         }
     }
 
@@ -142,9 +146,24 @@ fun DeenPulseWearApp(isAmbient: Boolean) {
                 }
             }
 
-            val screenHeight = LocalConfiguration.current.screenHeightDp.dp
-            val topSpacerHeight = remember(screenHeight) {
-                val height = (screenHeight - 150.dp) / 2
+            val configuration = LocalConfiguration.current
+            val screenWidth = configuration.screenWidthDp.dp
+            val screenHeight = configuration.screenHeightDp.dp
+
+            val ringSize = remember(screenWidth) {
+                (screenWidth * 0.72f) // Scale it to be 72% of the screen width
+            }
+
+            val scaleFactor = remember(screenWidth) {
+                (screenWidth.value / 220f).coerceIn(0.8f, 1.3f)
+            }
+
+            val titleFontSize = remember(scaleFactor) { (22 * scaleFactor).sp }
+            val countdownFontSize = remember(scaleFactor) { (18 * scaleFactor).sp }
+            val timeFontSize = remember(scaleFactor) { (12 * scaleFactor).sp }
+
+            val topSpacerHeight = remember(screenHeight, ringSize) {
+                val height = (screenHeight - ringSize) / 2
                 if (height > 0.dp) height else 0.dp
             }
 
@@ -171,7 +190,7 @@ fun DeenPulseWearApp(isAmbient: Boolean) {
                 item {
                     Box(
                         modifier = Modifier
-                            .size(150.dp)
+                            .size(ringSize)
                             .offset(x = ambientOffset.first, y = ambientOffset.second),
                         contentAlignment = Alignment.Center
                     ) {
@@ -222,31 +241,27 @@ fun DeenPulseWearApp(isAmbient: Boolean) {
                                 Text(
                                     text = nextPrayer.name.uppercase(),
                                     color = Color.White,
-                                    fontSize = 22.sp,
+                                    fontSize = titleFontSize,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = if (isAmbient) {
-                                        PrayerEngine.formatCountdownShort(nextPrayer.remainingMs)
-                                    } else {
-                                        PrayerEngine.formatCountdown(nextPrayer.remainingMs)
-                                    },
-                                    color = if (isAmbient) Color.White else DeenPulseAccent,
-                                    fontSize = 18.sp,
-                                    fontWeight = FontWeight.SemiBold
+                                CountdownText(
+                                    nextPrayer = nextPrayer,
+                                    isAmbient = isAmbient,
+                                    clockOffset = clockOffset,
+                                    fontSize = countdownFontSize
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = nextPrayer.timeStr,
                                     color = DeenPulseTextSecondary,
-                                    fontSize = 12.sp
+                                    fontSize = timeFontSize
                                 )
                             } else {
                                 Text(
                                     text = "SYNCING...",
                                     color = Color.White,
-                                    fontSize = 16.sp,
+                                    fontSize = (16 * scaleFactor).sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -397,4 +412,40 @@ fun DeenPulseWearApp(isAmbient: Boolean) {
             }
         }
     }
+}
+
+@Composable
+fun CountdownText(
+    nextPrayer: com.deenpulse.shared.NextPrayerInfo?,
+    isAmbient: Boolean,
+    clockOffset: Long,
+    fontSize: androidx.compose.ui.unit.TextUnit = 18.sp
+) {
+    if (nextPrayer == null) return
+
+    var remainingMs by remember(nextPrayer) { mutableStateOf(nextPrayer.remainingMs) }
+
+    LaunchedEffect(nextPrayer, isAmbient, clockOffset) {
+        if (isAmbient) {
+            remainingMs = nextPrayer.remainingMs
+            return@LaunchedEffect
+        }
+        val targetTime = System.currentTimeMillis() + clockOffset + nextPrayer.remainingMs
+        while (true) {
+            val now = System.currentTimeMillis() + clockOffset
+            remainingMs = targetTime - now
+            delay(1000L)
+        }
+    }
+
+    Text(
+        text = if (isAmbient) {
+            PrayerEngine.formatCountdownShort(remainingMs)
+        } else {
+            PrayerEngine.formatCountdown(remainingMs)
+        },
+        color = if (isAmbient) Color.White else DeenPulseAccent,
+        fontSize = fontSize,
+        fontWeight = FontWeight.SemiBold
+    )
 }

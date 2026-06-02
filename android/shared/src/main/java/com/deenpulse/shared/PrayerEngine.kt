@@ -87,20 +87,21 @@ object PrayerEngine {
                 return NextPrayerInfo(
                     name = prayer.name,
                     timeStr = prayer.timeStr,
-                    remainingMs = prayer.epochMs - nowMs,
-                    isActive = false
+                    remainingMs = prayer.epochMs - nowMs
                 )
             }
         }
 
         // All prayers passed today — next is Fajr tomorrow
         val fajr = prayers[0]
-        val tomorrowFajrMs = fajr.epochMs + 24 * 60 * 60 * 1000
+        val cal = Calendar.getInstance()
+        cal.timeInMillis = fajr.epochMs
+        cal.add(Calendar.DAY_OF_MONTH, 1)
+        val tomorrowFajrMs = cal.timeInMillis
         return NextPrayerInfo(
             name = fajr.name,
             timeStr = fajr.timeStr,
-            remainingMs = tomorrowFajrMs - nowMs,
-            isActive = false
+            remainingMs = tomorrowFajrMs - nowMs
         )
     }
 
@@ -183,12 +184,18 @@ object PrayerEngine {
             nextMs = prayers[nextIndex].epochMs
         } else if (nextIndex == 0) {
             // Before Fajr — previous was Isha yesterday
-            prevMs = prayers.last().epochMs - 24 * 60 * 60 * 1000
+            val cal = Calendar.getInstance()
+            cal.timeInMillis = prayers.last().epochMs
+            cal.add(Calendar.DAY_OF_MONTH, -1)
+            prevMs = cal.timeInMillis
             nextMs = prayers[0].epochMs
         } else {
             // After all prayers — next is Fajr tomorrow
             prevMs = prayers.last().epochMs
-            nextMs = prayers[0].epochMs + 24 * 60 * 60 * 1000
+            val cal = Calendar.getInstance()
+            cal.timeInMillis = prayers[0].epochMs
+            cal.add(Calendar.DAY_OF_MONTH, 1)
+            nextMs = cal.timeInMillis
         }
 
         val totalInterval = nextMs - prevMs

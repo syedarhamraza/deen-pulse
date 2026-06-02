@@ -6,6 +6,7 @@ import { PrayerTime, NextPrayerInfo, getPrayerStatus, formatCountdown } from '..
 interface PrayerCardProps {
   prayer: PrayerTime;
   nextPrayer: NextPrayerInfo;
+  currentDate?: Date;
 }
 
 // Map prayer names to Feather icons
@@ -19,8 +20,8 @@ const getPrayerIcon = (name: string): string => {
   return 'clock';
 };
 
-export const PrayerCard: React.FC<PrayerCardProps> = ({ prayer, nextPrayer }) => {
-  const now = new Date();
+export const PrayerCard: React.FC<PrayerCardProps> = ({ prayer, nextPrayer, currentDate }) => {
+  const now = currentDate || new Date();
   const status = getPrayerStatus(prayer, nextPrayer, now);
 
   const isNext = status === 'next';

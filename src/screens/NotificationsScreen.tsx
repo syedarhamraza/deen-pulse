@@ -101,17 +101,25 @@ export function NotificationsScreen({
           )}
 
           {/* Notification Title Format Choice */}
-          <Pressable
-            style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
-            onPress={() => {
-              triggerHaptic();
-              onNotificationStylePress();
-            }}
-          >
-            <Text style={styles.menuDetailLabel}>Notification Title Style</Text>
-            <Text style={styles.menuDetailValue}>{notificationStyleLabel}</Text>
-            <Text style={styles.menuDetailDesc}>Customize the title layout shown in the lock screen and drawer notification banner.</Text>
-          </Pressable>
+          {deviceCategory !== 1 && (
+            <Pressable
+              style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
+              onPress={() => {
+                triggerHaptic();
+                onNotificationStylePress();
+              }}
+            >
+              <Text style={styles.menuDetailLabel}>
+                {deviceCategory === 2 ? 'Notification Style' : 'Notification Title Style'}
+              </Text>
+              <Text style={styles.menuDetailValue}>{notificationStyleLabel}</Text>
+              <Text style={styles.menuDetailDesc}>
+                {deviceCategory === 2
+                  ? 'Customize the layout of the notification content text shown in the lock screen and drawer banner.'
+                  : 'Customize the title layout shown in the lock screen and drawer notification banner.'}
+              </Text>
+            </Pressable>
+          )}
         </View>
       </ScrollView>
     </View>

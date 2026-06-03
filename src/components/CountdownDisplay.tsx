@@ -4,9 +4,10 @@ import { NextPrayerInfo, formatCountdown } from '../utils/prayerEngine';
 
 interface CountdownDisplayProps {
   nextPrayer: NextPrayerInfo | null;
+  isWindowActive?: boolean;
 }
 
-export const CountdownDisplay: React.FC<CountdownDisplayProps> = ({ nextPrayer }) => {
+export const CountdownDisplay: React.FC<CountdownDisplayProps> = ({ nextPrayer, isWindowActive = false }) => {
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0.2)).current;
   const outerRingAnim = useRef(new Animated.Value(0.15)).current;
@@ -15,13 +16,13 @@ export const CountdownDisplay: React.FC<CountdownDisplayProps> = ({ nextPrayer }
     const pulse = Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
-          toValue: 1.04,
-          duration: 2500,
+          toValue: isWindowActive ? 1.06 : 1.04,
+          duration: isWindowActive ? 1500 : 2500,
           useNativeDriver: true,
         }),
         Animated.timing(pulseAnim, {
           toValue: 1,
-          duration: 2500,
+          duration: isWindowActive ? 1500 : 2500,
           useNativeDriver: true,
         }),
       ])
@@ -30,13 +31,13 @@ export const CountdownDisplay: React.FC<CountdownDisplayProps> = ({ nextPrayer }
     const glow = Animated.loop(
       Animated.sequence([
         Animated.timing(glowAnim, {
-          toValue: 0.55,
-          duration: 2500,
+          toValue: isWindowActive ? 0.7 : 0.55,
+          duration: isWindowActive ? 1500 : 2500,
           useNativeDriver: true,
         }),
         Animated.timing(glowAnim, {
           toValue: 0.2,
-          duration: 2500,
+          duration: isWindowActive ? 1500 : 2500,
           useNativeDriver: true,
         }),
       ])
@@ -45,13 +46,13 @@ export const CountdownDisplay: React.FC<CountdownDisplayProps> = ({ nextPrayer }
     const outerRing = Animated.loop(
       Animated.sequence([
         Animated.timing(outerRingAnim, {
-          toValue: 0.35,
-          duration: 3000,
+          toValue: isWindowActive ? 0.45 : 0.35,
+          duration: isWindowActive ? 2000 : 3000,
           useNativeDriver: true,
         }),
         Animated.timing(outerRingAnim, {
           toValue: 0.15,
-          duration: 3000,
+          duration: isWindowActive ? 2000 : 3000,
           useNativeDriver: true,
         }),
       ])
@@ -66,7 +67,7 @@ export const CountdownDisplay: React.FC<CountdownDisplayProps> = ({ nextPrayer }
       glow.stop();
       outerRing.stop();
     };
-  }, [glowAnim, outerRingAnim, pulseAnim]);
+  }, [glowAnim, outerRingAnim, pulseAnim, isWindowActive]);
 
   if (!nextPrayer) {
     return (
@@ -76,20 +77,26 @@ export const CountdownDisplay: React.FC<CountdownDisplayProps> = ({ nextPrayer }
     );
   }
 
-  const countdownText = formatCountdown(nextPrayer.remainingMinutes, nextPrayer.remainingSeconds);
+  const accentColor = isWindowActive ? '#FFD700' : '#00E8A2';
+  const glowColor = isWindowActive ? 'rgba(255, 215, 0, 0.04)' : 'rgba(0, 232, 162, 0.02)';
+  const borderColor = isWindowActive ? 'rgba(255, 215, 0, 0.35)' : 'rgba(0, 232, 162, 0.25)';
+  const labelColor = isWindowActive ? 'rgba(255, 215, 0, 0.7)' : 'rgba(0, 232, 162, 0.6)';
+  const shadowColor = isWindowActive ? '#FFD700' : '#00E8A2';
+
+  const countdownText = isWindowActive ? 'ACTIVE' : formatCountdown(nextPrayer.remainingMinutes, nextPrayer.remainingSeconds);
 
   return (
     <Animated.View style={[styles.container, { transform: [{ scale: pulseAnim }] }]}>
       {/* Decorative outer ring */}
-      <Animated.View style={[styles.outerDecoRing, { opacity: outerRingAnim }]} />
+      <Animated.View style={[styles.outerDecoRing, { opacity: outerRingAnim, borderColor: isWindowActive ? 'rgba(255, 215, 0, 0.2)' : 'rgba(0, 232, 162, 0.12)' }]} />
       {/* Glow ring */}
-      <Animated.View style={[styles.glowRing, { opacity: glowAnim }]} />
+      <Animated.View style={[styles.glowRing, { opacity: glowAnim, borderColor: isWindowActive ? 'rgba(255, 215, 0, 0.25)' : 'rgba(0, 232, 162, 0.15)', backgroundColor: glowColor }]} />
       {/* Main circle */}
-      <View style={styles.innerCircle}>
-        <Text style={styles.label}>NEXT PRAYER</Text>
+      <View style={[styles.innerCircle, { borderColor, shadowColor }]}>
+        <Text style={[styles.label, { color: labelColor }]}>{isWindowActive ? 'CURRENT PRAYER' : 'NEXT PRAYER'}</Text>
         <Text style={styles.prayerName}>{nextPrayer.name}</Text>
-        <Text style={styles.countdown}>{countdownText}</Text>
-        <Text style={styles.remainingLabel}>remaining</Text>
+        <Text style={[styles.countdown, { color: accentColor, textShadowColor: isWindowActive ? 'rgba(255, 215, 0, 0.45)' : 'rgba(0, 232, 162, 0.35)' }]}>{countdownText}</Text>
+        <Text style={styles.remainingLabel}>{isWindowActive ? 'right now' : 'remaining'}</Text>
         <Text style={styles.timeLabel}>at {nextPrayer.time}</Text>
       </View>
     </Animated.View>

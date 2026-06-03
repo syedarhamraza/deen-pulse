@@ -106,4 +106,19 @@ class PrayerRepository(context: Context) {
             prefs.unregisterOnSharedPreferenceChangeListener(listener)
         }
     }.flowOn(Dispatchers.IO)
+
+    fun saveSettings(juristicMethod: String, calculationRule: String, deviceCategory: Int) {
+        prefs.edit()
+            .putString("juristic_method", juristicMethod)
+            .putString("calculation_rule", calculationRule)
+            .putInt("device_category", deviceCategory)
+            .apply()
+    }
+
+    fun getSettings(): Triple<String, String, Int> {
+        val juristic = prefs.getString("juristic_method", "standard") ?: "standard"
+        val rule = prefs.getString("calculation_rule", "auto") ?: "auto"
+        val category = prefs.getInt("device_category", 3)
+        return Triple(juristic, rule, category)
+    }
 }

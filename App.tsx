@@ -31,10 +31,15 @@ import { NotificationsScreen } from './src/screens/NotificationsScreen';
 import { DataManagementScreen } from './src/screens/DataManagementScreen';
 import { AboutScreen } from './src/screens/AboutScreen';
 import { NotificationGuideScreen } from './src/screens/NotificationGuideScreen';
+import { OnboardingScreen } from './src/screens/OnboardingScreen';
+import { OEMGuidanceScreen } from './src/screens/OEMGuidanceScreen';
+import { WearOSControlScreen } from './src/screens/WearOSControlScreen';
+import { useDeviceProfile } from './src/hooks/useDeviceProfile';
+import { useGestureNavigation } from './src/hooks/useGestureNavigation';
 
 const { PrayerCapsuleModule } = NativeModules;
 
-export type Screen = 'dashboard' | 'settings' | 'prayer_rules' | 'notifications' | 'data_management' | 'about' | 'notification_guide';
+export type Screen = 'dashboard' | 'settings' | 'prayer_rules' | 'notifications' | 'data_management' | 'about' | 'notification_guide' | 'onboarding' | 'oem_guidance' | 'wearos_control';
 
 const CALCULATION_LABELS: Record<CalculationMethod, string> = {
   auto: 'Auto-Detect by Region',
@@ -112,7 +117,8 @@ export default function App(): React.JSX.Element {
 
 function DeenPulseApp(): React.JSX.Element {
   const insets = useSafeAreaInsets();
-  const [currentScreen, setCurrentScreen] = useState<Screen>('dashboard');
+  const { profile, isOnboardingComplete, isLoading: isProfileLoading, completeOnboarding } = useDeviceProfile();
+  const { currentScreen, navigateTo, goBack } = useGestureNavigation('dashboard');
   const [locationMode, setLocationMode] = useState<'gps' | 'cached'>('gps');
   const [juristicMethod, setJuristicMethod] = useState<'standard' | 'hanafi'>('standard');
   const [calculationRule, setCalculationRule] = useState<CalculationMethod>('auto');
@@ -120,6 +126,7 @@ function DeenPulseApp(): React.JSX.Element {
 
   const [capsuleFormat, setCapsuleFormat] = useState<'name' | 'name_time' | 'time'>('name');
   const [notificationStyle, setNotificationStyle] = useState<'standard' | 'with_time'>('standard');
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
 
   const [showCapsuleFormatPicker, setShowCapsuleFormatPicker] = useState(false);
   const [showNotificationStylePicker, setShowNotificationStylePicker] = useState(false);
@@ -150,34 +157,7 @@ function DeenPulseApp(): React.JSX.Element {
     ]).start();
   }, [currentScreen, fadeAnim, slideAnim]);
 
-  // Handle Android physical back press & swipe gesture
-  useEffect(() => {
-    const handleBackPress = () => {
-      if (currentScreen === 'dashboard') {
-        return false; // Exit app
-      }
-
-      triggerHaptic();
-
-      if (currentScreen === 'settings') {
-        setCurrentScreen('dashboard');
-      } else if (currentScreen === 'notification_guide') {
-        setCurrentScreen('dashboard');
-      } else if (
-        currentScreen === 'prayer_rules' ||
-        currentScreen === 'notifications' ||
-        currentScreen === 'data_management' ||
-        currentScreen === 'about'
-      ) {
-        setCurrentScreen('settings');
-      }
-
-      return true; // Prevent app exit
-    };
-
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackPress);
-    return () => backHandler.remove();
-  }, [currentScreen]);
+  // Note: Android back-press & swipe gestures are now handled internally by useGestureNavigation hook
 
   // Custom alert modal config
   const [alertConfig, setAlertConfig] = useState<CustomAlertConfig>({
@@ -206,12 +186,14 @@ function DeenPulseApp(): React.JSX.Element {
         const guideDismissed = await AsyncStorage.getItem('@isSetupGuideDismissed');
         const format = await AsyncStorage.getItem('@deenpulse_capsule_format');
         const style = await AsyncStorage.getItem('@deenpulse_notification_style');
+        const sound = await AsyncStorage.getItem('@deenpulse_adhan_sound_enabled');
 
         if (mode !== null) setLocationMode(mode as 'gps' | 'cached');
         if (juristic !== null) setJuristicMethod(juristic as 'standard' | 'hanafi');
         if (rule !== null) setCalculationRule(rule as CalculationMethod);
         if (format !== null) setCapsuleFormat(format as 'name' | 'name_time' | 'time');
         if (style !== null) setNotificationStyle(style as 'standard' | 'with_time');
+        if (sound !== null) setSoundEnabled(sound === 'true');
         setIsSetupGuideDismissed(guideDismissed === 'true');
       } catch (e) {
         console.warn('Failed to load settings:', e);
@@ -219,6 +201,18 @@ function DeenPulseApp(): React.JSX.Element {
     };
     loadSettings();
   }, []);
+
+  // Synchronize settings to Wear OS watch automatically when they change
+  useEffect(() => {
+    AsyncStorage.getItem('@deenpulse_sync_settings_to_wear').then(syncPref => {
+      if (syncPref === 'true' || syncPref === null) {
+        PrayerCapsuleModule?.syncSettingsToWear(juristicMethod, calculationRule);
+      }
+    }).catch(err => {
+      console.warn('Failed to load sync settings to wear preference', err);
+      PrayerCapsuleModule?.syncSettingsToWear(juristicMethod, calculationRule);
+    });
+  }, [juristicMethod, calculationRule]);
 
   const showAlert = useCallback((
     title: string,
@@ -376,18 +370,32 @@ function DeenPulseApp(): React.JSX.Element {
   }, [refresh]);
 
   const renderScreen = () => {
+    if (isProfileLoading) {
+      return <View style={styles.screenContainer} />;
+    }
+    if (!isOnboardingComplete) {
+      return (
+        <OnboardingScreen
+          onComplete={(brand) => {
+            completeOnboarding(brand);
+            navigateTo('dashboard');
+          }}
+        />
+      );
+    }
+
     switch (currentScreen) {
       case 'settings':
         return (
           <SettingsScreen
-            onBack={() => setCurrentScreen('dashboard')}
-            onNavigate={(screen) => setCurrentScreen(screen)}
+            onBack={goBack}
+            onNavigate={(screen) => navigateTo(screen)}
           />
         );
       case 'prayer_rules':
         return (
           <PrayerRulesScreen
-            onBack={() => setCurrentScreen('settings')}
+            onBack={goBack}
             onJuristicMethodPress={() => setShowJuristicPicker(true)}
             onCalculationRulePress={() => setShowCalculationPicker(true)}
             juristicMethodLabel={getJuristicLabel()}
@@ -397,18 +405,36 @@ function DeenPulseApp(): React.JSX.Element {
       case 'notifications':
         return (
           <NotificationsScreen
-            onBack={() => setCurrentScreen('settings')}
+            onBack={goBack}
             onAllowNotificationsPress={() => openAppNotificationSettings()}
             onCapsuleFormatPress={() => setShowCapsuleFormatPicker(true)}
             onNotificationStylePress={() => setShowNotificationStylePicker(true)}
+            onOptimizePress={() => navigateTo('oem_guidance')}
+            soundEnabled={soundEnabled}
+            onSoundToggle={async (val) => {
+              setSoundEnabled(val);
+              await AsyncStorage.setItem('@deenpulse_adhan_sound_enabled', val ? 'true' : 'false');
+            }}
             capsuleFormatLabel={getCapsuleFormatLabel()}
             notificationStyleLabel={getNotificationStyleLabel()}
+          />
+        );
+      case 'oem_guidance':
+        return (
+          <OEMGuidanceScreen
+            onBack={goBack}
+          />
+        );
+      case 'wearos_control':
+        return (
+          <WearOSControlScreen
+            onBack={goBack}
           />
         );
       case 'data_management':
         return (
           <DataManagementScreen
-            onBack={() => setCurrentScreen('settings')}
+            onBack={goBack}
             locationMode={locationMode}
             onLocationModeChange={(val) => handleLocationModeChange(val)}
             onRequestGPS={() => handleRequestGPS()}
@@ -418,18 +444,18 @@ function DeenPulseApp(): React.JSX.Element {
       case 'about':
         return (
           <AboutScreen
-            onBack={() => setCurrentScreen('settings')}
+            onBack={goBack}
           />
         );
       case 'notification_guide':
         return (
           <NotificationGuideScreen
-            onBack={() => setCurrentScreen('dashboard')}
+            onBack={goBack}
             onComplete={async () => {
               try {
                 await AsyncStorage.setItem('@isSetupGuideDismissed', 'true');
                 setIsSetupGuideDismissed(true);
-                setCurrentScreen('dashboard');
+                navigateTo('dashboard');
               } catch (e) {
                 console.warn(e);
               }
@@ -439,7 +465,7 @@ function DeenPulseApp(): React.JSX.Element {
       default: // dashboard
         return (
           <DashboardScreen
-            onNavigate={(screen) => setCurrentScreen(screen)}
+            onNavigate={(screen) => navigateTo(screen)}
             onRefresh={() => refresh()}
             isSetupGuideDismissed={isSetupGuideDismissed}
             loading={loading}

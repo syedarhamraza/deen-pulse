@@ -63,6 +63,24 @@ export function SettingsScreen({ onBack, onNavigate }: SettingsScreenProps) {
             <Icon name="chevron-right" size={18} color="rgba(0, 232, 162, 0.5)" />
           </Pressable>
 
+          {/* Row: Watch Companion */}
+          <Pressable
+            style={({ pressed }) => [styles.settingsRowCard, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
+            onPress={() => {
+              triggerHaptic();
+              onNavigate('wearos_control');
+            }}
+          >
+            <View style={styles.rowIconContainer}>
+              <Icon name="watch" size={18} color="#00E8A2" />
+            </View>
+            <View style={styles.rowInfo}>
+              <Text style={styles.rowTitle}>Watch Companion</Text>
+              <Text style={styles.rowDesc}>Manage Wear OS sync and connection status</Text>
+            </View>
+            <Icon name="chevron-right" size={18} color="rgba(0, 232, 162, 0.5)" />
+          </Pressable>
+
           {/* Row 3: Data Management */}
           <Pressable
             style={({ pressed }) => [styles.settingsRowCard, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}

@@ -21,6 +21,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.wear.compose.material.*
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.wear.compose.foundation.rotary.rotaryScrollable
+import androidx.wear.compose.foundation.rotary.RotaryScrollableDefaults
 import com.deenpulse.shared.PrayerEngine
 import com.deenpulse.shared.PrayerTime
 import com.deenpulse.wear.data.PrayerRepository
@@ -38,6 +42,9 @@ fun DeenPulseWearApp(isAmbient: Boolean) {
     val prayers = prayersState.value
 
     val listState = rememberScalingLazyListState()
+    val focusRequester = remember { FocusRequester() }
+    val emptyListState = rememberScalingLazyListState()
+    val emptyFocusRequester = remember { FocusRequester() }
     val coroutineScope = rememberCoroutineScope()
     val clockOffsetState = produceState(initialValue = 0L) {
         value = repository.getClockOffset()
@@ -71,7 +78,13 @@ fun DeenPulseWearApp(isAmbient: Boolean) {
             ScalingLazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black),
+                    .background(Color.Black)
+                    .focusRequester(emptyFocusRequester)
+                    .rotaryScrollable(
+                        behavior = RotaryScrollableDefaults.behavior(emptyListState),
+                        focusRequester = emptyFocusRequester
+                    ),
+                state = emptyListState,
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 20.dp)
@@ -124,6 +137,7 @@ fun DeenPulseWearApp(isAmbient: Boolean) {
 
             // Request sync on start
             LaunchedEffect(Unit) {
+                emptyFocusRequester.requestFocus()
                 WearDataListenerService.requestSyncFromPhone(context)
             }
         } else {
@@ -167,10 +181,19 @@ fun DeenPulseWearApp(isAmbient: Boolean) {
                 if (height > 0.dp) height else 0.dp
             }
 
+            LaunchedEffect(Unit) {
+                focusRequester.requestFocus()
+            }
+
             ScalingLazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black),
+                    .background(Color.Black)
+                    .focusRequester(focusRequester)
+                    .rotaryScrollable(
+                        behavior = RotaryScrollableDefaults.behavior(listState),
+                        focusRequester = focusRequester
+                    ),
                 state = listState,
                 autoCentering = null,
                 contentPadding = PaddingValues(

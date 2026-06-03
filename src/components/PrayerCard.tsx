@@ -37,7 +37,7 @@ export const PrayerCard: React.FC<PrayerCardProps> = ({ prayer, nextPrayer, curr
       isActive && styles.cardActive,
       isPassed && styles.cardPassed,
     ]}>
-      {/* Prayer icon */}
+          {/* Prayer icon */}
       <View style={[
         styles.iconContainer,
         isNext && styles.iconContainerNext,
@@ -47,7 +47,7 @@ export const PrayerCard: React.FC<PrayerCardProps> = ({ prayer, nextPrayer, curr
         <Icon
           name={isPassed ? 'check' : iconName}
           size={18}
-          color={isPassed ? 'rgba(240, 244, 248, 0.25)' : (isNext || isActive) ? '#00E8A2' : 'rgba(240, 244, 248, 0.5)'}
+          color={isPassed ? 'rgba(240, 244, 248, 0.25)' : isActive ? '#FFD700' : isNext ? '#00E8A2' : 'rgba(240, 244, 248, 0.5)'}
         />
       </View>
 
@@ -57,10 +57,12 @@ export const PrayerCard: React.FC<PrayerCardProps> = ({ prayer, nextPrayer, curr
           styles.name,
           isPassed && styles.namePassed,
           isNext && styles.nameNext,
+          isActive && styles.nameActive,
         ]}>{prayer.name}</Text>
         <Text style={[
           styles.time,
           isPassed && styles.timePassed,
+          isActive && styles.timeActive,
         ]}>{prayer.time}</Text>
       </View>
 
@@ -75,7 +77,7 @@ export const PrayerCard: React.FC<PrayerCardProps> = ({ prayer, nextPrayer, curr
       {isActive && (
         <View style={styles.activeBadge}>
           <View style={styles.activeDot} />
-          <Text style={styles.activeBadgeText}>Active</Text>
+          <Text style={styles.activeBadgeText}>NOW</Text>
         </View>
       )}
     </View>
@@ -107,9 +109,14 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
   },
   cardActive: {
-    backgroundColor: '#10222D',
+    backgroundColor: '#1C1917',
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.4)',
+    borderColor: '#FFD700',
+    elevation: 4,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
   },
   cardPassed: {
     opacity: 0.5,
@@ -128,7 +135,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 232, 162, 0.12)',
   },
   iconContainerActive: {
-    backgroundColor: 'rgba(0, 232, 162, 0.1)',
+    backgroundColor: 'rgba(255, 215, 0, 0.12)',
   },
   iconContainerPassed: {
     backgroundColor: 'rgba(240, 244, 248, 0.03)',
@@ -146,6 +153,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFFFFF',
   },
+  nameActive: {
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
   namePassed: {
     color: 'rgba(240, 244, 248, 0.4)',
   },
@@ -154,6 +165,9 @@ const styles = StyleSheet.create({
     color: 'rgba(240, 244, 248, 0.45)',
     marginTop: 3,
     fontVariant: ['tabular-nums'],
+  },
+  timeActive: {
+    color: 'rgba(255, 215, 0, 0.7)',
   },
   timePassed: {
     color: 'rgba(240, 244, 248, 0.2)',
@@ -179,7 +193,7 @@ const styles = StyleSheet.create({
   activeBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 232, 162, 0.15)',
+    backgroundColor: 'rgba(255, 215, 0, 0.15)',
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 20,
@@ -189,12 +203,12 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#00E8A2',
+    backgroundColor: '#FFD700',
   },
   activeBadgeText: {
     fontSize: 12,
-    fontWeight: '600',
-    color: '#00E8A2',
+    fontWeight: '700',
+    color: '#FFD700',
   },
   passedBadge: {
     paddingHorizontal: 10,

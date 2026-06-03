@@ -113,6 +113,37 @@ class WearDataSyncService : WearableListenerService() {
                 }
             }
         }
+
+        /**
+         * Push juristic and calculation settings to all connected Wear OS devices.
+         */
+        fun pushSettingsToWear(
+            context: Context,
+            juristicMethod: String,
+            calculationRule: String,
+            deviceCategory: Int,
+            scope: CoroutineScope = companionScope
+        ) {
+            scope.launch {
+                try {
+                    val dataClient = Wearable.getDataClient(context)
+                    val putDataReq = PutDataMapRequest.create(DataLayerConstants.SETTINGS_DATA_PATH).apply {
+                        dataMap.putString(DataLayerConstants.KEY_JURISTIC_METHOD, juristicMethod)
+                        dataMap.putString(DataLayerConstants.KEY_CALCULATION_RULE, calculationRule)
+                        dataMap.putInt(DataLayerConstants.KEY_DEVICE_CATEGORY, deviceCategory)
+                        dataMap.putInt(DataLayerConstants.KEY_SCHEMA_VERSION, DataLayerConstants.CURRENT_SCHEMA_VERSION)
+                        dataMap.putLong(DataLayerConstants.KEY_TIMESTAMP, System.currentTimeMillis())
+                    }.asPutDataRequest().setUrgent()
+
+                    retryWithBackoff(times = 3, initialDelay = 1000L) {
+                        dataClient.putDataItem(putDataReq).await()
+                    }
+                    Log.d(TAG, "Settings pushed to Wear OS (juristic: $juristicMethod, rule: $calculationRule, category: $deviceCategory)")
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to push settings to Wear after retries", e)
+                }
+            }
+        }
     }
 
     /**

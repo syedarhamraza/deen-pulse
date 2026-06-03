@@ -5,6 +5,7 @@ import { styles, triggerHaptic, HeaderFadeOverlay, Screen } from '../../App';
 import { PrayerTime, NextPrayerInfo } from '../utils/prayerEngine';
 import { CountdownDisplay } from '../components/CountdownDisplay';
 import { PrayerCard } from '../components/PrayerCard';
+import { useActiveWindowDetector } from '../hooks/useActiveWindowDetector';
 
 // Shimmer card loading placeholders
 function SkeletonCard() {
@@ -112,6 +113,7 @@ export function DashboardScreen({
   prayerTimes,
   nextPrayer,
 }: DashboardScreenProps) {
+  const { isWindowActive } = useActiveWindowDetector(nextPrayer);
   return (
     <View style={styles.screenContainer}>
       <View style={styles.header}>
@@ -201,7 +203,7 @@ export function DashboardScreen({
         {/* Calendar Data Display */}
         {!loading && !error && (
           <View>
-            <CountdownDisplay nextPrayer={nextPrayer} />
+            <CountdownDisplay nextPrayer={nextPrayer} isWindowActive={isWindowActive} />
 
             <View style={styles.divider}>
               <View style={styles.dividerLine} />

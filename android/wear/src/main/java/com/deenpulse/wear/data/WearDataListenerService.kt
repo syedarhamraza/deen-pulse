@@ -116,6 +116,30 @@ class WearDataListenerService : WearableListenerService() {
                 } catch (e: Exception) {
                     Log.e(TAG, "Error processing data change event", e)
                 }
+            } else if (path == DataLayerConstants.SETTINGS_DATA_PATH) {
+                try {
+                    val dataMap = DataMapItem.fromDataItem(event.dataItem).dataMap
+                    val juristicMethod = dataMap.getString(DataLayerConstants.KEY_JURISTIC_METHOD, "standard")
+                    val calculationRule = dataMap.getString(DataLayerConstants.KEY_CALCULATION_RULE, "auto")
+                    val deviceCategory = dataMap.getInt(DataLayerConstants.KEY_DEVICE_CATEGORY, 3)
+
+                    repository.saveSettings(juristicMethod, calculationRule, deviceCategory)
+                    Log.d(TAG, "Watch settings synced (juristic=$juristicMethod, calculation=$calculationRule, deviceCategory=$deviceCategory)")
+                    
+                    // Trigger instant complication/tile update on setting sync
+                    try {
+                        val componentName = ComponentName(applicationContext, PrayerComplicationService::class.java)
+                        val requester = ComplicationDataSourceUpdateRequester.create(applicationContext, componentName)
+                        requester.requestUpdateAll()
+
+                        androidx.wear.tiles.TileService.getUpdater(applicationContext)
+                            .requestUpdate(DeenPulseTileService::class.java)
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to update complications/tiles on setting sync", e)
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error processing settings change event", e)
+                }
             }
         }
     }

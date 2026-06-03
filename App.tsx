@@ -947,8 +947,9 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 8,
+    paddingTop: 10,
+    paddingBottom: 4,
+    marginBottom: 14,
     backgroundColor: '#080B14',
   },
   appName: {
@@ -965,11 +966,7 @@ export const styles = StyleSheet.create({
     marginTop: 4,
     marginBottom: 6,
   },
-  greeting: {
-    fontSize: 14,
-    color: 'rgba(240, 244, 248, 0.5)',
-    marginTop: 4,
-  },
+
   subtitle: {
     fontSize: 13,
     color: 'rgba(255, 255, 255, 0.35)',
@@ -1118,11 +1115,7 @@ export const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFFFFF',
   },
-  scrollHeader: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 4,
-  },
+
   scrollLocationBar: {
     flexDirection: 'row',
     alignItems: 'center',

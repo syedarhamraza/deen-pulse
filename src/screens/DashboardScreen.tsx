@@ -58,15 +58,7 @@ function SkeletonLoader() {
   );
 }
 
-// Time-of-day greeting
-const getGreeting = (): string => {
-  const hour = new Date().getHours();
-  if (hour < 5) return 'Peace be upon you';
-  if (hour < 12) return 'Good Morning';
-  if (hour < 17) return 'Good Afternoon';
-  if (hour < 21) return 'Good Evening';
-  return 'Peace be upon you';
-};
+
 
 interface DashboardScreenProps {
   onNavigate: (screen: Screen) => void;
@@ -119,10 +111,7 @@ export function DashboardScreen({
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Greeting - scrolls with content */}
-        <View style={styles.scrollHeader}>
-          <Text style={styles.greeting}>{getGreeting()}</Text>
-        </View>
+
 
 
 

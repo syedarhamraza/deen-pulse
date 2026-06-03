@@ -35,33 +35,7 @@ function SkeletonCard() {
   );
 }
 
-// Pulsing notification dot
-function PulsingDot() {
-  const dotAnim = useRef(new Animated.Value(0.4)).current;
 
-  useEffect(() => {
-    const animation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(dotAnim, {
-          toValue: 1,
-          duration: 1500,
-          useNativeDriver: true,
-        }),
-        Animated.timing(dotAnim, {
-          toValue: 0.4,
-          duration: 1500,
-          useNativeDriver: true,
-        }),
-      ])
-    );
-    animation.start();
-    return () => animation.stop();
-  }, [dotAnim]);
-
-  return (
-    <Animated.View style={[styles.capsuleDot, { opacity: dotAnim }]} />
-  );
-}
 
 // Full skeleton loader
 function SkeletonLoader() {
@@ -198,20 +172,22 @@ export function DashboardScreen({
 
         {/* Bottom Status Banner */}
         {!loading && !error && nextPrayer && (
-          <Pressable
-            style={({ pressed }) => [styles.capsuleStatus, { opacity: pressed ? 0.7 : 1 }]}
-            onPress={() => {
-              triggerHaptic();
-              Linking.openURL('https://github.com/syedarhamraza').catch(err =>
-                console.warn('Failed to open URL:', err)
-              );
-            }}
-          >
-            <PulsingDot />
-            <Text style={styles.capsuleText}>
-              Made By <Text style={styles.linkTextFooter}>Syed Arham Raza</Text>
-            </Text>
-          </Pressable>
+          <View style={styles.footerContainer}>
+            <View style={styles.footerDivider} />
+            <Pressable
+              style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
+              onPress={() => {
+                triggerHaptic();
+                Linking.openURL('https://github.com/syedarhamraza').catch(err =>
+                  console.warn('Failed to open URL:', err)
+                );
+              }}
+            >
+              <Text style={styles.footerText}>
+                DeenPulse • Crafted by <Text style={styles.footerLink}>Syed Arham Raza</Text>
+              </Text>
+            </Pressable>
+          </View>
         )}
       </ScrollView>
     </View>

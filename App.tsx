@@ -350,6 +350,12 @@ function DeenPulseApp(): React.JSX.Element {
   };
 
   const getCapsuleFormatLabel = () => {
+    if (profile?.category === 2) {
+      if (capsuleFormat === 'name_countdown') return 'Name & Countdown (e.g., Asr (16m 10s))';
+      if (capsuleFormat === 'name_time') return 'Name & Time (e.g., Asr (5:12 PM))';
+      if (capsuleFormat === 'time') return 'Time Only (e.g., 5:12 PM)';
+      return 'Name Only (e.g., Asr)';
+    }
     if (capsuleFormat === 'name_time') return 'Name & Time (e.g., Fajr (5:12 AM))';
     if (capsuleFormat === 'time') return 'Time Only (e.g., 5:12 AM)';
     if (capsuleFormat === 'name_countdown') return 'Name & Countdown (e.g., Fajr (45m 12s))';
@@ -357,6 +363,11 @@ function DeenPulseApp(): React.JSX.Element {
   };
 
   const getNotificationStyleLabel = () => {
+    if (profile?.category === 2) {
+      if (notificationStyle === 'with_time') return 'Name & Time (e.g., Asr at 5:12 PM)';
+      if (notificationStyle === 'with_countdown') return 'Name & Countdown (e.g., Asr in 16m 10s)';
+      return 'Name Only (e.g., Asr)';
+    }
     if (notificationStyle === 'with_time') return 'With Time (e.g., Next Prayer: Fajr (5:12 AM))';
     if (notificationStyle === 'with_countdown') return 'With Countdown (e.g., Next Prayer: Fajr (45m 12s))';
     return 'Standard (e.g., Next Prayer: Fajr)';
@@ -530,76 +541,132 @@ function DeenPulseApp(): React.JSX.Element {
         }}
         title="Status Bar Capsule Style"
       >
-        <Pressable
-          style={({ pressed }) => [
-            styles.modalItem,
-            capsuleFormat === 'name' && styles.modalItemSelected,
-            { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
-          ]}
-          onPress={() => {
-            triggerHaptic();
-            updateSetting('@deenpulse_capsule_format', 'name', setCapsuleFormat, () => setShowCapsuleFormatPicker(false));
-          }}
-        >
-          <Text style={[
-            styles.modalItemText,
-            capsuleFormat === 'name' && styles.modalItemTextSelected,
-          ]}>Name Only (e.g., Fajr)</Text>
-          {capsuleFormat === 'name' && <Icon name="check" size={16} color="#00E8A2" />}
-        </Pressable>
-        {profile?.category === 2 && (
-          <Pressable
-            style={({ pressed }) => [
-              styles.modalItem,
-              capsuleFormat === 'name_countdown' && styles.modalItemSelected,
-              { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
-            ]}
-            onPress={() => {
-              triggerHaptic();
-              updateSetting('@deenpulse_capsule_format', 'name_countdown', setCapsuleFormat, () => setShowCapsuleFormatPicker(false));
-            }}
-          >
-            <Text style={[
-              styles.modalItemText,
-              capsuleFormat === 'name_countdown' && styles.modalItemTextSelected,
-            ]}>Name & Countdown (e.g., Fajr (45m 12s))</Text>
-            {capsuleFormat === 'name_countdown' && <Icon name="check" size={16} color="#00E8A2" />}
-          </Pressable>
+        {profile?.category === 2 ? (
+          <>
+            <Pressable
+              style={({ pressed }) => [
+                styles.modalItem,
+                capsuleFormat === 'name' && styles.modalItemSelected,
+                { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
+              ]}
+              onPress={() => {
+                triggerHaptic();
+                updateSetting('@deenpulse_capsule_format', 'name', setCapsuleFormat, () => setShowCapsuleFormatPicker(false));
+              }}
+            >
+              <Text style={[
+                styles.modalItemText,
+                capsuleFormat === 'name' && styles.modalItemTextSelected,
+              ]}>Name Only (e.g., Asr)</Text>
+              {capsuleFormat === 'name' && <Icon name="check" size={16} color="#00E8A2" />}
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [
+                styles.modalItem,
+                capsuleFormat === 'name_countdown' && styles.modalItemSelected,
+                { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
+              ]}
+              onPress={() => {
+                triggerHaptic();
+                updateSetting('@deenpulse_capsule_format', 'name_countdown', setCapsuleFormat, () => setShowCapsuleFormatPicker(false));
+              }}
+            >
+              <Text style={[
+                styles.modalItemText,
+                capsuleFormat === 'name_countdown' && styles.modalItemTextSelected,
+              ]}>Name & Countdown (e.g., Asr (16m 10s))</Text>
+              {capsuleFormat === 'name_countdown' && <Icon name="check" size={16} color="#00E8A2" />}
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [
+                styles.modalItem,
+                capsuleFormat === 'name_time' && styles.modalItemSelected,
+                { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
+              ]}
+              onPress={() => {
+                triggerHaptic();
+                updateSetting('@deenpulse_capsule_format', 'name_time', setCapsuleFormat, () => setShowCapsuleFormatPicker(false));
+              }}
+            >
+              <Text style={[
+                styles.modalItemText,
+                capsuleFormat === 'name_time' && styles.modalItemTextSelected,
+              ]}>Name & Time (e.g., Asr (5:12 PM))</Text>
+              {capsuleFormat === 'name_time' && <Icon name="check" size={16} color="#00E8A2" />}
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [
+                styles.modalItem,
+                capsuleFormat === 'time' && styles.modalItemSelected,
+                { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
+              ]}
+              onPress={() => {
+                triggerHaptic();
+                updateSetting('@deenpulse_capsule_format', 'time', setCapsuleFormat, () => setShowCapsuleFormatPicker(false));
+              }}
+            >
+              <Text style={[
+                styles.modalItemText,
+                capsuleFormat === 'time' && styles.modalItemTextSelected,
+              ]}>Time Only (e.g., 5:12 PM)</Text>
+              {capsuleFormat === 'time' && <Icon name="check" size={16} color="#00E8A2" />}
+            </Pressable>
+          </>
+        ) : (
+          <>
+            <Pressable
+              style={({ pressed }) => [
+                styles.modalItem,
+                capsuleFormat === 'name' && styles.modalItemSelected,
+                { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
+              ]}
+              onPress={() => {
+                triggerHaptic();
+                updateSetting('@deenpulse_capsule_format', 'name', setCapsuleFormat, () => setShowCapsuleFormatPicker(false));
+              }}
+            >
+              <Text style={[
+                styles.modalItemText,
+                capsuleFormat === 'name' && styles.modalItemTextSelected,
+              ]}>Name Only (e.g., Fajr)</Text>
+              {capsuleFormat === 'name' && <Icon name="check" size={16} color="#00E8A2" />}
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [
+                styles.modalItem,
+                capsuleFormat === 'name_time' && styles.modalItemSelected,
+                { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
+              ]}
+              onPress={() => {
+                triggerHaptic();
+                updateSetting('@deenpulse_capsule_format', 'name_time', setCapsuleFormat, () => setShowCapsuleFormatPicker(false));
+              }}
+            >
+              <Text style={[
+                styles.modalItemText,
+                capsuleFormat === 'name_time' && styles.modalItemTextSelected,
+              ]}>Name & Time (e.g., Fajr (5:12 AM))</Text>
+              {capsuleFormat === 'name_time' && <Icon name="check" size={16} color="#00E8A2" />}
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [
+                styles.modalItem,
+                capsuleFormat === 'time' && styles.modalItemSelected,
+                { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
+              ]}
+              onPress={() => {
+                triggerHaptic();
+                updateSetting('@deenpulse_capsule_format', 'time', setCapsuleFormat, () => setShowCapsuleFormatPicker(false));
+              }}
+            >
+              <Text style={[
+                styles.modalItemText,
+                capsuleFormat === 'time' && styles.modalItemTextSelected,
+              ]}>Time Only (e.g., 5:12 AM)</Text>
+              {capsuleFormat === 'time' && <Icon name="check" size={16} color="#00E8A2" />}
+            </Pressable>
+          </>
         )}
-        <Pressable
-          style={({ pressed }) => [
-            styles.modalItem,
-            capsuleFormat === 'name_time' && styles.modalItemSelected,
-            { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
-          ]}
-          onPress={() => {
-            triggerHaptic();
-            updateSetting('@deenpulse_capsule_format', 'name_time', setCapsuleFormat, () => setShowCapsuleFormatPicker(false));
-          }}
-        >
-          <Text style={[
-            styles.modalItemText,
-            capsuleFormat === 'name_time' && styles.modalItemTextSelected,
-          ]}>Name & Time (e.g., Fajr (5:12 AM))</Text>
-          {capsuleFormat === 'name_time' && <Icon name="check" size={16} color="#00E8A2" />}
-        </Pressable>
-        <Pressable
-          style={({ pressed }) => [
-            styles.modalItem,
-            capsuleFormat === 'time' && styles.modalItemSelected,
-            { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
-          ]}
-          onPress={() => {
-            triggerHaptic();
-            updateSetting('@deenpulse_capsule_format', 'time', setCapsuleFormat, () => setShowCapsuleFormatPicker(false));
-          }}
-        >
-          <Text style={[
-            styles.modalItemText,
-            capsuleFormat === 'time' && styles.modalItemTextSelected,
-          ]}>Time Only (e.g., 5:12 AM)</Text>
-          {capsuleFormat === 'time' && <Icon name="check" size={16} color="#00E8A2" />}
-        </Pressable>
       </FluidModal>
 
       {/* Notification Style Picker Modal */}
@@ -609,60 +676,118 @@ function DeenPulseApp(): React.JSX.Element {
           triggerHaptic();
           setShowNotificationStylePicker(false);
         }}
-        title="Notification Title Style"
+        title={profile?.category === 2 ? "Notification Style" : "Notification Title Style"}
       >
-        <Pressable
-          style={({ pressed }) => [
-            styles.modalItem,
-            notificationStyle === 'standard' && styles.modalItemSelected,
-            { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
-          ]}
-          onPress={() => {
-            triggerHaptic();
-            updateSetting('@deenpulse_notification_style', 'standard', setNotificationStyle, () => setShowNotificationStylePicker(false));
-          }}
-        >
-          <Text style={[
-            styles.modalItemText,
-            notificationStyle === 'standard' && styles.modalItemTextSelected,
-          ]}>Standard (e.g., Next Prayer: Fajr)</Text>
-          {notificationStyle === 'standard' && <Icon name="check" size={16} color="#00E8A2" />}
-        </Pressable>
-        <Pressable
-          style={({ pressed }) => [
-            styles.modalItem,
-            notificationStyle === 'with_time' && styles.modalItemSelected,
-            { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
-          ]}
-          onPress={() => {
-            triggerHaptic();
-            updateSetting('@deenpulse_notification_style', 'with_time', setNotificationStyle, () => setShowNotificationStylePicker(false));
-          }}
-        >
-          <Text style={[
-            styles.modalItemText,
-            notificationStyle === 'with_time' && styles.modalItemTextSelected,
-          ]}>With Time (e.g., Next Prayer: Fajr (5:12 AM))</Text>
-          {notificationStyle === 'with_time' && <Icon name="check" size={16} color="#00E8A2" />}
-        </Pressable>
-        {profile?.category !== 1 && (
-          <Pressable
-            style={({ pressed }) => [
-              styles.modalItem,
-              notificationStyle === 'with_countdown' && styles.modalItemSelected,
-              { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
-            ]}
-            onPress={() => {
-              triggerHaptic();
-              updateSetting('@deenpulse_notification_style', 'with_countdown', setNotificationStyle, () => setShowNotificationStylePicker(false));
-            }}
-          >
-            <Text style={[
-              styles.modalItemText,
-              notificationStyle === 'with_countdown' && styles.modalItemTextSelected,
-            ]}>With Countdown (e.g., Next Prayer: Fajr (45m 12s))</Text>
-            {notificationStyle === 'with_countdown' && <Icon name="check" size={16} color="#00E8A2" />}
-          </Pressable>
+        {profile?.category === 2 ? (
+          <>
+            <Pressable
+              style={({ pressed }) => [
+                styles.modalItem,
+                notificationStyle === 'standard' && styles.modalItemSelected,
+                { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
+              ]}
+              onPress={() => {
+                triggerHaptic();
+                updateSetting('@deenpulse_notification_style', 'standard', setNotificationStyle, () => setShowNotificationStylePicker(false));
+              }}
+            >
+              <Text style={[
+                styles.modalItemText,
+                notificationStyle === 'standard' && styles.modalItemTextSelected,
+              ]}>Name Only (e.g., Asr)</Text>
+              {notificationStyle === 'standard' && <Icon name="check" size={16} color="#00E8A2" />}
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [
+                styles.modalItem,
+                notificationStyle === 'with_countdown' && styles.modalItemSelected,
+                { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
+              ]}
+              onPress={() => {
+                triggerHaptic();
+                updateSetting('@deenpulse_notification_style', 'with_countdown', setNotificationStyle, () => setShowNotificationStylePicker(false));
+              }}
+            >
+              <Text style={[
+                styles.modalItemText,
+                notificationStyle === 'with_countdown' && styles.modalItemTextSelected,
+              ]}>Name & Countdown (e.g., Asr in 16m 10s)</Text>
+              {notificationStyle === 'with_countdown' && <Icon name="check" size={16} color="#00E8A2" />}
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [
+                styles.modalItem,
+                notificationStyle === 'with_time' && styles.modalItemSelected,
+                { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
+              ]}
+              onPress={() => {
+                triggerHaptic();
+                updateSetting('@deenpulse_notification_style', 'with_time', setNotificationStyle, () => setShowNotificationStylePicker(false));
+              }}
+            >
+              <Text style={[
+                styles.modalItemText,
+                notificationStyle === 'with_time' && styles.modalItemTextSelected,
+              ]}>Name & Time (e.g., Asr at 5:12 PM)</Text>
+              {notificationStyle === 'with_time' && <Icon name="check" size={16} color="#00E8A2" />}
+            </Pressable>
+          </>
+        ) : (
+          <>
+            <Pressable
+              style={({ pressed }) => [
+                styles.modalItem,
+                notificationStyle === 'standard' && styles.modalItemSelected,
+                { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
+              ]}
+              onPress={() => {
+                triggerHaptic();
+                updateSetting('@deenpulse_notification_style', 'standard', setNotificationStyle, () => setShowNotificationStylePicker(false));
+              }}
+            >
+              <Text style={[
+                styles.modalItemText,
+                notificationStyle === 'standard' && styles.modalItemTextSelected,
+              ]}>Standard (e.g., Next Prayer: Fajr)</Text>
+              {notificationStyle === 'standard' && <Icon name="check" size={16} color="#00E8A2" />}
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [
+                styles.modalItem,
+                notificationStyle === 'with_time' && styles.modalItemSelected,
+                { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
+              ]}
+              onPress={() => {
+                triggerHaptic();
+                updateSetting('@deenpulse_notification_style', 'with_time', setNotificationStyle, () => setShowNotificationStylePicker(false));
+              }}
+            >
+              <Text style={[
+                styles.modalItemText,
+                notificationStyle === 'with_time' && styles.modalItemTextSelected,
+              ]}>With Time (e.g., Next Prayer: Fajr (5:12 AM))</Text>
+              {notificationStyle === 'with_time' && <Icon name="check" size={16} color="#00E8A2" />}
+            </Pressable>
+            {profile?.category !== 1 && (
+              <Pressable
+                style={({ pressed }) => [
+                  styles.modalItem,
+                  notificationStyle === 'with_countdown' && styles.modalItemSelected,
+                  { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
+                ]}
+                onPress={() => {
+                  triggerHaptic();
+                  updateSetting('@deenpulse_notification_style', 'with_countdown', setNotificationStyle, () => setShowNotificationStylePicker(false));
+                }}
+              >
+                <Text style={[
+                  styles.modalItemText,
+                  notificationStyle === 'with_countdown' && styles.modalItemTextSelected,
+                ]}>With Countdown (e.g., Next Prayer: Fajr (45m 12s))</Text>
+                {notificationStyle === 'with_countdown' && <Icon name="check" size={16} color="#00E8A2" />}
+              </Pressable>
+            )}
+          </>
         )}
       </FluidModal>
 
@@ -1080,23 +1205,27 @@ export const styles = StyleSheet.create({
     letterSpacing: 2,
     marginHorizontal: 12,
   },
-  capsuleStatus: {
-    flexDirection: 'row',
+  footerContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 20,
-    gap: 8,
+    paddingVertical: 24,
+    gap: 12,
   },
-  capsuleDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#00E8A2',
+  footerDivider: {
+    width: '30%',
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
   },
-  capsuleText: {
-    fontSize: 12,
-    color: 'rgba(0, 232, 162, 0.6)',
-    letterSpacing: 0.3,
+  footerText: {
+    fontSize: 11,
+    color: 'rgba(255, 255, 255, 0.3)',
+    letterSpacing: 0.8,
+    textAlign: 'center',
+  },
+  footerLink: {
+    color: '#00E8A2',
+    fontWeight: '700',
+    textDecorationLine: 'underline',
   },
   modalOverlay: {
     flex: 1,

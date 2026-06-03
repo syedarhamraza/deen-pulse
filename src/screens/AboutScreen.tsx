@@ -1,16 +1,29 @@
 import React from 'react';
-import { View, Text, ScrollView, Pressable, Linking } from 'react-native';
+import { View, Text, ScrollView, Pressable, Linking, StyleSheet, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
-import { styles, triggerHaptic, HeaderFadeOverlay } from '../../App';
+import { triggerHaptic, HeaderFadeOverlay } from '../../App';
 
 interface AboutScreenProps {
   onBack: () => void;
 }
 
 export function AboutScreen({ onBack }: AboutScreenProps) {
+  const handleOpenGitHub = () => {
+    triggerHaptic();
+    Linking.openURL('https://github.com/syedarhamraza').catch(err =>
+      console.warn('Failed to open URL:', err)
+    );
+  };
+
+  const handleCheckUpdates = () => {
+    triggerHaptic();
+    // In a real app this would query a version endpoint. Mocking for premium feedback.
+    Alert.alert('DeenPulse Hub', 'DeenPulse is up to date!\nVersion: 1.0.2 (Stable)');
+  };
+
   return (
-    <View style={styles.screenContainer}>
-      <View style={styles.subHeader}>
+    <View style={styles.container}>
+      <View style={styles.header}>
         <Pressable
           onPress={() => {
             triggerHaptic();
@@ -20,55 +33,273 @@ export function AboutScreen({ onBack }: AboutScreenProps) {
         >
           <Icon name="arrow-left" size={20} color="#00E8A2" />
         </Pressable>
-        <Text style={styles.subTitle}>About</Text>
+        <Text style={styles.title}>About</Text>
         <HeaderFadeOverlay />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.cardContainer}>
-          {/* Highlight header block */}
-          <View style={styles.aboutHeaderBlock}>
-            <View style={styles.aboutBrandingContainer}>
-              <Text style={styles.aboutBranding}>DeenPulse</Text>
-              <View style={styles.betaBadge}>
-                <Text style={styles.betaBadgeText}>BETA</Text>
-              </View>
+        {/* Branding Hero Block */}
+        <View style={styles.heroSection}>
+          <View style={styles.logoOuterRing}>
+            <View style={styles.logoInnerRing}>
+              <Icon name="activity" size={42} color="#00E8A2" style={styles.logoIcon} />
             </View>
-            <View style={styles.aboutAccentBar} />
-            <Text style={styles.aboutTagline}>Live tracking on your status bar</Text>
           </View>
-
-          {/* Basic information card */}
-          <View style={styles.menuDetailCard}>
-            <Text style={styles.aboutSectionTitle}>Basic Information</Text>
-
-            <View style={styles.infoRow}>
-              <Text style={styles.infoKey}>App Name</Text>
-              <Text style={styles.infoVal}>DeenPulse</Text>
-            </View>
-
-            <Pressable
-              style={({ pressed }) => [styles.infoRow, { opacity: pressed ? 0.7 : 1 }]}
-              onPress={() => {
-                triggerHaptic();
-                Linking.openURL('https://github.com/syedarhamraza').catch(err =>
-                  console.warn('Failed to open URL:', err)
-                );
-              }}
-            >
-              <Text style={styles.infoKey}>Owner</Text>
-              <Text style={styles.infoValLink}>Syed Arham Raza</Text>
-            </Pressable>
-
-            <View style={[styles.infoRow, styles.infoRowLast]}>
-              <Text style={styles.infoKey}>Version</Text>
-              <View style={styles.versionBadge}>
-                <Text style={styles.versionBadgeText}>1.0.2 Beta</Text>
-              </View>
-            </View>
+          <Text style={styles.appName}>DeenPulse</Text>
+          <Text style={styles.appTagline}>Live tracking on your status bar</Text>
+          <View style={styles.versionBadge}>
+            <Text style={styles.versionText}>v1.0.2 Stable</Text>
           </View>
         </View>
+
+        {/* Feature Pillars Grid */}
+        <Text style={styles.sectionLabel}>Key Features</Text>
+        <View style={styles.featuresGrid}>
+          <View style={styles.featureCard}>
+            <Icon name="feather" size={20} color="#00E8A2" style={styles.featureIcon} />
+            <Text style={styles.featureTitle}>Live Capsule</Text>
+            <Text style={styles.featureDesc}>Status bar tracking lock-in</Text>
+          </View>
+
+          <View style={styles.featureCard}>
+            <Icon name="watch" size={20} color="#00E8A2" style={styles.featureIcon} />
+            <Text style={styles.featureTitle}>Wear OS Sync</Text>
+            <Text style={styles.featureDesc}>Active watch companion sync</Text>
+          </View>
+
+          <View style={styles.featureCard}>
+            <Icon name="bell" size={20} color="#00E8A2" style={styles.featureIcon} />
+            <Text style={styles.featureTitle}>Active Alerts</Text>
+            <Text style={styles.featureDesc}>15m window dynamic sounds</Text>
+          </View>
+
+          <View style={styles.featureCard}>
+            <Icon name="sliders" size={20} color="#00E8A2" style={styles.featureIcon} />
+            <Text style={styles.featureTitle}>OEM Branching</Text>
+            <Text style={styles.featureDesc}>Specialized brand profiles</Text>
+          </View>
+        </View>
+
+        {/* Credits Card */}
+        <Text style={styles.sectionLabel}>Core Team</Text>
+        <View style={styles.creditsCard}>
+          <View style={styles.creditsHeader}>
+            <Icon name="code" size={18} color="#00E8A2" />
+            <Text style={styles.creditsTitle}>Developer & Owner</Text>
+          </View>
+          <View style={styles.divider} />
+          <Pressable
+            style={({ pressed }) => [styles.creatorRow, { opacity: pressed ? 0.75 : 1 }]}
+            onPress={handleOpenGitHub}
+          >
+            <View>
+              <Text style={styles.creatorName}>Syed Arham Raza</Text>
+              <Text style={styles.creatorRole}>Lead Software Architect & Engineer</Text>
+            </View>
+            <Icon name="github" size={20} color="#00E8A2" />
+          </Pressable>
+        </View>
+
+        {/* Update action */}
+        <Pressable
+          style={({ pressed }) => [styles.updateButton, { opacity: pressed ? 0.9 : 1 }]}
+          onPress={handleCheckUpdates}
+        >
+          <Icon name="refresh-cw" size={16} color="#00E8A2" />
+          <Text style={styles.updateButtonText}>Check for Updates</Text>
+        </Pressable>
       </ScrollView>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#080B14',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 232, 162, 0.15)',
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: -0.3,
+  },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 40,
+  },
+  heroSection: {
+    alignItems: 'center',
+    marginVertical: 24,
+  },
+  logoOuterRing: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(0, 232, 162, 0.04)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 232, 162, 0.15)',
+    marginBottom: 16,
+  },
+  logoInnerRing: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    backgroundColor: 'rgba(0, 232, 162, 0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#00E8A2',
+    shadowColor: '#00E8A2',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  logoIcon: {
+    shadowColor: '#00E8A2',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 6,
+  },
+  appName: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  appTagline: {
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.5)',
+    marginBottom: 12,
+  },
+  versionBadge: {
+    backgroundColor: 'rgba(0, 232, 162, 0.12)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 232, 162, 0.2)',
+  },
+  versionText: {
+    color: '#00E8A2',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  sectionLabel: {
+    fontSize: 11,
+    color: 'rgba(255, 255, 255, 0.4)',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 12,
+    marginTop: 16,
+    paddingLeft: 4,
+  },
+  featuresGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  featureCard: {
+    width: '48%',
+    backgroundColor: '#121624',
+    borderRadius: 16,
+    padding: 16,
+    marginVertical: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.03)',
+  },
+  featureIcon: {
+    marginBottom: 8,
+  },
+  featureTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  featureDesc: {
+    fontSize: 11,
+    color: 'rgba(255, 255, 255, 0.4)',
+    lineHeight: 14,
+  },
+  creditsCard: {
+    backgroundColor: '#121624',
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.03)',
+  },
+  creditsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  creditsTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    marginBottom: 16,
+  },
+  creatorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  creatorName: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 2,
+  },
+  creatorRole: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.5)',
+  },
+  updateButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    borderRadius: 14,
+    height: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 232, 162, 0.15)',
+    marginTop: 8,
+  },
+  updateButtonText: {
+    color: '#00E8A2',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+});

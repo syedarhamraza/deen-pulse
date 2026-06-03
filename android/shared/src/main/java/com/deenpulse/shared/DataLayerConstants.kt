@@ -28,5 +28,6 @@ object DataLayerConstants {
     const val KEY_TIMESTAMP = "timestamp"
 
     const val KEY_SCHEMA_VERSION = "schema_version"
+    const val KEY_DEVICE_CATEGORY = "device_category"
     const val CURRENT_SCHEMA_VERSION = 1
 }

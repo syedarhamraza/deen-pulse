@@ -101,6 +101,9 @@ export function getNextPrayer(prayers: PrayerTime[], now: Date = new Date()): Ne
 }
 
 export function formatCountdown(minutes: number, seconds: number): string {
+  if (minutes <= 0 && seconds <= 0) {
+    return 'Active';
+  }
   if (minutes >= 60) {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { NativeModules } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PrayerTime, getNextPrayer, NextPrayerInfo } from '../utils/prayerEngine';
 
 const { PrayerCapsuleModule } = NativeModules;
@@ -37,11 +38,13 @@ export function usePrayerCountdown(
         })
       ];
       const prayersJson = JSON.stringify(scheduleList);
+      AsyncStorage.setItem('@deenpulse_last_prayers_json', prayersJson).catch(() => {});
       PrayerCapsuleModule?.updateLiveCapsule(prayersJson, capsuleFormat, notificationStyle);
 
       // Sync to Wear OS watch if location coordinates are available
       if (location) {
         PrayerCapsuleModule?.syncToWear(prayersJson, location.latitude, location.longitude);
+        AsyncStorage.setItem('@deenpulse_last_wear_sync', new Date().toISOString()).catch(() => {});
       }
     } catch (e) {
       console.warn('Failed to update live capsule or sync to wear:', e);

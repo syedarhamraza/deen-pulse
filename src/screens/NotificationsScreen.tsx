@@ -2,14 +2,19 @@ import React from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { styles, triggerHaptic, HeaderFadeOverlay } from '../../App';
+import { ColorOSSwitch } from '../components/ColorOSSwitch';
 
 interface NotificationsScreenProps {
   onBack: () => void;
   onAllowNotificationsPress: () => void;
   onCapsuleFormatPress: () => void;
   onNotificationStylePress: () => void;
+  onOptimizePress: () => void;
+  soundEnabled: boolean;
+  onSoundToggle: (val: boolean) => void;
   capsuleFormatLabel: string;
   notificationStyleLabel: string;
+  deviceCategory?: number;
 }
 
 export function NotificationsScreen({
@@ -17,8 +22,12 @@ export function NotificationsScreen({
   onAllowNotificationsPress,
   onCapsuleFormatPress,
   onNotificationStylePress,
+  onOptimizePress,
+  soundEnabled,
+  onSoundToggle,
   capsuleFormatLabel,
   notificationStyleLabel,
+  deviceCategory,
 }: NotificationsScreenProps) {
   return (
     <View style={styles.screenContainer}>
@@ -49,18 +58,47 @@ export function NotificationsScreen({
             <Text style={styles.menuDetailDesc}>For the Live island, enable live alerts in notification settings</Text>
           </Pressable>
 
-          {/* Status Bar Capsule Format Choice */}
+          {/* Device Optimization Navigation */}
           <Pressable
             style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
             onPress={() => {
               triggerHaptic();
-              onCapsuleFormatPress();
+              onOptimizePress();
             }}
           >
-            <Text style={styles.menuDetailLabel}>Status Bar Capsule Style</Text>
-            <Text style={styles.menuDetailValue}>{capsuleFormatLabel}</Text>
-            <Text style={styles.menuDetailDesc}>Choose what information is displayed directly inside your device's status bar capsule.</Text>
+            <Text style={styles.menuDetailLabel}>Optimize for Your Device</Text>
+            <Text style={styles.menuDetailDesc}>Configure brand-specific notification capsule settings and power profiles</Text>
           </Pressable>
+
+          {/* Audible Prayer Alert Switch */}
+          <View style={[styles.menuDetailCard, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
+            <View style={{ flex: 1, marginRight: 16 }}>
+              <Text style={styles.menuDetailLabel}>Audible Prayer Alert</Text>
+              <Text style={styles.menuDetailDesc}>Play the system default notification sound when a prayer time begins.</Text>
+            </View>
+            <ColorOSSwitch
+              value={soundEnabled}
+              onValueChange={(val) => {
+                triggerHaptic();
+                onSoundToggle(val);
+              }}
+            />
+          </View>
+
+          {/* Status Bar Capsule Format Choice */}
+          {deviceCategory !== 3 && (
+            <Pressable
+              style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
+              onPress={() => {
+                triggerHaptic();
+                onCapsuleFormatPress();
+              }}
+            >
+              <Text style={styles.menuDetailLabel}>Status Bar Capsule Style</Text>
+              <Text style={styles.menuDetailValue}>{capsuleFormatLabel}</Text>
+              <Text style={styles.menuDetailDesc}>Choose what information is displayed directly inside your device's status bar capsule.</Text>
+            </Pressable>
+          )}
 
           {/* Notification Title Format Choice */}
           <Pressable

@@ -1,7 +1,8 @@
-import React from 'react';
-import { View, Text, ScrollView, Pressable, Switch, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, Pressable, Platform, PermissionsAndroid, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
-import { styles, triggerHaptic, HeaderFadeOverlay } from '../../App';
+import { triggerHaptic, HeaderFadeOverlay } from '../../App';
+import { ColorOSSwitch } from '../components/ColorOSSwitch';
 
 interface DataManagementScreenProps {
   onBack: () => void;
@@ -18,74 +19,131 @@ export function DataManagementScreen({
   onRequestGPS,
   onClearCacheReset,
 }: DataManagementScreenProps) {
+  const [gpsGranted, setGpsGranted] = useState<boolean | null>(null);
+
+  const checkGPSPermission = async () => {
+    if (Platform.OS === 'android') {
+      try {
+        const hasPermission = await PermissionsAndroid.check(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+        );
+        setGpsGranted(hasPermission);
+      } catch (err) {
+        console.warn('Failed to check GPS permission:', err);
+        setGpsGranted(false);
+      }
+    } else {
+      setGpsGranted(true);
+    }
+  };
+
+  useEffect(() => {
+    checkGPSPermission();
+  }, []);
+
+  const handleRequestGPS = async () => {
+    triggerHaptic();
+    onRequestGPS();
+    // Re-verify the permission status after a brief delay to allow the user to accept/deny
+    setTimeout(() => {
+      checkGPSPermission();
+    }, 1200);
+  };
+
   return (
-    <View style={styles.screenContainer}>
-      <View style={styles.subHeader}>
+    <View style={styles.container}>
+      <View style={styles.header}>
         <Pressable
           onPress={() => {
             triggerHaptic();
             onBack();
           }}
-          style={({ pressed }) => [styles.backButton, { opacity: pressed ? 0.7 : 1 }]}
+          style={({ pressed }) => [styles.backButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
         >
           <Icon name="arrow-left" size={20} color="#00E8A2" />
         </Pressable>
-        <Text style={styles.subTitle}>Data Management</Text>
+        <Text style={styles.title}>Data Management</Text>
         <HeaderFadeOverlay />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.cardContainer}>
           {/* Location Mode */}
-          <View style={styles.menuDetailCard}>
+          <View style={styles.card}>
             <View style={styles.switchRow}>
               <View style={styles.switchInfo}>
-                <Text style={styles.menuDetailLabel}>Location Mode</Text>
-                <Text style={styles.menuDetailDesc}>
-                  {locationMode === 'gps' ? 'Auto-Detect Location (GPS)' : 'Use Cached Location'}
+                <Text style={styles.cardLabel}>Location Mode</Text>
+                <Text style={styles.cardDesc}>
+                  {locationMode === 'gps'
+                    ? 'Auto-Detect Location (GPS)'
+                    : 'Use Static Cached Coordinates'}
                 </Text>
               </View>
-              <Switch
+              <ColorOSSwitch
                 value={locationMode === 'gps'}
                 onValueChange={(val) => {
                   triggerHaptic();
                   onLocationModeChange(val);
                 }}
-                trackColor={{ false: '#2A2E3D', true: '#00E8A2' }}
-                thumbColor={Platform.OS === 'android' ? '#FFFFFF' : undefined}
               />
             </View>
           </View>
 
           {/* Force GPS Permission Request */}
           <Pressable
-            style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
-            onPress={() => {
-              triggerHaptic();
-              onRequestGPS();
-            }}
+            style={({ pressed }) => [styles.card, { opacity: pressed ? 0.75 : 1 }]}
+            onPress={handleRequestGPS}
           >
-            <Text style={styles.menuDetailLabel}>Request GPS Permission</Text>
-            <Text style={styles.menuDetailDesc}>
-              Manually trigger system location permission dialog to authorize GPS coordinates tracking.
-            </Text>
+            <View style={styles.rowLayout}>
+              <View style={styles.infoLayout}>
+                <Text style={styles.cardLabel}>GPS Location Permission</Text>
+                <Text style={styles.cardDesc}>
+                  Manually trigger system location authorization settings for accurate local calculations.
+                </Text>
+              </View>
+              {gpsGranted !== null && (
+                <View
+                  style={[
+                    styles.statusBadge,
+                    gpsGranted ? styles.statusBadgeGranted : styles.statusBadgeDenied,
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.statusDot,
+                      gpsGranted ? styles.statusDotGranted : styles.statusDotDenied,
+                    ]}
+                  />
+                  <Text
+                    style={[
+                      styles.statusText,
+                      { color: gpsGranted ? '#00E8A2' : '#FF6B6B' },
+                    ]}
+                  >
+                    {gpsGranted ? 'Active' : 'Setup'}
+                  </Text>
+                </View>
+              )}
+            </View>
           </Pressable>
 
           {/* Reset Cache / Reset History */}
           <Pressable
             style={({ pressed }) => [
-              styles.menuDetailCard,
+              styles.card,
               styles.destructiveBorder,
-              { opacity: pressed ? 0.75 : 1 }
+              { opacity: pressed ? 0.75 : 1 },
             ]}
             onPress={() => {
               triggerHaptic();
               onClearCacheReset();
             }}
           >
-            <Text style={[styles.menuDetailLabel, styles.destructiveText]}>Clear Cache / Reset History</Text>
-            <Text style={styles.menuDetailDesc}>
-              Wipes out all stored calculation rules, caching tables, and restarts positioning loop.
+            <Text style={[styles.cardLabel, styles.destructiveText]}>
+              Clear Cache & App Reset
+            </Text>
+            <Text style={styles.cardDesc}>
+              Wipes out all stored calculation rules, cached locations, and restarts the initial setup wizard.
             </Text>
           </Pressable>
         </View>
@@ -93,3 +151,119 @@ export function DataManagementScreen({
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#080B14',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 232, 162, 0.15)',
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: -0.3,
+  },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 40,
+  },
+  cardContainer: {
+    gap: 12,
+  },
+  card: {
+    backgroundColor: '#121624',
+    borderRadius: 20,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.03)',
+  },
+  destructiveBorder: {
+    borderColor: 'rgba(239, 68, 68, 0.2)',
+  },
+  destructiveText: {
+    color: '#EF4444',
+  },
+  switchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  switchInfo: {
+    flex: 1,
+    marginRight: 16,
+  },
+  cardLabel: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  cardDesc: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.4)',
+    lineHeight: 18,
+  },
+  rowLayout: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  infoLayout: {
+    flex: 1,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+    gap: 6,
+    borderWidth: 1,
+  },
+  statusBadgeGranted: {
+    backgroundColor: 'rgba(0, 232, 162, 0.08)',
+    borderColor: 'rgba(0, 232, 162, 0.2)',
+  },
+  statusBadgeDenied: {
+    backgroundColor: 'rgba(255, 107, 107, 0.08)',
+    borderColor: 'rgba(255, 107, 107, 0.2)',
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  statusDotGranted: {
+    backgroundColor: '#00E8A2',
+  },
+  statusDotDenied: {
+    backgroundColor: '#FF6B6B',
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+});

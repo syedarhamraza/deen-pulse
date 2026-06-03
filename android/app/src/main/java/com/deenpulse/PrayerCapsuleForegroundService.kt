@@ -14,6 +14,7 @@ import android.os.Looper
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import org.json.JSONArray
+import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -29,6 +30,52 @@ class PrayerCapsuleForegroundService : Service() {
     private var isTimerRunning = false
     private var capsuleFormat: String = "name"
     private var notificationStyle: String = "standard"
+    private var isCountdownRunning = false
+
+    private fun formatCountdown(remainingMs: Long): String {
+        if (remainingMs <= 0L) return "00s"
+        val totalSecs = remainingMs / 1000L
+        val seconds = totalSecs % 60L
+        val minutes = (totalSecs / 60L) % 60L
+        val hours = totalSecs / 3600L
+        return if (hours > 0L) {
+            String.format(Locale.getDefault(), "%02dh %02dm %02ds", hours, minutes, seconds)
+        } else if (minutes > 0L) {
+            String.format(Locale.getDefault(), "%02dm %02ds", minutes, seconds)
+        } else {
+            String.format(Locale.getDefault(), "%02ds", seconds)
+        }
+    }
+
+    private val countdownRunnable = object : Runnable {
+        override fun run() {
+            if (isCountdownRunning) {
+                val prefs = getSharedPreferences("DeenPulsePrefs", MODE_PRIVATE)
+                val deviceCategory = prefs.getInt("device_category", -1)
+                val category = if (deviceCategory != -1) {
+                    deviceCategory
+                } else {
+                    val manufacturer = Build.MANUFACTURER?.lowercase() ?: ""
+                    val brand = Build.BRAND?.lowercase() ?: ""
+                    if (manufacturer.contains("oppo") || manufacturer.contains("oneplus") || manufacturer.contains("realme") ||
+                        brand.contains("oppo") || brand.contains("oneplus") || brand.contains("realme")) {
+                        1
+                    } else if (manufacturer.contains("vivo") || manufacturer.contains("iqoo") ||
+                               brand.contains("vivo") || brand.contains("iqoo")) {
+                        2
+                    } else {
+                        3
+                    }
+                }
+
+                val isCountdownActive = (capsuleFormat == "name_countdown" || notificationStyle == "with_countdown" || getActivePrayerName() != null)
+                if (isCountdownActive) {
+                    updateNotification()
+                }
+                handler.postDelayed(this, 1000L)
+            }
+        }
+    }
 
     private fun formatTime(timestamp: Long): String {
         if (timestamp == 0L) return ""
@@ -38,22 +85,46 @@ class PrayerCapsuleForegroundService : Service() {
 
     private val checkRunnable = object : Runnable {
         override fun run() {
-            val next = findNextPrayer()
-            if (next != null) {
-                // If the next prayer has changed, update the notification chronometer immediately
-                if (next.name != currentPrayerName || next.timestamp != currentTargetTimestamp) {
+            val now = System.currentTimeMillis()
+            
+            // Immediate transition at prayer arrival
+            if (currentTargetTimestamp > 0L && currentTargetTimestamp <= now) {
+                Log.d("PrayerCapsuleService", "Prayer $currentPrayerName time reached ($currentTargetTimestamp <= $now). Advancing.")
+                fireActiveNotification(currentPrayerName)
+                
+                // Immediately transition to next prayer
+                val next = findNextPrayer()
+                if (next != null && next.timestamp > now) {
                     currentPrayerName = next.name
                     currentTargetTimestamp = next.timestamp
                     updateNotification()
+                    Log.d("PrayerCapsuleService", "Transitioned to: ${next.name} at ${next.timestamp}")
                 }
-                // Schedule next check: every 60 seconds normally, or exactly at transition time if closer
-                val now = System.currentTimeMillis()
+            }
+
+            val next = findNextPrayer()
+            if (next != null) {
+                if (next.name != currentPrayerName || next.timestamp != currentTargetTimestamp) {
+                    // Verify the target is actually in the future before setting
+                    if (next.timestamp > now) {
+                        currentPrayerName = next.name
+                        currentTargetTimestamp = next.timestamp
+                        updateNotification()
+                        Log.d("PrayerCapsuleService", "Updated target to: ${next.name} at ${next.timestamp}")
+                    }
+                }
+                // Schedule next check
                 val timeToNext = if (currentTargetTimestamp > now) currentTargetTimestamp - now else 60000L
                 val delay = timeToNext.coerceIn(1000L, 60000L)
                 handler.postDelayed(this, delay)
             } else {
-                Log.d("PrayerCapsuleService", "No more upcoming prayers in schedule. Stopping service.")
-                stopSelf()
+                if (getActivePrayerName() != null) {
+                    updateNotification()
+                    handler.postDelayed(this, 5000L)
+                } else {
+                    Log.d("PrayerCapsuleService", "All prayers exhausted. Showing Schedule Complete notification.")
+                    showScheduleCompleteNotification()
+                }
             }
         }
     }
@@ -62,7 +133,6 @@ class PrayerCapsuleForegroundService : Service() {
         private const val CHANNEL_ID = "deenpulse_capsule"
         private const val CHANNEL_NAME = "Prayer Countdown"
         private const val NOTIFICATION_ID = 7001
-        private const val FLAG_PROMOTED_ONGOING = 0x40000000
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -75,18 +145,28 @@ class PrayerCapsuleForegroundService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val format = intent?.getStringExtra("capsuleFormat")
         val style = intent?.getStringExtra("notificationStyle")
-        if (format != null) capsuleFormat = format
-        if (style != null) notificationStyle = style
+        
+        val prefs = getSharedPreferences("DeenPulsePrefs", MODE_PRIVATE)
+        if (format != null) {
+            capsuleFormat = format
+            prefs.edit().putString("capsuleFormat", format).apply()
+        } else {
+            capsuleFormat = prefs.getString("capsuleFormat", "name") ?: "name"
+        }
+        if (style != null) {
+            notificationStyle = style
+            prefs.edit().putString("notificationStyle", style).apply()
+        } else {
+            notificationStyle = prefs.getString("notificationStyle", "standard") ?: "standard"
+        }
 
         val action = intent?.action
         if (action != null) {
             when (action) {
                 "ACTION_REFRESH" -> {
-                    // Emit event to React Native JS thread to trigger location & timings refresh
                     PrayerCapsuleModule.sendEvent("onRefreshRequested", null)
                 }
                 "ACTION_CLOSE" -> {
-                    // Close the foreground service and exit the application process
                     stopSelf()
                     System.exit(0)
                 }
@@ -106,8 +186,10 @@ class PrayerCapsuleForegroundService : Service() {
                     list.add(PrayerScheduleItem(name, timestamp))
                 }
                 prayerList = list
+                
+                // Persist the updated prayer list
+                prefs.edit().putString("last_prayer_list", newPrayersJson).apply()
 
-                // Immediately determine next prayer and start/update foreground to prevent ANR
                 val next = findNextPrayer()
                 if (next != null) {
                     currentPrayerName = next.name
@@ -119,34 +201,76 @@ class PrayerCapsuleForegroundService : Service() {
             } catch (e: Exception) {
                 e.printStackTrace()
             }
+        } else {
+            // Null intent fallback (e.g. service restart by OS)
+            val savedJson = prefs.getString("last_prayer_list", null)
+            if (savedJson != null) {
+                try {
+                    val jsonArray = JSONArray(savedJson)
+                    val list = mutableListOf<PrayerScheduleItem>()
+                    for (i in 0 until jsonArray.length()) {
+                        val obj = jsonArray.getJSONObject(i)
+                        val name = obj.getString("name")
+                        val timestamp = obj.getLong("timestamp")
+                        list.add(PrayerScheduleItem(name, timestamp))
+                    }
+                    prayerList = list
 
-            // Start background ticker check if it is not already running
-            if (!isTimerRunning) {
-                isTimerRunning = true
-                handler.post(checkRunnable)
+                    val next = findNextPrayer()
+                    if (next != null) {
+                        currentPrayerName = next.name
+                        currentTargetTimestamp = next.timestamp
+                        val notification = buildCapsuleNotification()
+                        startForeground(NOTIFICATION_ID, notification)
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }
         }
 
-        return START_NOT_STICKY
+        if (!isTimerRunning) {
+            isTimerRunning = true
+            handler.post(checkRunnable)
+        }
+
+        if (!isCountdownRunning) {
+            isCountdownRunning = true
+            handler.post(countdownRunnable)
+        }
+
+        return START_STICKY
     }
 
     override fun onDestroy() {
         super.onDestroy()
         handler.removeCallbacks(checkRunnable)
         isTimerRunning = false
+        handler.removeCallbacks(countdownRunnable)
+        isCountdownRunning = false
         stopForeground(STOP_FOREGROUND_REMOVE)
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         super.onTaskRemoved(rootIntent)
-        Log.d("PrayerCapsuleService", "App task removed. Stopping service.")
-        stopSelf()
+        Log.d("PrayerCapsuleService", "App task removed. Service remains sticky.")
     }
 
     private fun findNextPrayer(): PrayerScheduleItem? {
         val now = System.currentTimeMillis()
-        // Sort and find the first prayer that is scheduled in the future
         return prayerList.sortedBy { it.timestamp }.firstOrNull { it.timestamp > now }
+    }
+
+    private fun getActivePrayerName(): String? {
+        val now = System.currentTimeMillis()
+        val passedPrayers = prayerList.sortedBy { it.timestamp }.filter { it.timestamp <= now }
+        if (passedPrayers.isEmpty()) return null
+        val lastPassed = passedPrayers.last()
+        val fifteenMinutesMs = 15 * 60 * 1000L
+        if (now - lastPassed.timestamp < fifteenMinutesMs) {
+            return lastPassed.name
+        }
+        return null
     }
 
     private fun createNotificationChannel() {
@@ -172,14 +296,12 @@ class PrayerCapsuleForegroundService : Service() {
     }
 
     private fun buildCapsuleNotification(): Notification {
-        // Create pending intent to open the app when notification is tapped
         val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
         val pendingIntent = PendingIntent.getActivity(
             this, 0, launchIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // Notification Action Buttons
         val refreshIntent = Intent(this, PrayerCapsuleForegroundService::class.java).apply {
             setAction("ACTION_REFRESH")
         }
@@ -197,18 +319,59 @@ class PrayerCapsuleForegroundService : Service() {
         )
 
         val formattedTime = formatTime(currentTargetTimestamp)
-        
-        val contentTitle = if (notificationStyle == "with_time") {
+        val remainingMs = currentTargetTimestamp - System.currentTimeMillis()
+        val countdownStr = formatCountdown(remainingMs)
+
+        val prefs = getSharedPreferences("DeenPulsePrefs", MODE_PRIVATE)
+        val deviceCategory = prefs.getInt("device_category", -1)
+        val category = if (deviceCategory != -1) {
+            deviceCategory
+        } else {
+            val manufacturer = Build.MANUFACTURER?.lowercase() ?: ""
+            val brand = Build.BRAND?.lowercase() ?: ""
+            if (manufacturer.contains("oppo") || manufacturer.contains("oneplus") || manufacturer.contains("realme") ||
+                brand.contains("oppo") || brand.contains("oneplus") || brand.contains("realme")) {
+                1
+            } else if (manufacturer.contains("vivo") || manufacturer.contains("iqoo") ||
+                       brand.contains("vivo") || brand.contains("iqoo")) {
+                2
+            } else {
+                3
+            }
+        }
+
+        val isVivo = (category == 2)
+        val activePrayerName = getActivePrayerName()
+
+        val contentTitle = if (activePrayerName != null) {
+            if (isVivo) "Active" else "Prayer Active: $activePrayerName"
+        } else if (isVivo) {
+            when (capsuleFormat) {
+                "name_countdown" -> "$currentPrayerName ($countdownStr)"
+                "name_time" -> "$currentPrayerName ($formattedTime)"
+                "time" -> formattedTime
+                else -> currentPrayerName
+            }
+        } else if (notificationStyle == "with_time") {
             "Next Prayer: $currentPrayerName ($formattedTime)"
+        } else if (notificationStyle == "with_countdown") {
+            "Next Prayer: $currentPrayerName ($countdownStr)"
         } else {
             "Next Prayer: $currentPrayerName"
         }
 
-        val shortText = when (capsuleFormat) {
-            "name_time" -> "$currentPrayerName ($formattedTime)"
-            "time" -> formattedTime
-            else -> currentPrayerName
+        val shortText = if (activePrayerName != null) {
+            "Active"
+        } else {
+            when (capsuleFormat) {
+                "name_countdown" -> "$currentPrayerName ($countdownStr)"
+                "name_time" -> "$currentPrayerName ($formattedTime)"
+                "time" -> formattedTime
+                else -> currentPrayerName
+            }
         }
+
+        val useChronometer = !isVivo && (notificationStyle != "with_countdown") && (activePrayerName == null)
 
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(contentTitle)
@@ -219,28 +382,114 @@ class PrayerCapsuleForegroundService : Service() {
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setOnlyAlertOnce(true)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setUsesChronometer(true)
-            .setChronometerCountDown(true)
-            .setWhen(currentTargetTimestamp)
+            .setUsesChronometer(useChronometer)
+            .setChronometerCountDown(useChronometer)
             .addAction(0, "Refresh", refreshPendingIntent)
             .addAction(0, "Close App", closePendingIntent)
 
-        // Enforce methods for standard Android 15/16 base system compliance
-        try {
-            builder.setRequestPromotedOngoing(true)
-            builder.setShortCriticalText(shortText)
-        } catch (e: NoSuchMethodError) {
-            // Fallback for older compile environments if any
-            builder.extras.putBoolean("android.requestPromotedOngoing", true)
-            builder.extras.putString("android.shortCriticalText", shortText)
+        if (useChronometer) {
+            builder.setWhen(currentTargetTimestamp)
         }
 
-        val notification = builder.build()
+        if (category == 1 || category == 2) {
+            // Category 1 & 2: OPPO/OnePlus/Realme and Vivo/iQOO - Promoted Ongoing Status Bar Capsule Enabled
+            try {
+                builder.setRequestPromotedOngoing(true)
+                builder.setShortCriticalText(shortText)
+            } catch (e: NoSuchMethodError) {
+                builder.extras.putBoolean("android.requestPromotedOngoing", true)
+                builder.extras.putString("android.shortCriticalText", shortText)
+            }
+            val notification = builder.build()
+            notification.flags = notification.flags or 0x40000000 or 0x02000000
+            return notification
+        } else {
+            // Category 3: Samsung, Xiaomi, Pixel, etc. (High Priority Standard Ongoing)
+            val forceEnabled = prefs.getBoolean("isLiveNotificationForced", false)
+            if (forceEnabled) {
+                try {
+                    builder.setRequestPromotedOngoing(true)
+                    builder.setShortCriticalText(shortText)
+                } catch (e: NoSuchMethodError) {
+                    builder.extras.putBoolean("android.requestPromotedOngoing", true)
+                    builder.extras.putString("android.shortCriticalText", shortText)
+                }
+                val notification = builder.build()
+                notification.flags = notification.flags or 0x40000000 or 0x02000000
+                return notification
+            }
+            return builder.build()
+        }
+    }
 
-        // Inject both '0x40000000' and '0x02000000' bitmask flags to preserve native capsule promotion
-        notification.flags = notification.flags or 0x40000000 or 0x02000000
+    private fun showScheduleCompleteNotification() {
+        val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
+        val pendingIntent = PendingIntent.getActivity(
+            this, 0, launchIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val refreshIntent = Intent(this, PrayerCapsuleForegroundService::class.java).apply {
+            setAction("ACTION_REFRESH")
+        }
+        val refreshPendingIntent = PendingIntent.getService(
+            this, 1, refreshIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
 
-        return notification
+        val builder = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("Schedule Completed")
+            .setContentText("Open app or tap refresh to update timings.")
+            .setSmallIcon(R.drawable.ic_stat_prayer)
+            .setContentIntent(pendingIntent)
+            .setOngoing(true)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setOnlyAlertOnce(true)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .addAction(0, "Refresh", refreshPendingIntent)
+
+        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
+        manager?.notify(NOTIFICATION_ID, builder.build())
+    }
+
+    private fun fireActiveNotification(prayerName: String) {
+        val channelId = "deenpulse_prayer_alert"
+        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                channelId,
+                "Prayer Alerts",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Audible alerts when a prayer time starts"
+                enableVibration(true)
+                setSound(
+                    android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_NOTIFICATION),
+                    android.media.AudioAttributes.Builder()
+                        .setUsage(android.media.AudioAttributes.USAGE_NOTIFICATION)
+                        .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .build()
+                )
+            }
+            manager?.createNotificationChannel(channel)
+        }
+
+        val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
+        val pendingIntent = PendingIntent.getActivity(
+            this, 9, launchIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = NotificationCompat.Builder(this, channelId)
+            .setContentTitle("It's time for $prayerName")
+            .setContentText("Tap to open DeenPulse and view timings.")
+            .setSmallIcon(R.drawable.ic_stat_prayer)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .build()
+
+        manager?.notify(7002, notification)
     }
 }
 

@@ -1,178 +1,229 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
+import Icon from 'react-native-vector-icons/Feather';
 import { NextPrayerInfo, formatCountdown } from '../utils/prayerEngine';
 
 interface CountdownDisplayProps {
   nextPrayer: NextPrayerInfo | null;
+  isWindowActive?: boolean;
 }
 
-export const CountdownDisplay: React.FC<CountdownDisplayProps> = ({ nextPrayer }) => {
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  const glowAnim = useRef(new Animated.Value(0.2)).current;
-  const outerRingAnim = useRef(new Animated.Value(0.15)).current;
+export const CountdownDisplay: React.FC<CountdownDisplayProps> = ({ nextPrayer, isWindowActive = false }) => {
+  const breatheAnim = useRef(new Animated.Value(0.4)).current;
+  const pulseDotAnim = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {
-    const pulse = Animated.loop(
+    // Breathing progress bar animation
+    const breathe = Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.04,
-          duration: 2500,
+        Animated.timing(breatheAnim, {
+          toValue: 1.0,
+          duration: 2000,
           useNativeDriver: true,
         }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 2500,
+        Animated.timing(breatheAnim, {
+          toValue: 0.4,
+          duration: 2000,
           useNativeDriver: true,
         }),
       ])
     );
 
-    const glow = Animated.loop(
+    // Live dot pulsing
+    const pulseDot = Animated.loop(
       Animated.sequence([
-        Animated.timing(glowAnim, {
-          toValue: 0.55,
-          duration: 2500,
+        Animated.timing(pulseDotAnim, {
+          toValue: 1.0,
+          duration: 1000,
           useNativeDriver: true,
         }),
-        Animated.timing(glowAnim, {
-          toValue: 0.2,
-          duration: 2500,
+        Animated.timing(pulseDotAnim, {
+          toValue: 0.3,
+          duration: 1000,
           useNativeDriver: true,
         }),
       ])
     );
 
-    const outerRing = Animated.loop(
-      Animated.sequence([
-        Animated.timing(outerRingAnim, {
-          toValue: 0.35,
-          duration: 3000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(outerRingAnim, {
-          toValue: 0.15,
-          duration: 3000,
-          useNativeDriver: true,
-        }),
-      ])
-    );
-
-    pulse.start();
-    glow.start();
-    outerRing.start();
+    breathe.start();
+    pulseDot.start();
 
     return () => {
-      pulse.stop();
-      glow.stop();
-      outerRing.stop();
+      breathe.stop();
+      pulseDot.stop();
     };
-  }, [glowAnim, outerRingAnim, pulseAnim]);
+  }, [breatheAnim, pulseDotAnim]);
 
   if (!nextPrayer) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.loading}>Loading...</Text>
+      <View style={styles.loadingContainer}>
+        <Text style={styles.loadingText}>Synchronizing schedule...</Text>
       </View>
     );
   }
 
-  const countdownText = formatCountdown(nextPrayer.remainingMinutes, nextPrayer.remainingSeconds);
+  const accentColor = isWindowActive ? '#FFD700' : '#00E8A2';
+  const glowColor = isWindowActive ? 'rgba(255, 215, 0, 0.45)' : 'rgba(0, 232, 162, 0.35)';
+  const borderColor = isWindowActive ? 'rgba(255, 215, 0, 0.3)' : 'rgba(0, 232, 162, 0.2)';
+  const countdownText = isWindowActive ? 'ACTIVE' : formatCountdown(nextPrayer.remainingMinutes, nextPrayer.remainingSeconds);
 
   return (
-    <Animated.View style={[styles.container, { transform: [{ scale: pulseAnim }] }]}>
-      {/* Decorative outer ring */}
-      <Animated.View style={[styles.outerDecoRing, { opacity: outerRingAnim }]} />
-      {/* Glow ring */}
-      <Animated.View style={[styles.glowRing, { opacity: glowAnim }]} />
-      {/* Main circle */}
-      <View style={styles.innerCircle}>
-        <Text style={styles.label}>NEXT PRAYER</Text>
-        <Text style={styles.prayerName}>{nextPrayer.name}</Text>
-        <Text style={styles.countdown}>{countdownText}</Text>
-        <Text style={styles.remainingLabel}>remaining</Text>
-        <Text style={styles.timeLabel}>at {nextPrayer.time}</Text>
+    <View style={[styles.consoleCard, { borderColor }]}>
+      {/* Top Header Row */}
+      <View style={styles.cardHeader}>
+        <View style={styles.headerLeft}>
+          <Icon name="clock" size={13} color={accentColor} />
+          <Text style={[styles.headerText, { color: isWindowActive ? '#FFD700' : '#00E8A2' }]}>
+            {isWindowActive ? 'PRAYER ACTIVE' : 'UPCOMING PRAYER'}
+          </Text>
+        </View>
+        <View style={styles.liveIndicator}>
+          <Animated.View style={[styles.liveDot, { backgroundColor: accentColor, opacity: pulseDotAnim }]} />
+          <Text style={styles.liveText}>LIVE MONITOR</Text>
+        </View>
       </View>
-    </Animated.View>
+
+      {/* Middle Dynamic Row */}
+      <View style={styles.mainInfoRow}>
+        <View style={styles.prayerColumn}>
+          <Text style={styles.prayerName}>{nextPrayer.name}</Text>
+          <Text style={styles.timeLabel}>begins at {nextPrayer.time}</Text>
+        </View>
+
+        <View style={styles.timeColumn}>
+          <Text style={[styles.countdownText, { color: accentColor, textShadowColor: glowColor }]}>
+            {countdownText}
+          </Text>
+          <Text style={styles.remainingText}>
+            {isWindowActive ? 'adhan window' : 'remaining'}
+          </Text>
+        </View>
+      </View>
+
+      {/* Bottom breathing line */}
+      <View style={styles.progressTrack}>
+        <Animated.View style={[styles.progressBar, { backgroundColor: accentColor, opacity: breatheAnim }]} />
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  loadingContainer: {
+    height: 160,
     alignItems: 'center',
     justifyContent: 'center',
-    marginVertical: 30,
-  },
-  outerDecoRing: {
-    position: 'absolute',
-    width: 300,
-    height: 300,
-    borderRadius: 150,
+    marginHorizontal: 20,
+    backgroundColor: '#121624',
+    borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.12)',
-    borderStyle: 'dashed',
+    borderColor: 'rgba(255, 255, 255, 0.03)',
   },
-  glowRing: {
-    position: 'absolute',
-    width: 275,
-    height: 275,
-    borderRadius: 137.5,
-    borderWidth: 1.5,
-    borderColor: 'rgba(0, 232, 162, 0.15)',
-    backgroundColor: 'rgba(0, 232, 162, 0.02)',
+  loadingText: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.4)',
   },
-  innerCircle: {
-    width: 250,
-    height: 250,
-    borderRadius: 125,
-    backgroundColor: '#111827',
+  consoleCard: {
+    backgroundColor: '#121624',
+    borderRadius: 24,
+    padding: 20,
+    marginHorizontal: 20,
+    marginVertical: 20,
     borderWidth: 1.5,
-    borderColor: 'rgba(0, 232, 162, 0.25)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#00E8A2',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
     shadowRadius: 16,
-    elevation: 4,
+    elevation: 6,
   },
-  label: {
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  headerText: {
     fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 2,
+  },
+  liveIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  liveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  liveText: {
+    fontSize: 9,
     fontWeight: '700',
-    color: 'rgba(0, 232, 162, 0.6)',
-    letterSpacing: 4,
-    marginBottom: 6,
+    color: 'rgba(255, 255, 255, 0.4)',
+    letterSpacing: 0.5,
+  },
+  mainInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 4,
+  },
+  prayerColumn: {
+    flex: 1.2,
   },
   prayerName: {
-    fontSize: 34,
+    fontSize: 32,
     fontWeight: '800',
     color: '#FFFFFF',
-    letterSpacing: 1.5,
-  },
-  countdown: {
-    fontSize: 44,
-    fontWeight: '300',
-    color: '#00E8A2',
-    marginTop: 4,
-    fontVariant: ['tabular-nums'],
-    textShadowColor: 'rgba(0, 232, 162, 0.35)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
-  },
-  remainingLabel: {
-    fontSize: 11,
-    fontWeight: '500',
-    color: 'rgba(240, 244, 248, 0.4)',
-    letterSpacing: 1.5,
-    marginTop: 2,
-    textTransform: 'uppercase',
+    letterSpacing: -0.5,
   },
   timeLabel: {
     fontSize: 13,
-    color: 'rgba(240, 244, 248, 0.35)',
-    marginTop: 6,
+    color: 'rgba(255, 255, 255, 0.45)',
+    marginTop: 4,
   },
-  loading: {
-    fontSize: 16,
-    color: 'rgba(240, 244, 248, 0.4)',
+  timeColumn: {
+    flex: 1.8,
+    alignItems: 'flex-end',
+  },
+  countdownText: {
+    fontSize: 38,
+    fontWeight: '300',
+    letterSpacing: -0.5,
+    fontVariant: ['tabular-nums'],
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
+  },
+  remainingText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: 'rgba(255, 255, 255, 0.4)',
+    textTransform: 'uppercase',
+    letterSpacing: 1.5,
+    marginTop: 4,
+  },
+  progressTrack: {
+    height: 3,
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderRadius: 1.5,
+    marginTop: 18,
+    overflow: 'hidden',
+  },
+  progressBar: {
+    height: '100%',
+    width: '100%',
+    borderRadius: 1.5,
   },
 });

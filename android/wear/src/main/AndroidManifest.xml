@@ -36,14 +36,14 @@
             </intent-filter>
             <meta-data
                 android:name="androidx.wear.tiles.PREVIEW"
-                android:resource="@drawable/ic_launcher_foreground" />
+                android:resource="@drawable/tile_preview" />
         </service>
 
         <service
             android:name=".complication.PrayerComplicationService"
             android:exported="true"
             android:label="@string/complication_label"
-            android:icon="@mipmap/ic_launcher"
+            android:icon="@drawable/ic_launcher_foreground"
             android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
             <intent-filter>
                 <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST" />

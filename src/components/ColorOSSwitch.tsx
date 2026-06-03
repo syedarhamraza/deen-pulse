@@ -40,10 +40,7 @@ export function ColorOSSwitch({ value, onValueChange }: ColorOSSwitchProps) {
   });
 
   return (
-    <Pressable
-      onPress={handlePress}
-      style={({ pressed }) => [{ transform: [{ scale: pressed ? 0.93 : 1 }] }]}
-    >
+    <Pressable onPress={handlePress}>
       <Animated.View style={[styles.track, { backgroundColor: trackColor }]}>
         <Animated.View
           style={[

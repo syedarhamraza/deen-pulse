@@ -97,7 +97,6 @@ const getGreeting = (): string => {
 interface DashboardScreenProps {
   onNavigate: (screen: Screen) => void;
   onRefresh: () => void;
-  isSetupGuideDismissed: boolean;
   loading: boolean;
   error: string | null;
   prayerTimes: PrayerTime[];
@@ -107,7 +106,6 @@ interface DashboardScreenProps {
 export function DashboardScreen({
   onNavigate,
   onRefresh,
-  isSetupGuideDismissed,
   loading,
   error,
   prayerTimes,
@@ -120,9 +118,6 @@ export function DashboardScreen({
         <View>
           <View style={styles.appNameContainer}>
             <Text style={styles.appName}>DeenPulse</Text>
-            <View style={styles.betaBadge}>
-              <Text style={styles.betaBadgeText}>BETA</Text>
-            </View>
           </View>
           <View style={styles.accentBar} />
         </View>
@@ -155,28 +150,7 @@ export function DashboardScreen({
           <Text style={styles.greeting}>{getGreeting()}</Text>
         </View>
 
-        {/* Onboarding Setup Guide Card (First-Launch Only) */}
-        {!isSetupGuideDismissed && (
-          <Pressable
-            style={({ pressed }) => [
-              styles.setupGuideCard,
-              { transform: [{ scale: pressed ? 0.98 : 1 }] }
-            ]}
-            onPress={() => {
-              triggerHaptic();
-              onNavigate('notification_guide');
-            }}
-          >
-            <View style={styles.setupCardHeader}>
-              <Icon name="help-circle" size={22} color="#00E8A2" />
-              <Text style={styles.setupCardTitle}>Complete Setup Guide</Text>
-            </View>
-            <Text style={styles.setupCardDesc}>
-              Please tap here to configure necessary OS notification settings to allow status bar capsule countdowns.
-            </Text>
-            <Icon name="chevron-right" size={16} color="#00E8A2" style={styles.setupCardArrow} />
-          </Pressable>
-        )}
+
 
         {/* Active loading state with Skeleton Animation */}
         {loading && <SkeletonLoader />}

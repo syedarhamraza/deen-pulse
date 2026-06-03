@@ -30,9 +30,6 @@ export function AboutScreen({ onBack }: AboutScreenProps) {
           <View style={styles.aboutHeaderBlock}>
             <View style={styles.aboutBrandingContainer}>
               <Text style={styles.aboutBranding}>DeenPulse</Text>
-              <View style={styles.betaBadge}>
-                <Text style={styles.betaBadgeText}>BETA</Text>
-              </View>
             </View>
             <View style={styles.aboutAccentBar} />
             <Text style={styles.aboutTagline}>Live tracking on your status bar</Text>
@@ -63,7 +60,7 @@ export function AboutScreen({ onBack }: AboutScreenProps) {
             <View style={[styles.infoRow, styles.infoRowLast]}>
               <Text style={styles.infoKey}>Version</Text>
               <View style={styles.versionBadge}>
-                <Text style={styles.versionBadgeText}>1.0.2 Beta</Text>
+                <Text style={styles.versionBadgeText}>1.0.2</Text>
               </View>
             </View>
           </View>

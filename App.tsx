@@ -30,7 +30,6 @@ import { PrayerRulesScreen } from './src/screens/PrayerRulesScreen';
 import { NotificationsScreen } from './src/screens/NotificationsScreen';
 import { DataManagementScreen } from './src/screens/DataManagementScreen';
 import { AboutScreen } from './src/screens/AboutScreen';
-import { NotificationGuideScreen } from './src/screens/NotificationGuideScreen';
 import { OnboardingScreen } from './src/screens/OnboardingScreen';
 import { OEMGuidanceScreen } from './src/screens/OEMGuidanceScreen';
 import { WearOSControlScreen } from './src/screens/WearOSControlScreen';
@@ -39,7 +38,7 @@ import { useGestureNavigation } from './src/hooks/useGestureNavigation';
 
 const { PrayerCapsuleModule } = NativeModules;
 
-export type Screen = 'dashboard' | 'settings' | 'prayer_rules' | 'notifications' | 'data_management' | 'about' | 'notification_guide' | 'onboarding' | 'oem_guidance' | 'wearos_control';
+export type Screen = 'dashboard' | 'settings' | 'prayer_rules' | 'notifications' | 'data_management' | 'about' | 'onboarding' | 'oem_guidance' | 'wearos_control';
 
 const CALCULATION_LABELS: Record<CalculationMethod, string> = {
   auto: 'Auto-Detect by Region',
@@ -122,7 +121,6 @@ function DeenPulseApp(): React.JSX.Element {
   const [locationMode, setLocationMode] = useState<'gps' | 'cached'>('gps');
   const [juristicMethod, setJuristicMethod] = useState<'standard' | 'hanafi'>('standard');
   const [calculationRule, setCalculationRule] = useState<CalculationMethod>('auto');
-  const [isSetupGuideDismissed, setIsSetupGuideDismissed] = useState<boolean>(true);
 
   const [capsuleFormat, setCapsuleFormat] = useState<'name' | 'name_time' | 'time'>('name');
   const [notificationStyle, setNotificationStyle] = useState<'standard' | 'with_time'>('standard');
@@ -183,7 +181,6 @@ function DeenPulseApp(): React.JSX.Element {
         const mode = await AsyncStorage.getItem('@deenpulse_location_mode');
         const juristic = await AsyncStorage.getItem('@deenpulse_juristic_method');
         const rule = await AsyncStorage.getItem('@deenpulse_calculation_rule');
-        const guideDismissed = await AsyncStorage.getItem('@isSetupGuideDismissed');
         const format = await AsyncStorage.getItem('@deenpulse_capsule_format');
         const style = await AsyncStorage.getItem('@deenpulse_notification_style');
         const sound = await AsyncStorage.getItem('@deenpulse_adhan_sound_enabled');
@@ -194,7 +191,6 @@ function DeenPulseApp(): React.JSX.Element {
         if (format !== null) setCapsuleFormat(format as 'name' | 'name_time' | 'time');
         if (style !== null) setNotificationStyle(style as 'standard' | 'with_time');
         if (sound !== null) setSoundEnabled(sound === 'true');
-        setIsSetupGuideDismissed(guideDismissed === 'true');
       } catch (e) {
         console.warn('Failed to load settings:', e);
       }
@@ -289,7 +285,6 @@ function DeenPulseApp(): React.JSX.Element {
           setCalculationRule('auto');
           setCapsuleFormat('name');
           setNotificationStyle('standard');
-          setIsSetupGuideDismissed(false);
           try {
             PrayerCapsuleModule?.stopCapsule();
           } catch (e) {
@@ -447,27 +442,11 @@ function DeenPulseApp(): React.JSX.Element {
             onBack={goBack}
           />
         );
-      case 'notification_guide':
-        return (
-          <NotificationGuideScreen
-            onBack={goBack}
-            onComplete={async () => {
-              try {
-                await AsyncStorage.setItem('@isSetupGuideDismissed', 'true');
-                setIsSetupGuideDismissed(true);
-                navigateTo('dashboard');
-              } catch (e) {
-                console.warn(e);
-              }
-            }}
-          />
-        );
       default: // dashboard
         return (
           <DashboardScreen
             onNavigate={(screen) => navigateTo(screen)}
             onRefresh={() => refresh()}
-            isSetupGuideDismissed={isSetupGuideDismissed}
             loading={loading}
             error={error}
             prayerTimes={prayerTimes}

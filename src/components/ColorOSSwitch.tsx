@@ -10,9 +10,11 @@ export function ColorOSSwitch({ value, onValueChange }: ColorOSSwitchProps) {
   const animatedValue = useRef(new Animated.Value(value ? 1 : 0)).current;
 
   useEffect(() => {
-    Animated.timing(animatedValue, {
+    Animated.spring(animatedValue, {
       toValue: value ? 1 : 0,
-      duration: 180,
+      damping: 15,
+      mass: 0.6,
+      stiffness: 140,
       useNativeDriver: false,
     }).start();
   }, [value, animatedValue]);
@@ -31,13 +33,23 @@ export function ColorOSSwitch({ value, onValueChange }: ColorOSSwitchProps) {
     outputRange: [0, 20],
   });
 
+  // Droplet stretching width interpolation
+  const thumbWidth = animatedValue.interpolate({
+    inputRange: [0, 0.25, 0.5, 0.75, 1],
+    outputRange: [22, 26, 28, 26, 22],
+  });
+
   return (
-    <Pressable onPress={handlePress}>
+    <Pressable
+      onPress={handlePress}
+      style={({ pressed }) => [{ transform: [{ scale: pressed ? 0.93 : 1 }] }]}
+    >
       <Animated.View style={[styles.track, { backgroundColor: trackColor }]}>
         <Animated.View
           style={[
             styles.thumb,
             {
+              width: thumbWidth,
               transform: [{ translateX: thumbTranslate }],
             },
           ]}
@@ -57,7 +69,6 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   thumb: {
-    width: 22,
     height: 22,
     borderRadius: 11,
     backgroundColor: '#FFFFFF',

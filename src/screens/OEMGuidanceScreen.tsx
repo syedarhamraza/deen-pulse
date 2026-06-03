@@ -187,7 +187,7 @@ export function OEMGuidanceScreen({ onBack }: OEMGuidanceScreenProps) {
           </View>
 
           <Pressable
-            style={({ pressed }) => [styles.settingsButton, { opacity: pressed ? 0.9 : 1 }]}
+            style={({ pressed }) => [styles.settingsButton, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
             onPress={handleOpenSettings}
           >
             <Icon name="external-link" size={16} color="#000" />
@@ -207,40 +207,42 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 24,
+    paddingHorizontal: 24,
+    paddingTop: 16,
     paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: '#0B0F12',
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
     borderWidth: 1,
     borderColor: 'rgba(0, 242, 157, 0.15)',
+    shadowColor: '#00F29D',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '800',
+    fontSize: 24,
+    fontWeight: '700',
     color: '#FFFFFF',
-    letterSpacing: -0.3,
   },
   scrollContent: {
-    padding: 20,
+    paddingHorizontal: 24,
     paddingBottom: 40,
   },
   profileSection: {
-    backgroundColor: '#121624',
+    backgroundColor: '#111417',
     borderRadius: 16,
     padding: 16,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: 'rgba(0, 242, 157, 0.15)',
   },
   label: {
     fontSize: 12,
@@ -255,7 +257,7 @@ const styles = StyleSheet.create({
     color: '#00F29D',
   },
   guidanceCard: {
-    backgroundColor: '#121624',
+    backgroundColor: '#111417',
     borderRadius: 20,
     padding: 20,
     marginBottom: 20,
@@ -323,11 +325,11 @@ const styles = StyleSheet.create({
     lineHeight: 15,
   },
   generalCard: {
-    backgroundColor: '#121624',
+    backgroundColor: '#111417',
     borderRadius: 20,
     padding: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: 'rgba(0, 242, 157, 0.15)',
   },
   generalTitle: {
     fontSize: 16,

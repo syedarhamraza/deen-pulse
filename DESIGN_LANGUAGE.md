@@ -14,9 +14,9 @@ The design language is characterized by an ultra-premium, dark-mode-only aesthet
 ### Primary Colors
 | Token Name | Hex Code | Android / CSS Value | Description |
 | :--- | :--- | :--- | :--- |
-| **Obsidian Dark** | `#0B0F12` | `rgb(8, 11, 20)` | App-wide screen background |
-| **Midnight Gray** | `#111827` | `rgb(17, 24, 39)` | Card layers, containers, modals, watch surface |
-| **Mint Accent** | `#00F29D` | `rgb(0, 232, 162)` | Highlights, countdown clocks, primary controls |
+| **Obsidian Dark** | `#0B0F12` | `rgb(11, 15, 18)` | App-wide screen background |
+| **Midnight Gray** | `#111417` | `rgb(17, 20, 23)` | Card layers, containers, modals, watch surface |
+| **Mint Accent** | `#00F29D` | `rgb(0, 242, 157)` | Highlights, countdown clocks, primary controls |
 
 ### Text Colors & Opacities
 | Token Name | Value / Opacity | Usage |
@@ -114,3 +114,39 @@ All apps utilize **Inter** (fallback system default) with high contrast weights:
 - **Screen Transitions**: Parallel fading (`fadeAnim`: 0 ➔ 1 over `300ms`) and sliding (`translateY`: 25 ➔ 0 with spring damping `24`).
 - **Interactive States**: Hover/Press effects scale elements to `0.98` or `0.95` scale to simulate mechanical button depth.
 - **Notification Updates**: Chronometer is delegated to the native OS countdown thread, which dynamically updates every second with zero app background process footprint.
+
+---
+
+## 8. Layout Parity & Component Rendering Rules
+
+To ensure a seamless, pixel-perfect visual design across mobile and watch form factors, we enforce the following rules:
+
+### Solid Card Background Rule (Shadow Bleed Prevention)
+- **Problem**: Applying Android `elevation` shadows to semi-transparent `rgba` view backgrounds causes the OS shadow engine to bleed a dark rectangular box artifact through the transparency.
+- **Rule**: All elements utilizing shadow elevation MUST use solid backgrounds (e.g., `#111417` card base, `#141D20` active emerald tint, or `#0B0F12` circle base) to mask rendering glitches.
+
+### Checklist Column Spacer Rule (Pixel-Perfect Grid)
+- **Problem**: Removing left checklist indicators on active rows shifts the rest of the elements horizontally, breaking the vertical column grid.
+- **Rule**: Active rows that omit checklist icons must render a matching alignment spacer (`checkIconSpacer` of `width: 14`, `marginRight: 12`) to keep custom sun/sky icons and text perfectly aligned with other rows.
+
+### Dynamic Timezone Suffix
+- **Rule**: All time displays (countdown subtexts and prayer card times) should dynamically display short timezone abbreviations (e.g. `(PKT)`) using the `getTimezoneAbbreviation` date utility to prevent double timezone labels when the API output already contains them.
+
+### Split-Weight Branding Typography
+- **Rule**: Screen header branding utilizes weight contrast: a Regular/Light weight segment followed by an Ultra-Bold highlighted segment (e.g., `Deen` in `400` + `Pulse` in `800` neon mint) with a glowing text shadow. Accent underlines are deprecated in favor of this clean typographic contrast.
+
+---
+
+## 9. Settings, Sub-Screens & Onboarding Consistency
+
+To maintain absolute theme parity across all secondary pages, we enforce these guidelines:
+
+### Solid Card Backgrounds
+- **Background Rule**: Settings cards, feature listings, onboarding options, troubleshooting blocks, and step panels must use solid `#111417` (Midnight Gray) backgrounds. Muted borders should use `rgba(0, 242, 157, 0.15)`.
+
+### Uniform Headers & Back Controls
+- **Headers & Padding**: Sub-headers must use 24px horizontal padding (`paddingHorizontal: 24` or `paddingHorizontal: 20` if card margins match) to avoid horizontal jumpiness on navigation transitions.
+- **Glassmorphic Back Button**: Back buttons must match `App.tsx` global styling: width `38`, height `38`, border radius `19`, background `rgba(255, 255, 255, 0.02)`, and a neon mint border tint `rgba(0, 242, 157, 0.15)`.
+- **Haptic Scale Feedbacks**: Button pressed interactions must employ springy scale transforms (`scale: pressed ? 0.92 : 1` for small icons, and `scale: pressed ? 0.98 : 1` for action cards/buttons) to provide mechanical tactility.
+
+

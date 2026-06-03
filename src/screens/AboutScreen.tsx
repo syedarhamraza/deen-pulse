@@ -89,7 +89,7 @@ export function AboutScreen({ onBack }: AboutScreenProps) {
           </View>
           <View style={styles.divider} />
           <Pressable
-            style={({ pressed }) => [styles.creatorRow, { opacity: pressed ? 0.75 : 1 }]}
+            style={({ pressed }) => [styles.creatorRow, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
             onPress={handleOpenGitHub}
           >
             <View>
@@ -102,7 +102,7 @@ export function AboutScreen({ onBack }: AboutScreenProps) {
 
         {/* Update action */}
         <Pressable
-          style={({ pressed }) => [styles.updateButton, { opacity: pressed ? 0.9 : 1 }]}
+          style={({ pressed }) => [styles.updateButton, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
           onPress={handleCheckUpdates}
         >
           <Icon name="refresh-cw" size={16} color="#00F29D" />
@@ -121,31 +121,33 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 24,
+    paddingHorizontal: 24,
+    paddingTop: 16,
     paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: '#0B0F12',
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
     borderWidth: 1,
     borderColor: 'rgba(0, 242, 157, 0.15)',
+    shadowColor: '#00F29D',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '800',
+    fontSize: 24,
+    fontWeight: '700',
     color: '#FFFFFF',
-    letterSpacing: -0.3,
   },
   scrollContent: {
-    padding: 20,
+    paddingHorizontal: 24,
     paddingBottom: 40,
   },
   heroSection: {
@@ -222,15 +224,16 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     marginBottom: 16,
+    marginTop: 4,
   },
   featureCard: {
     width: '48%',
-    backgroundColor: '#121624',
+    backgroundColor: '#111417',
     borderRadius: 16,
     padding: 16,
     marginVertical: 6,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.03)',
+    borderColor: 'rgba(0, 242, 157, 0.15)',
   },
   featureIcon: {
     marginBottom: 8,
@@ -247,12 +250,12 @@ const styles = StyleSheet.create({
     lineHeight: 14,
   },
   creditsCard: {
-    backgroundColor: '#121624',
+    backgroundColor: '#111417',
     borderRadius: 20,
     padding: 20,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.03)',
+    borderColor: 'rgba(0, 242, 157, 0.15)',
   },
   creditsHeader: {
     flexDirection: 'row',

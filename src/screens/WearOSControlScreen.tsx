@@ -149,7 +149,7 @@ export function WearOSControlScreen({ onBack }: WearOSControlScreenProps) {
           style={({ pressed }) => [
             styles.syncButton,
             (!isConnected || syncing) && styles.syncButtonDisabled,
-            { opacity: pressed ? 0.9 : 1 },
+            { transform: [{ scale: pressed && isConnected && !syncing ? 0.98 : 1 }] },
           ]}
           disabled={!isConnected || syncing}
           onPress={handleSyncNow}
@@ -246,42 +246,44 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 24,
+    paddingHorizontal: 24,
+    paddingTop: 16,
     paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: '#0B0F12',
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
     borderWidth: 1,
     borderColor: 'rgba(0, 242, 157, 0.15)',
+    shadowColor: '#00F29D',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '800',
+    fontSize: 24,
+    fontWeight: '700',
     color: '#FFFFFF',
-    letterSpacing: -0.3,
   },
   scrollContent: {
-    padding: 20,
+    paddingHorizontal: 24,
     paddingBottom: 40,
   },
   statusCard: {
-    borderRadius: 24,
+    borderRadius: 20,
     padding: 20,
     marginBottom: 20,
-    borderWidth: 1.5,
+    borderWidth: 1,
   },
   statusCardConnected: {
-    backgroundColor: '#102931',
-    borderColor: '#00F29D',
+    backgroundColor: '#141D20',
+    borderColor: 'rgba(0, 242, 157, 0.25)',
     shadowColor: '#00F29D',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
@@ -289,8 +291,8 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   statusCardDisconnected: {
-    backgroundColor: '#121624',
-    borderColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: '#111417',
+    borderColor: 'rgba(255, 107, 107, 0.2)',
   },
   statusHeader: {
     flexDirection: 'row',
@@ -332,14 +334,14 @@ const styles = StyleSheet.create({
   },
   syncButton: {
     backgroundColor: '#00F29D',
-    borderRadius: 16,
+    borderRadius: 14,
     height: 52,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
   },
   syncButtonDisabled: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
   },
   syncButtonInner: {
     flexDirection: 'row',
@@ -358,12 +360,12 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   settingsSection: {
-    backgroundColor: '#121624',
+    backgroundColor: '#111417',
     borderRadius: 20,
     padding: 20,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: 'rgba(0, 242, 157, 0.15)',
   },
   sectionLabel: {
     fontSize: 12,
@@ -396,11 +398,11 @@ const styles = StyleSheet.create({
     lineHeight: 15,
   },
   troubleCard: {
-    backgroundColor: '#121624',
+    backgroundColor: '#111417',
     borderRadius: 20,
     padding: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: 'rgba(0, 242, 157, 0.15)',
   },
   troubleHeader: {
     flexDirection: 'row',

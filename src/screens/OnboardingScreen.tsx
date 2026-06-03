@@ -126,7 +126,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
       </View>
 
       <Pressable
-        style={({ pressed }) => [styles.primaryButton, { opacity: pressed ? 0.9 : 1 }]}
+        style={({ pressed }) => [styles.primaryButton, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
         onPress={() => transitionToStep(1)}
       >
         <Text style={styles.primaryButtonText}>Get Started</Text>
@@ -184,7 +184,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
 
       <View style={styles.navRow}>
         <Pressable
-          style={({ pressed }) => [styles.secondaryButton, { opacity: pressed ? 0.7 : 1 }]}
+          style={({ pressed }) => [styles.secondaryButton, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
           onPress={() => transitionToStep(0)}
         >
           <Icon name="arrow-left" size={18} color="#00F29D" />
@@ -192,7 +192,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
         </Pressable>
 
         <Pressable
-          style={({ pressed }) => [styles.primaryButton, { flex: 1, marginLeft: 12, opacity: pressed ? 0.9 : 1 }]}
+          style={({ pressed }) => [styles.primaryButton, { flex: 1, marginLeft: 12, transform: [{ scale: pressed ? 0.98 : 1 }] }]}
           onPress={() => transitionToStep(2)}
         >
           <Text style={styles.primaryButtonText}>Next</Text>
@@ -255,7 +255,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
 
         <View style={styles.navRow}>
           <Pressable
-            style={({ pressed }) => [styles.secondaryButton, { opacity: pressed ? 0.7 : 1 }]}
+            style={({ pressed }) => [styles.secondaryButton, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
             onPress={() => transitionToStep(1)}
           >
             <Icon name="arrow-left" size={18} color="#00F29D" />
@@ -263,7 +263,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
           </Pressable>
 
           <Pressable
-            style={({ pressed }) => [styles.primaryButton, { flex: 1, marginLeft: 12, opacity: pressed ? 0.9 : 1 }]}
+            style={({ pressed }) => [styles.primaryButton, { flex: 1, marginLeft: 12, transform: [{ scale: pressed ? 0.98 : 1 }] }]}
             onPress={handleFinish}
           >
             <Text style={styles.primaryButtonText}>Finish Setup</Text>
@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   introCard: {
-    backgroundColor: '#121624',
+    backgroundColor: '#111417',
     borderRadius: 20,
     padding: 20,
     flexDirection: 'row',
@@ -391,12 +391,12 @@ const styles = StyleSheet.create({
   },
   gridCard: {
     width: '48%',
-    backgroundColor: '#121624',
+    backgroundColor: '#111417',
     borderRadius: 16,
     padding: 16,
     marginVertical: 6,
     borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.03)',
+    borderColor: 'rgba(0, 242, 157, 0.15)',
   },
   gridCardSelected: {
     borderColor: '#00F29D',
@@ -437,11 +437,11 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.4)',
   },
   explanationCard: {
-    backgroundColor: '#121624',
+    backgroundColor: '#111417',
     borderRadius: 24,
     padding: 24,
     borderWidth: 1,
-    borderColor: 'rgba(0, 242, 157, 0.2)',
+    borderColor: 'rgba(0, 242, 157, 0.15)',
     flex: 1,
     marginBottom: 30,
     maxHeight: 400,
@@ -494,7 +494,7 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     backgroundColor: '#00F29D',
-    borderRadius: 18,
+    borderRadius: 14,
     height: 56,
     flexDirection: 'row',
     alignItems: 'center',
@@ -507,10 +507,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   secondaryButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
     borderWidth: 1,
-    borderColor: 'rgba(0, 242, 157, 0.2)',
-    borderRadius: 18,
+    borderColor: 'rgba(0, 242, 157, 0.15)',
+    borderRadius: 14,
     height: 56,
     paddingHorizontal: 24,
     flexDirection: 'row',

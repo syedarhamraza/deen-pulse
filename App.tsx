@@ -994,7 +994,7 @@ export const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   dashboardContainer: {
-    backgroundColor: '#111827',
+    backgroundColor: '#111417',
     borderRadius: 20,
     marginHorizontal: 20,
     paddingVertical: 16,
@@ -1007,7 +1007,7 @@ export const styles = StyleSheet.create({
     marginTop: 24,
   },
   settingsRowCard: {
-    backgroundColor: '#111827',
+    backgroundColor: '#111417',
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
@@ -1042,7 +1042,7 @@ export const styles = StyleSheet.create({
     marginTop: 2,
   },
   menuDetailCard: {
-    backgroundColor: '#111827',
+    backgroundColor: '#111417',
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
@@ -1246,7 +1246,7 @@ export const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.75)',
   },
   modalContent: {
-    backgroundColor: '#111827',
+    backgroundColor: '#111417',
     borderRadius: 28,
     width: '100%',
     paddingBottom: 20,
@@ -1327,7 +1327,7 @@ export const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.65)',
   },
   alertContainer: {
-    backgroundColor: '#111827',
+    backgroundColor: '#111417',
     borderRadius: 16,
     padding: 24,
     width: '85%',
@@ -1388,7 +1388,7 @@ export const styles = StyleSheet.create({
     letterSpacing: -0.1,
   },
   aboutHeaderBlock: {
-    backgroundColor: '#111827',
+    backgroundColor: '#111417',
     borderRadius: 16,
     padding: 24,
     alignItems: 'center',
@@ -1451,7 +1451,7 @@ export const styles = StyleSheet.create({
     fontWeight: '700',
   },
   setupGuideCard: {
-    backgroundColor: '#111827',
+    backgroundColor: '#111417',
     borderRadius: 16,
     padding: 16,
     marginBottom: 8,
@@ -1485,7 +1485,7 @@ export const styles = StyleSheet.create({
     marginTop: 24,
   },
   guideStepCard: {
-    backgroundColor: '#111827',
+    backgroundColor: '#111417',
     borderRadius: 22,
     padding: 16,
     marginBottom: 16,

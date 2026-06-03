@@ -116,6 +116,24 @@ export function SettingsScreen({ onBack, onNavigate }: SettingsScreenProps) {
             </View>
             <Icon name="chevron-right" size={18} color="rgba(0, 232, 162, 0.5)" />
           </Pressable>
+
+          {/* Row: Developer Options */}
+          <Pressable
+            style={({ pressed }) => [styles.settingsRowCard, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
+            onPress={() => {
+              triggerHaptic();
+              onNavigate('developer_options');
+            }}
+          >
+            <View style={styles.rowIconContainer}>
+              <Icon name="tool" size={18} color="#00E8A2" />
+            </View>
+            <View style={styles.rowInfo}>
+              <Text style={styles.rowTitle}>Developer Options</Text>
+              <Text style={styles.rowDesc}>Trigger test notifications and simulations</Text>
+            </View>
+            <Icon name="chevron-right" size={18} color="rgba(0, 232, 162, 0.5)" />
+          </Pressable>
         </View>
       </ScrollView>
     </View>

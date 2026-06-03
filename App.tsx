@@ -18,6 +18,7 @@ import { PermissionsAndroid } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Feather';
 import { usePrayerTimes, CalculationMethod } from './src/hooks/usePrayerTimes';
+import { PrayerTime } from './src/utils/prayerEngine';
 import { usePrayerCountdown } from './src/hooks/usePrayerCountdown';
 import { NativeModules } from 'react-native';
 
@@ -34,12 +35,13 @@ import { OnboardingScreen } from './src/screens/OnboardingScreen';
 import { OEMGuidanceScreen } from './src/screens/OEMGuidanceScreen';
 import { WearOSControlScreen } from './src/screens/WearOSControlScreen';
 import { Cat1NotificationGuideScreen } from './src/screens/Cat1NotificationGuideScreen';
+import { DeveloperOptionsScreen } from './src/screens/DeveloperOptionsScreen';
 import { useDeviceProfile } from './src/hooks/useDeviceProfile';
 import { useGestureNavigation } from './src/hooks/useGestureNavigation';
 
 const { PrayerCapsuleModule } = NativeModules;
 
-export type Screen = 'dashboard' | 'settings' | 'prayer_rules' | 'notifications' | 'data_management' | 'about' | 'onboarding' | 'oem_guidance' | 'wearos_control' | 'cat1_notification_guide';
+export type Screen = 'dashboard' | 'settings' | 'prayer_rules' | 'notifications' | 'data_management' | 'about' | 'onboarding' | 'oem_guidance' | 'wearos_control' | 'cat1_notification_guide' | 'developer_options';
 
 const CALCULATION_LABELS: Record<CalculationMethod, string> = {
   auto: 'Auto-Detect by Region',
@@ -123,9 +125,10 @@ function DeenPulseApp(): React.JSX.Element {
   const [juristicMethod, setJuristicMethod] = useState<'standard' | 'hanafi'>('standard');
   const [calculationRule, setCalculationRule] = useState<CalculationMethod>('auto');
 
-  const [capsuleFormat, setCapsuleFormat] = useState<'name' | 'name_time' | 'time'>('name');
-  const [notificationStyle, setNotificationStyle] = useState<'standard' | 'with_time'>('standard');
+  const [capsuleFormat, setCapsuleFormat] = useState<'name' | 'name_time' | 'time' | 'name_countdown'>('name');
+  const [notificationStyle, setNotificationStyle] = useState<'standard' | 'with_time' | 'with_countdown'>('standard');
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+  const [mockPrayerTimes, setMockPrayerTimes] = useState<PrayerTime[] | null>(null);
 
   const [showCapsuleFormatPicker, setShowCapsuleFormatPicker] = useState(false);
   const [showNotificationStylePicker, setShowNotificationStylePicker] = useState(false);
@@ -173,7 +176,8 @@ function DeenPulseApp(): React.JSX.Element {
     calculationRule
   );
 
-  const nextPrayer = usePrayerCountdown(prayerTimes, true, capsuleFormat, notificationStyle, location);
+  const activePrayerTimes = mockPrayerTimes || prayerTimes;
+  const nextPrayer = usePrayerCountdown(activePrayerTimes, true, capsuleFormat, notificationStyle, location);
 
   // Load preferences and setup guide state on startup
   useEffect(() => {
@@ -189,8 +193,8 @@ function DeenPulseApp(): React.JSX.Element {
         if (mode !== null) setLocationMode(mode as 'gps' | 'cached');
         if (juristic !== null) setJuristicMethod(juristic as 'standard' | 'hanafi');
         if (rule !== null) setCalculationRule(rule as CalculationMethod);
-        if (format !== null) setCapsuleFormat(format as 'name' | 'name_time' | 'time');
-        if (style !== null) setNotificationStyle(style as 'standard' | 'with_time');
+        if (format !== null) setCapsuleFormat(format as 'name' | 'name_time' | 'time' | 'name_countdown');
+        if (style !== null) setNotificationStyle(style as 'standard' | 'with_time' | 'with_countdown');
         if (sound !== null) setSoundEnabled(sound === 'true');
       } catch (e) {
         console.warn('Failed to load settings:', e);
@@ -348,11 +352,13 @@ function DeenPulseApp(): React.JSX.Element {
   const getCapsuleFormatLabel = () => {
     if (capsuleFormat === 'name_time') return 'Name & Time (e.g., Fajr (5:12 AM))';
     if (capsuleFormat === 'time') return 'Time Only (e.g., 5:12 AM)';
+    if (capsuleFormat === 'name_countdown') return 'Name & Countdown (e.g., Fajr (45m 12s))';
     return 'Name Only (e.g., Fajr)';
   };
 
   const getNotificationStyleLabel = () => {
     if (notificationStyle === 'with_time') return 'With Time (e.g., Next Prayer: Fajr (5:12 AM))';
+    if (notificationStyle === 'with_countdown') return 'With Countdown (e.g., Next Prayer: Fajr (45m 12s))';
     return 'Standard (e.g., Next Prayer: Fajr)';
   };
 
@@ -419,6 +425,7 @@ function DeenPulseApp(): React.JSX.Element {
             }}
             capsuleFormatLabel={getCapsuleFormatLabel()}
             notificationStyleLabel={getNotificationStyleLabel()}
+            deviceCategory={profile?.category}
           />
         );
       case 'oem_guidance':
@@ -456,14 +463,50 @@ function DeenPulseApp(): React.JSX.Element {
             onBack={goBack}
           />
         );
+      case 'developer_options':
+        return (
+          <DeveloperOptionsScreen
+            onBack={goBack}
+            isSimulating={mockPrayerTimes !== null}
+            onSimulatePrayer={() => {
+              const now = new Date();
+              const mockDate = new Date(now.getTime() + 1000);
+              
+              const formatTimeStr = (d: Date) => {
+                let hours = d.getHours();
+                const minutes = d.getMinutes();
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12;
+                hours = hours ? hours : 12;
+                const minStr = minutes < 10 ? '0' + minutes : minutes;
+                return `${hours}:${minStr} ${ampm}`;
+              };
+
+              const mockPrayers = [
+                {
+                  name: 'Test Prayer',
+                  time: formatTimeStr(mockDate),
+                  date: mockDate
+                }
+              ];
+              setMockPrayerTimes(mockPrayers);
+            }}
+            onClearSimulation={() => {
+              setMockPrayerTimes(null);
+            }}
+            onTriggerImmediateAlert={() => {
+              PrayerCapsuleModule?.playPrayerAlert('Test Prayer');
+            }}
+          />
+        );
       default: // dashboard
         return (
           <DashboardScreen
             onNavigate={(screen) => navigateTo(screen)}
             onRefresh={() => refresh()}
-            loading={loading}
+            loading={loading && !mockPrayerTimes}
             error={error}
-            prayerTimes={prayerTimes}
+            prayerTimes={activePrayerTimes}
             nextPrayer={nextPrayer}
           />
         );
@@ -504,6 +547,25 @@ function DeenPulseApp(): React.JSX.Element {
           ]}>Name Only (e.g., Fajr)</Text>
           {capsuleFormat === 'name' && <Icon name="check" size={16} color="#00E8A2" />}
         </Pressable>
+        {profile?.category === 2 && (
+          <Pressable
+            style={({ pressed }) => [
+              styles.modalItem,
+              capsuleFormat === 'name_countdown' && styles.modalItemSelected,
+              { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
+            ]}
+            onPress={() => {
+              triggerHaptic();
+              updateSetting('@deenpulse_capsule_format', 'name_countdown', setCapsuleFormat, () => setShowCapsuleFormatPicker(false));
+            }}
+          >
+            <Text style={[
+              styles.modalItemText,
+              capsuleFormat === 'name_countdown' && styles.modalItemTextSelected,
+            ]}>Name & Countdown (e.g., Fajr (45m 12s))</Text>
+            {capsuleFormat === 'name_countdown' && <Icon name="check" size={16} color="#00E8A2" />}
+          </Pressable>
+        )}
         <Pressable
           style={({ pressed }) => [
             styles.modalItem,
@@ -583,6 +645,25 @@ function DeenPulseApp(): React.JSX.Element {
           ]}>With Time (e.g., Next Prayer: Fajr (5:12 AM))</Text>
           {notificationStyle === 'with_time' && <Icon name="check" size={16} color="#00E8A2" />}
         </Pressable>
+        {profile?.category !== 1 && (
+          <Pressable
+            style={({ pressed }) => [
+              styles.modalItem,
+              notificationStyle === 'with_countdown' && styles.modalItemSelected,
+              { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
+            ]}
+            onPress={() => {
+              triggerHaptic();
+              updateSetting('@deenpulse_notification_style', 'with_countdown', setNotificationStyle, () => setShowNotificationStylePicker(false));
+            }}
+          >
+            <Text style={[
+              styles.modalItemText,
+              notificationStyle === 'with_countdown' && styles.modalItemTextSelected,
+            ]}>With Countdown (e.g., Next Prayer: Fajr (45m 12s))</Text>
+            {notificationStyle === 'with_countdown' && <Icon name="check" size={16} color="#00E8A2" />}
+          </Pressable>
+        )}
       </FluidModal>
 
       {/* Juristic Method Picker Modal */}

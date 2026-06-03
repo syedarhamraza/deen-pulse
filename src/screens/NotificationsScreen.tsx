@@ -14,6 +14,7 @@ interface NotificationsScreenProps {
   onSoundToggle: (val: boolean) => void;
   capsuleFormatLabel: string;
   notificationStyleLabel: string;
+  deviceCategory?: number;
 }
 
 export function NotificationsScreen({
@@ -26,6 +27,7 @@ export function NotificationsScreen({
   onSoundToggle,
   capsuleFormatLabel,
   notificationStyleLabel,
+  deviceCategory,
 }: NotificationsScreenProps) {
   return (
     <View style={styles.screenContainer}>
@@ -84,17 +86,19 @@ export function NotificationsScreen({
           </View>
 
           {/* Status Bar Capsule Format Choice */}
-          <Pressable
-            style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
-            onPress={() => {
-              triggerHaptic();
-              onCapsuleFormatPress();
-            }}
-          >
-            <Text style={styles.menuDetailLabel}>Status Bar Capsule Style</Text>
-            <Text style={styles.menuDetailValue}>{capsuleFormatLabel}</Text>
-            <Text style={styles.menuDetailDesc}>Choose what information is displayed directly inside your device's status bar capsule.</Text>
-          </Pressable>
+          {deviceCategory !== 3 && (
+            <Pressable
+              style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
+              onPress={() => {
+                triggerHaptic();
+                onCapsuleFormatPress();
+              }}
+            >
+              <Text style={styles.menuDetailLabel}>Status Bar Capsule Style</Text>
+              <Text style={styles.menuDetailValue}>{capsuleFormatLabel}</Text>
+              <Text style={styles.menuDetailDesc}>Choose what information is displayed directly inside your device's status bar capsule.</Text>
+            </Pressable>
+          )}
 
           {/* Notification Title Format Choice */}
           <Pressable

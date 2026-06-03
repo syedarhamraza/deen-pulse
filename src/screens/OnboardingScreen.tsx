@@ -396,7 +396,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginVertical: 6,
     borderWidth: 1.5,
-    borderColor: 'transparent',
+    borderColor: 'rgba(255, 255, 255, 0.03)',
   },
   gridCardSelected: {
     borderColor: '#00E8A2',

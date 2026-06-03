@@ -60,7 +60,7 @@ export function DataManagementScreen({
           }}
           style={({ pressed }) => [styles.backButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
         >
-          <Icon name="arrow-left" size={20} color="#00E8A2" />
+          <Icon name="arrow-left" size={20} color="#00F29D" />
         </Pressable>
         <Text style={styles.title}>Data Management</Text>
         <HeaderFadeOverlay />
@@ -117,7 +117,7 @@ export function DataManagementScreen({
                   <Text
                     style={[
                       styles.statusText,
-                      { color: gpsGranted ? '#00E8A2' : '#FF6B6B' },
+                      { color: gpsGranted ? '#00F29D' : '#FF6B6B' },
                     ]}
                   >
                     {gpsGranted ? 'Active' : 'Setup'}
@@ -155,7 +155,7 @@ export function DataManagementScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#080B14',
+    backgroundColor: '#0B0F12',
   },
   header: {
     flexDirection: 'row',
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 16,
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.15)',
+    borderColor: 'rgba(0, 242, 157, 0.15)',
   },
   title: {
     fontSize: 20,
@@ -242,8 +242,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   statusBadgeGranted: {
-    backgroundColor: 'rgba(0, 232, 162, 0.08)',
-    borderColor: 'rgba(0, 232, 162, 0.2)',
+    backgroundColor: 'rgba(0, 242, 157, 0.08)',
+    borderColor: 'rgba(0, 242, 157, 0.2)',
   },
   statusBadgeDenied: {
     backgroundColor: 'rgba(255, 107, 107, 0.08)',
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   statusDotGranted: {
-    backgroundColor: '#00E8A2',
+    backgroundColor: '#00F29D',
   },
   statusDotDenied: {
     backgroundColor: '#FF6B6B',

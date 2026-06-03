@@ -22,7 +22,7 @@ export function Cat1NotificationGuideScreen({
           }}
           style={({ pressed }) => [styles.backButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
         >
-          <Icon name="arrow-left" size={20} color="#00E8A2" />
+          <Icon name="arrow-left" size={20} color="#00F29D" />
         </Pressable>
         <Text style={styles.title}>Notification Settings</Text>
         <HeaderFadeOverlay />
@@ -95,7 +95,7 @@ export function Cat1NotificationGuideScreen({
             onBack();
           }}
         >
-          <Icon name="check" size={16} color="#00E8A2" />
+          <Icon name="check" size={16} color="#00F29D" />
           <Text style={styles.secondaryButtonText}>I have configured these settings</Text>
         </Pressable>
       </ScrollView>
@@ -106,7 +106,7 @@ export function Cat1NotificationGuideScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#080B14',
+    backgroundColor: '#0B0F12',
   },
   header: {
     flexDirection: 'row',
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 16,
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.15)',
+    borderColor: 'rgba(0, 242, 157, 0.15)',
   },
   title: {
     fontSize: 20,
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   brandHighlight: {
-    color: '#00E8A2',
+    color: '#00F29D',
     fontWeight: '700',
   },
   cardContainer: {
@@ -172,14 +172,14 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: 'rgba(0, 232, 162, 0.12)',
+    backgroundColor: 'rgba(0, 242, 157, 0.12)',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.25)',
+    borderColor: 'rgba(0, 242, 157, 0.25)',
   },
   stepNumber: {
-    color: '#00E8A2',
+    color: '#00F29D',
     fontSize: 11,
     fontWeight: '800',
   },
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.8)',
   },
   primaryButton: {
-    backgroundColor: '#00E8A2',
+    backgroundColor: '#00F29D',
     borderRadius: 14,
     height: 48,
     flexDirection: 'row',
@@ -221,10 +221,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.15)',
+    borderColor: 'rgba(0, 242, 157, 0.15)',
   },
   secondaryButtonText: {
-    color: '#00E8A2',
+    color: '#00F29D',
     fontSize: 13,
     fontWeight: '700',
   },

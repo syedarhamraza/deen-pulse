@@ -28,7 +28,7 @@ export function PrayerRulesScreen({
           }}
           style={({ pressed }) => [styles.backButton, { opacity: pressed ? 0.7 : 1 }]}
         >
-          <Icon name="arrow-left" size={20} color="#00E8A2" />
+          <Icon name="arrow-left" size={20} color="#00F29D" />
         </Pressable>
         <Text style={styles.subTitle}>Prayer Rules</Text>
         <HeaderFadeOverlay />

@@ -28,7 +28,7 @@ export function DeveloperOptionsScreen({
           }}
           style={({ pressed }) => [styles.backButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
         >
-          <Icon name="arrow-left" size={20} color="#00E8A2" />
+          <Icon name="arrow-left" size={20} color="#00F29D" />
         </Pressable>
         <Text style={styles.title}>Developer Options</Text>
         <HeaderFadeOverlay />
@@ -55,7 +55,7 @@ export function DeveloperOptionsScreen({
                 onTriggerImmediateAlert();
               }}
             >
-              <Icon name="bell" size={16} color="#00E8A2" />
+              <Icon name="bell" size={16} color="#00F29D" />
               <Text style={styles.actionButtonText}>Trigger Sound Check</Text>
             </Pressable>
           </View>
@@ -69,7 +69,7 @@ export function DeveloperOptionsScreen({
               <Text style={styles.cardLabel}>Active State Simulation</Text>
               <View style={[styles.statusIndicator, isSimulating ? styles.statusSimulating : styles.statusIdle]}>
                 <View style={[styles.statusDot, isSimulating ? styles.dotSimulating : styles.dotIdle]} />
-                <Text style={[styles.statusText, { color: isSimulating ? '#00E8A2' : 'rgba(255,255,255,0.4)' }]}>
+                <Text style={[styles.statusText, { color: isSimulating ? '#00F29D' : 'rgba(255,255,255,0.4)' }]}>
                   {isSimulating ? 'SIMULATING' : 'IDLE'}
                 </Text>
               </View>
@@ -104,7 +104,7 @@ export function DeveloperOptionsScreen({
                   onSimulatePrayer();
                 }}
               >
-                <Icon name="play" size={16} color="#00E8A2" />
+                <Icon name="play" size={16} color="#00F29D" />
                 <Text style={styles.actionButtonText}>Test Active State</Text>
               </Pressable>
             )}
@@ -118,7 +118,7 @@ export function DeveloperOptionsScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#080B14',
+    backgroundColor: '#0B0F12',
   },
   header: {
     flexDirection: 'row',
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 16,
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.15)',
+    borderColor: 'rgba(0, 242, 157, 0.15)',
   },
   title: {
     fontSize: 20,
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.03)',
   },
   activeSimCard: {
-    borderColor: 'rgba(0, 232, 162, 0.2)',
+    borderColor: 'rgba(0, 242, 157, 0.2)',
   },
   rowHeader: {
     flexDirection: 'row',
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   actionButton: {
-    backgroundColor: 'rgba(0, 232, 162, 0.08)',
+    backgroundColor: 'rgba(0, 242, 157, 0.08)',
     borderRadius: 12,
     height: 44,
     flexDirection: 'row',
@@ -199,10 +199,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.2)',
+    borderColor: 'rgba(0, 242, 157, 0.2)',
   },
   actionButtonText: {
-    color: '#00E8A2',
+    color: '#00F29D',
     fontSize: 13,
     fontWeight: '700',
   },
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.02)',
   },
   statusSimulating: {
-    backgroundColor: 'rgba(0, 232, 162, 0.05)',
+    backgroundColor: 'rgba(0, 242, 157, 0.05)',
   },
   statusIdle: {
     backgroundColor: 'rgba(255, 255, 255, 0.01)',
@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   dotSimulating: {
-    backgroundColor: '#00E8A2',
+    backgroundColor: '#00F29D',
   },
   dotIdle: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',

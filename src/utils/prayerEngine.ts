@@ -58,6 +58,29 @@ export function formatTo12Hour(timeStr: string): string {
   return suffix ? `${formattedTime} ${suffix}` : formattedTime;
 }
 
+export function getTimezoneAbbreviation(date: Date = new Date()): string {
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', { timeZoneName: 'short' }).formatToParts(date);
+    const tzPart = parts.find(p => p.type === 'timeZoneName');
+    if (tzPart && tzPart.value) {
+      const val = tzPart.value;
+      if (val.includes('GMT') || val.includes('UTC')) {
+        const offset = -date.getTimezoneOffset() / 60;
+        if (offset === 5) return 'PKT';
+        return val;
+      }
+      return val;
+    }
+  } catch (e) {}
+
+  const match = date.toTimeString().match(/\(([^)]+)\)$/);
+  if (match) return match[1];
+
+  const offset = -date.getTimezoneOffset() / 60;
+  if (offset === 5) return 'PKT';
+  return `GMT${offset >= 0 ? '+' : ''}${offset}`;
+}
+
 export function parsePrayerTimings(timings: Record<string, string>, timezone: string = ''): PrayerTime[] {
   return PRAYER_NAMES.map(name => {
     const rawTime = timings[name] || '00:00';

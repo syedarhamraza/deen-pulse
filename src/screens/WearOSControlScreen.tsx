@@ -119,7 +119,7 @@ export function WearOSControlScreen({ onBack }: WearOSControlScreenProps) {
           }}
           style={({ pressed }) => [styles.backButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
         >
-          <Icon name="arrow-left" size={20} color="#00E8A2" />
+          <Icon name="arrow-left" size={20} color="#00F29D" />
         </Pressable>
         <Text style={styles.title}>Watch Companion</Text>
       </View>
@@ -130,11 +130,11 @@ export function WearOSControlScreen({ onBack }: WearOSControlScreenProps) {
           <View style={styles.statusHeader}>
             <View style={styles.statusIndicatorWrapper}>
               <View style={[styles.statusDot, isConnected ? styles.statusDotConnected : styles.statusDotDisconnected]} />
-              <Text style={[styles.statusText, { color: isConnected ? '#00E8A2' : '#FF6B6B' }]}>
+              <Text style={[styles.statusText, { color: isConnected ? '#00F29D' : '#FF6B6B' }]}>
                 {isConnected ? 'Connected' : 'Not Connected'}
               </Text>
             </View>
-            <Icon name="watch" size={28} color={isConnected ? '#00E8A2' : 'rgba(255,255,255,0.4)'} />
+            <Icon name="watch" size={28} color={isConnected ? '#00F29D' : 'rgba(255,255,255,0.4)'} />
           </View>
           <Text style={styles.watchName}>
             {isConnected ? watchName || 'Galaxy Watch / Wear OS' : 'No companion watch active'}
@@ -212,7 +212,7 @@ export function WearOSControlScreen({ onBack }: WearOSControlScreenProps) {
         >
           <View style={styles.troubleHeader}>
             <View style={styles.troubleTitleCol}>
-              <Icon name="help-circle" size={18} color="#00E8A2" />
+              <Icon name="help-circle" size={18} color="#00F29D" />
               <Text style={styles.troubleTitle}>Troubleshooting Sync Issues</Text>
             </View>
             <Icon name={troubleOpen ? 'chevron-up' : 'chevron-down'} size={18} color="rgba(255,255,255,0.4)" />
@@ -241,7 +241,7 @@ export function WearOSControlScreen({ onBack }: WearOSControlScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#080B14',
+    backgroundColor: '#0B0F12',
   },
   header: {
     flexDirection: 'row',
@@ -261,7 +261,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 16,
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.15)',
+    borderColor: 'rgba(0, 242, 157, 0.15)',
   },
   title: {
     fontSize: 20,
@@ -281,8 +281,8 @@ const styles = StyleSheet.create({
   },
   statusCardConnected: {
     backgroundColor: '#102931',
-    borderColor: '#00E8A2',
-    shadowColor: '#00E8A2',
+    borderColor: '#00F29D',
+    shadowColor: '#00F29D',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 10,
@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   statusDotConnected: {
-    backgroundColor: '#00E8A2',
+    backgroundColor: '#00F29D',
   },
   statusDotDisconnected: {
     backgroundColor: '#FF6B6B',
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.5)',
   },
   syncButton: {
-    backgroundColor: '#00E8A2',
+    backgroundColor: '#00F29D',
     borderRadius: 16,
     height: 52,
     alignItems: 'center',

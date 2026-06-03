@@ -23,7 +23,7 @@ export function ColorOSSwitch({ value, onValueChange }: ColorOSSwitchProps) {
 
   const trackColor = animatedValue.interpolate({
     inputRange: [0, 1],
-    outputRange: ['rgba(255, 255, 255, 0.1)', '#00E8A2'],
+    outputRange: ['rgba(255, 255, 255, 0.1)', '#00F29D'],
   });
 
   const thumbTranslate = animatedValue.interpolate({

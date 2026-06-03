@@ -5,11 +5,11 @@ import {
   StyleSheet,
   Pressable,
   ScrollView,
-  Switch,
   NativeModules,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { triggerHaptic } from '../../App';
+import { ColorOSSwitch } from '../components/ColorOSSwitch';
 import {
   getProfileFromStorage,
   DeviceProfile,
@@ -109,11 +109,9 @@ export function OEMGuidanceScreen({ onBack }: OEMGuidanceScreenProps) {
                   Attempt to force status bar capsule pill. May cause layout glitches on unsupported devices.
                 </Text>
               </View>
-              <Switch
+              <ColorOSSwitch
                 value={forceCapsule}
                 onValueChange={handleToggleForceCapsule}
-                trackColor={{ false: '#334155', true: 'rgba(0, 232, 162, 0.4)' }}
-                thumbColor={forceCapsule ? '#00E8A2' : '#cbd5e1'}
               />
             </View>
           </View>
@@ -204,7 +202,7 @@ export function OEMGuidanceScreen({ onBack }: OEMGuidanceScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#080B14',
   },
   header: {
     flexDirection: 'row',
@@ -237,7 +235,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   profileSection: {
-    backgroundColor: '#1E293B',
+    backgroundColor: '#121624',
     borderRadius: 16,
     padding: 16,
     marginBottom: 20,
@@ -257,7 +255,7 @@ const styles = StyleSheet.create({
     color: '#00E8A2',
   },
   guidanceCard: {
-    backgroundColor: '#1E293B',
+    backgroundColor: '#121624',
     borderRadius: 20,
     padding: 20,
     marginBottom: 20,
@@ -325,7 +323,7 @@ const styles = StyleSheet.create({
     lineHeight: 15,
   },
   generalCard: {
-    backgroundColor: '#1E293B',
+    backgroundColor: '#121624',
     borderRadius: 20,
     padding: 20,
     borderWidth: 1,

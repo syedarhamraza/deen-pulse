@@ -33,12 +33,13 @@ import { AboutScreen } from './src/screens/AboutScreen';
 import { OnboardingScreen } from './src/screens/OnboardingScreen';
 import { OEMGuidanceScreen } from './src/screens/OEMGuidanceScreen';
 import { WearOSControlScreen } from './src/screens/WearOSControlScreen';
+import { Cat1NotificationGuideScreen } from './src/screens/Cat1NotificationGuideScreen';
 import { useDeviceProfile } from './src/hooks/useDeviceProfile';
 import { useGestureNavigation } from './src/hooks/useGestureNavigation';
 
 const { PrayerCapsuleModule } = NativeModules;
 
-export type Screen = 'dashboard' | 'settings' | 'prayer_rules' | 'notifications' | 'data_management' | 'about' | 'onboarding' | 'oem_guidance' | 'wearos_control';
+export type Screen = 'dashboard' | 'settings' | 'prayer_rules' | 'notifications' | 'data_management' | 'about' | 'onboarding' | 'oem_guidance' | 'wearos_control' | 'cat1_notification_guide';
 
 const CALCULATION_LABELS: Record<CalculationMethod, string> = {
   auto: 'Auto-Detect by Region',
@@ -401,7 +402,13 @@ function DeenPulseApp(): React.JSX.Element {
         return (
           <NotificationsScreen
             onBack={goBack}
-            onAllowNotificationsPress={() => openAppNotificationSettings()}
+            onAllowNotificationsPress={() => {
+              if (profile?.category === 1) {
+                navigateTo('cat1_notification_guide');
+              } else {
+                openAppNotificationSettings();
+              }
+            }}
             onCapsuleFormatPress={() => setShowCapsuleFormatPicker(true)}
             onNotificationStylePress={() => setShowNotificationStylePicker(true)}
             onOptimizePress={() => navigateTo('oem_guidance')}
@@ -424,6 +431,13 @@ function DeenPulseApp(): React.JSX.Element {
         return (
           <WearOSControlScreen
             onBack={goBack}
+          />
+        );
+      case 'cat1_notification_guide':
+        return (
+          <Cat1NotificationGuideScreen
+            onBack={goBack}
+            onOpenSettings={() => openAppNotificationSettings()}
           />
         );
       case 'data_management':

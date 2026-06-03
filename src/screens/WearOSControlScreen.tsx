@@ -5,12 +5,12 @@ import {
   StyleSheet,
   Pressable,
   ScrollView,
-  Switch,
   ActivityIndicator,
   NativeModules,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { triggerHaptic } from '../../App';
+import { ColorOSSwitch } from '../components/ColorOSSwitch';
 import { useWearConnection, LAST_WEAR_SYNC_KEY } from '../hooks/useWearConnection';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -182,11 +182,9 @@ export function WearOSControlScreen({ onBack }: WearOSControlScreenProps) {
                 Pushes new timings to the watch automatically when phone coordinates refresh.
               </Text>
             </View>
-            <Switch
+            <ColorOSSwitch
               value={autoSync}
               onValueChange={handleToggleAutoSync}
-              trackColor={{ false: '#334155', true: 'rgba(0, 232, 162, 0.4)' }}
-              thumbColor={autoSync ? '#00E8A2' : '#cbd5e1'}
             />
           </View>
 
@@ -197,11 +195,9 @@ export function WearOSControlScreen({ onBack }: WearOSControlScreenProps) {
                 Keeps Juristic Method and Asr calculation rules synchronized between phone and watch.
               </Text>
             </View>
-            <Switch
+            <ColorOSSwitch
               value={syncSettings}
               onValueChange={handleToggleSyncSettings}
-              trackColor={{ false: '#334155', true: 'rgba(0, 232, 162, 0.4)' }}
-              thumbColor={syncSettings ? '#00E8A2' : '#cbd5e1'}
             />
           </View>
         </View>
@@ -245,7 +241,7 @@ export function WearOSControlScreen({ onBack }: WearOSControlScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#080B14',
   },
   header: {
     flexDirection: 'row',
@@ -293,7 +289,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   statusCardDisconnected: {
-    backgroundColor: '#1E293B',
+    backgroundColor: '#121624',
     borderColor: 'rgba(255, 255, 255, 0.05)',
   },
   statusHeader: {
@@ -362,7 +358,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   settingsSection: {
-    backgroundColor: '#1E293B',
+    backgroundColor: '#121624',
     borderRadius: 20,
     padding: 20,
     marginBottom: 20,
@@ -400,7 +396,7 @@ const styles = StyleSheet.create({
     lineHeight: 15,
   },
   troubleCard: {
-    backgroundColor: '#1E293B',
+    backgroundColor: '#121624',
     borderRadius: 20,
     padding: 20,
     borderWidth: 1,

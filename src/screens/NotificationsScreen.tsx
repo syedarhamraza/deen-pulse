@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, ScrollView, Pressable, Switch } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { styles, triggerHaptic, HeaderFadeOverlay } from '../../App';
+import { ColorOSSwitch } from '../components/ColorOSSwitch';
 
 interface NotificationsScreenProps {
   onBack: () => void;
@@ -73,14 +74,12 @@ export function NotificationsScreen({
               <Text style={styles.menuDetailLabel}>Audible Prayer Alert</Text>
               <Text style={styles.menuDetailDesc}>Play the system default notification sound when a prayer time begins.</Text>
             </View>
-            <Switch
+            <ColorOSSwitch
               value={soundEnabled}
               onValueChange={(val) => {
                 triggerHaptic();
                 onSoundToggle(val);
               }}
-              trackColor={{ false: '#334155', true: 'rgba(0, 232, 162, 0.4)' }}
-              thumbColor={soundEnabled ? '#00E8A2' : '#cbd5e1'}
             />
           </View>
 

@@ -296,7 +296,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#080B14',
   },
   content: {
     flex: 1,
@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   introCard: {
-    backgroundColor: '#1E293B',
+    backgroundColor: '#121624',
     borderRadius: 20,
     padding: 20,
     flexDirection: 'row',
@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
   },
   gridCard: {
     width: '48%',
-    backgroundColor: '#1E293B',
+    backgroundColor: '#121624',
     borderRadius: 16,
     padding: 16,
     marginVertical: 6,
@@ -437,7 +437,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.4)',
   },
   explanationCard: {
-    backgroundColor: '#1E293B',
+    backgroundColor: '#121624',
     borderRadius: 24,
     padding: 24,
     borderWidth: 1,

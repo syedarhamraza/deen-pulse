@@ -1,7 +1,5 @@
-import { NativeModules, Linking } from 'react-native';
+import { Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const { PrayerCapsuleModule } = NativeModules;
 
 export const UPDATE_CHECK_FREQUENCY_KEY = '@deenpulse_update_check_frequency';
 export const LAST_UPDATE_CHECK_KEY = '@deenpulse_last_update_check';

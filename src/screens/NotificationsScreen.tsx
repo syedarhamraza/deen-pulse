@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { styles, triggerHaptic, HeaderFadeOverlay } from '../../App';
 import { ColorOSSwitch } from '../components/ColorOSSwitch';
@@ -75,8 +75,8 @@ export function NotificationsScreen({
           </Pressable>
 
           {/* Audible Prayer Alert Switch */}
-          <View style={[styles.menuDetailCard, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
-            <View style={{ flex: 1, marginRight: 16 }}>
+          <View style={[styles.menuDetailCard, localStyles.switchCard]}>
+            <View style={localStyles.switchInfo}>
               <Text style={styles.menuDetailLabel}>Audible Prayer Alert</Text>
               <Text style={styles.menuDetailDesc}>Play the system default notification sound when a prayer time begins.</Text>
             </View>
@@ -96,36 +96,29 @@ export function NotificationsScreen({
               <Text style={styles.menuDetailDesc}>
                 Choose how DeenPulse notifies you about upcoming prayers on your device.
               </Text>
-              <View style={{ marginTop: 12, gap: 8 }}>
+              <View style={localStyles.radioGroup}>
                 <Pressable
                   onPress={() => {
                     triggerHaptic();
                     onCat3ModeChange?.('reminder');
                   }}
-                  style={({ pressed }) => [{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    paddingVertical: 10,
-                    paddingHorizontal: 14,
-                    borderRadius: 12,
-                    borderWidth: 1,
-                    borderColor: cat3NotificationMode === 'reminder' ? '#00F29D' : 'rgba(255,255,255,0.08)',
-                    backgroundColor: cat3NotificationMode === 'reminder' ? 'rgba(0, 242, 157, 0.08)' : 'rgba(255,255,255,0.02)',
-                    opacity: pressed ? 0.7 : 1,
-                  }]}
+                  style={({ pressed }) => [
+                    localStyles.radioButton,
+                    cat3NotificationMode === 'reminder' ? localStyles.radioButtonSelected : localStyles.radioButtonUnselected,
+                    { opacity: pressed ? 0.7 : 1 }
+                  ]}
                 >
-                  <View style={{
-                    width: 18, height: 18, borderRadius: 9, borderWidth: 2,
-                    borderColor: cat3NotificationMode === 'reminder' ? '#00F29D' : 'rgba(255,255,255,0.3)',
-                    alignItems: 'center', justifyContent: 'center', marginRight: 12,
-                  }}>
+                  <View style={[
+                    localStyles.radioDot,
+                    cat3NotificationMode === 'reminder' ? localStyles.radioDotSelected : localStyles.radioDotUnselected,
+                  ]}>
                     {cat3NotificationMode === 'reminder' && (
-                      <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#00F29D' }} />
+                      <View style={localStyles.radioDotFill} />
                     )}
                   </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '700' }}>15-Minute Reminder</Text>
-                    <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, marginTop: 2 }}>
+                  <View style={localStyles.radioLabelWrap}>
+                    <Text style={localStyles.radioTitle}>15-Minute Reminder</Text>
+                    <Text style={localStyles.radioSubtitle}>
                       Sends a one-time notification 15 minutes before each prayer. Battery efficient.
                     </Text>
                   </View>
@@ -136,30 +129,23 @@ export function NotificationsScreen({
                     triggerHaptic();
                     onCat3ModeChange?.('ongoing');
                   }}
-                  style={({ pressed }) => [{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    paddingVertical: 10,
-                    paddingHorizontal: 14,
-                    borderRadius: 12,
-                    borderWidth: 1,
-                    borderColor: cat3NotificationMode === 'ongoing' ? '#00F29D' : 'rgba(255,255,255,0.08)',
-                    backgroundColor: cat3NotificationMode === 'ongoing' ? 'rgba(0, 242, 157, 0.08)' : 'rgba(255,255,255,0.02)',
-                    opacity: pressed ? 0.7 : 1,
-                  }]}
+                  style={({ pressed }) => [
+                    localStyles.radioButton,
+                    cat3NotificationMode === 'ongoing' ? localStyles.radioButtonSelected : localStyles.radioButtonUnselected,
+                    { opacity: pressed ? 0.7 : 1 }
+                  ]}
                 >
-                  <View style={{
-                    width: 18, height: 18, borderRadius: 9, borderWidth: 2,
-                    borderColor: cat3NotificationMode === 'ongoing' ? '#00F29D' : 'rgba(255,255,255,0.3)',
-                    alignItems: 'center', justifyContent: 'center', marginRight: 12,
-                  }}>
+                  <View style={[
+                    localStyles.radioDot,
+                    cat3NotificationMode === 'ongoing' ? localStyles.radioDotSelected : localStyles.radioDotUnselected,
+                  ]}>
                     {cat3NotificationMode === 'ongoing' && (
-                      <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#00F29D' }} />
+                      <View style={localStyles.radioDotFill} />
                     )}
                   </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '700' }}>Ongoing Notification</Text>
-                    <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, marginTop: 2 }}>
+                  <View style={localStyles.radioLabelWrap}>
+                    <Text style={localStyles.radioTitle}>Ongoing Notification</Text>
+                    <Text style={localStyles.radioSubtitle}>
                       Persistent countdown in the notification drawer. Uses more battery but always visible.
                     </Text>
                   </View>
@@ -208,3 +194,69 @@ export function NotificationsScreen({
     </View>
   );
 }
+
+const localStyles = StyleSheet.create({
+  switchCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  switchInfo: {
+    flex: 1,
+    marginRight: 16,
+  },
+  radioGroup: {
+    marginTop: 12,
+    gap: 8,
+  },
+  radioButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  radioButtonSelected: {
+    borderColor: '#00F29D',
+    backgroundColor: 'rgba(0, 242, 157, 0.08)',
+  },
+  radioButtonUnselected: {
+    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.02)',
+  },
+  radioDot: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  radioDotSelected: {
+    borderColor: '#00F29D',
+  },
+  radioDotUnselected: {
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  radioDotFill: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#00F29D',
+  },
+  radioLabelWrap: {
+    flex: 1,
+  },
+  radioTitle: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  radioSubtitle: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 11,
+    marginTop: 2,
+  },
+});

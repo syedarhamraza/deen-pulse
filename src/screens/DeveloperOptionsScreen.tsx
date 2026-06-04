@@ -69,7 +69,7 @@ export function DeveloperOptionsScreen({
               <Text style={styles.cardLabel}>Active State Simulation</Text>
               <View style={[styles.statusIndicator, isSimulating ? styles.statusSimulating : styles.statusIdle]}>
                 <View style={[styles.statusDot, isSimulating ? styles.dotSimulating : styles.dotIdle]} />
-                <Text style={[styles.statusText, { color: isSimulating ? '#00F29D' : 'rgba(255,255,255,0.4)' }]}>
+                <Text style={[styles.statusText, isSimulating ? styles.statusTextSimulating : styles.statusTextIdle]}>
                   {isSimulating ? 'SIMULATING' : 'IDLE'}
                 </Text>
               </View>
@@ -246,5 +246,11 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '800',
     letterSpacing: 0.5,
+  },
+  statusTextSimulating: {
+    color: '#00F29D',
+  },
+  statusTextIdle: {
+    color: 'rgba(255,255,255,0.4)',
   },
 });

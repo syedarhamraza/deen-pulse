@@ -117,7 +117,7 @@ export function DataManagementScreen({
                   <Text
                     style={[
                       styles.statusText,
-                      { color: gpsGranted ? '#00F29D' : '#FF6B6B' },
+                      gpsGranted ? styles.statusTextActive : styles.statusTextSetup,
                     ]}
                   >
                     {gpsGranted ? 'Active' : 'Setup'}
@@ -268,5 +268,11 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+  },
+  statusTextActive: {
+    color: '#00F29D',
+  },
+  statusTextSetup: {
+    color: '#FF6B6B',
   },
 });

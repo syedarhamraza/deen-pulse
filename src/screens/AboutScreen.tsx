@@ -206,7 +206,7 @@ export function AboutScreen({ onBack }: AboutScreenProps) {
             ) : updateResult ? (
               <>
                 <View style={s.resultIconRow}>
-                  <View style={[s.resultIconCircle, { borderColor: '#00F29D' }]}>
+                  <View style={[s.resultIconCircle, s.resultIconCircleAvailable]}>
                     <Icon name="download" size={22} color="#00F29D" />
                   </View>
                 </View>
@@ -263,9 +263,7 @@ export function AboutScreen({ onBack }: AboutScreenProps) {
                   <View
                     style={[
                       s.radioDot,
-                      {
-                        borderColor: selected ? '#00F29D' : 'rgba(255,255,255,0.3)',
-                      },
+                      selected ? s.radioDotSelected : s.radioDotUnselected,
                     ]}
                   >
                     {selected && <View style={s.radioDotFill} />}
@@ -524,6 +522,9 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(0, 242, 157, 0.2)',
   },
+  resultIconCircleAvailable: {
+    borderColor: '#00F29D',
+  },
   resultTitle: {
     fontSize: 17,
     fontWeight: '700',
@@ -593,6 +594,12 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
+  },
+  radioDotSelected: {
+    borderColor: '#00F29D',
+  },
+  radioDotUnselected: {
+    borderColor: 'rgba(255,255,255,0.3)',
   },
   radioDotFill: {
     width: 8,

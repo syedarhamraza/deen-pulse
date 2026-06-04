@@ -71,7 +71,7 @@ export function getTimezoneAbbreviation(date: Date = new Date()): string {
       }
       return val;
     }
-  } catch (e) {}
+  } catch {}
 
   const match = date.toTimeString().match(/\(([^)]+)\)$/);
   if (match) return match[1];

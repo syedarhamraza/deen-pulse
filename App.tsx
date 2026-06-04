@@ -11,7 +11,6 @@ import {
   DeviceEventEmitter,
   Vibration,
   Animated,
-  BackHandler,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PermissionsAndroid } from 'react-native';

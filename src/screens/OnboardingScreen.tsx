@@ -5,7 +5,6 @@ import {
   StyleSheet,
   Pressable,
   Animated,
-  Dimensions,
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,7 +16,7 @@ interface OnboardingScreenProps {
   onComplete: (brand: string) => void;
 }
 
-const { width } = Dimensions.get('window');
+
 
 const BRANDS = [
   { id: 'oppo', name: 'OPPO', icon: 'smartphone', category: 1 },

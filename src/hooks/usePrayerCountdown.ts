@@ -5,12 +5,16 @@ import { PrayerTime, getNextPrayer, NextPrayerInfo } from '../utils/prayerEngine
 
 const { PrayerCapsuleModule } = NativeModules;
 
+export const CAT3_NOTIFICATION_MODE_KEY = '@deenpulse_cat3_notification_mode';
+
 export function usePrayerCountdown(
   prayerTimes: PrayerTime[],
   liveActivityEnabled: boolean = true,
   capsuleFormat: string = 'name',
   notificationStyle: string = 'standard',
-  location: { latitude: number; longitude: number } | null = null
+  location: { latitude: number; longitude: number } | null = null,
+  deviceCategory: number = 3,
+  cat3NotificationMode: 'ongoing' | 'reminder' = 'reminder'
 ) {
   const [nextPrayer, setNextPrayer] = useState<NextPrayerInfo | null>(null);
 
@@ -21,6 +25,9 @@ export function usePrayerCountdown(
     if (!liveActivityEnabled) {
       try {
         PrayerCapsuleModule?.stopCapsule();
+        if (deviceCategory === 3) {
+          PrayerCapsuleModule?.cancelReminders();
+        }
       } catch (e) {
         console.warn('Failed to stop capsule:', e);
       }
@@ -39,17 +46,30 @@ export function usePrayerCountdown(
       ];
       const prayersJson = JSON.stringify(scheduleList);
       AsyncStorage.setItem('@deenpulse_last_prayers_json', prayersJson).catch(() => {});
-      PrayerCapsuleModule?.updateLiveCapsule(prayersJson, capsuleFormat, notificationStyle);
+
+      if (deviceCategory === 3 && cat3NotificationMode === 'reminder') {
+        // Cat3 reminder mode: schedule AlarmManager reminders, no foreground service
+        PrayerCapsuleModule?.stopCapsule();
+        PrayerCapsuleModule?.scheduleReminders(prayersJson);
+      } else {
+        // Cat1/Cat2 or Cat3 ongoing mode: use foreground service
+        PrayerCapsuleModule?.cancelReminders();
+        PrayerCapsuleModule?.updateLiveCapsule(prayersJson, capsuleFormat, notificationStyle);
+      }
 
       // Sync to Wear OS watch if location coordinates are available
       if (location) {
-        PrayerCapsuleModule?.syncToWear(prayersJson, location.latitude, location.longitude);
-        AsyncStorage.setItem('@deenpulse_last_wear_sync', new Date().toISOString()).catch(() => {});
+        AsyncStorage.getItem('@deenpulse_auto_sync_wear').then(val => {
+          if (val === 'true' || val === null) {
+            PrayerCapsuleModule?.syncToWear(prayersJson, location.latitude, location.longitude);
+            AsyncStorage.setItem('@deenpulse_last_wear_sync', new Date().toISOString()).catch(() => {});
+          }
+        }).catch(() => {});
       }
     } catch (e) {
       console.warn('Failed to update live capsule or sync to wear:', e);
     }
-  }, [prayerTimes, liveActivityEnabled, capsuleFormat, notificationStyle, location]);
+  }, [prayerTimes, liveActivityEnabled, capsuleFormat, notificationStyle, location, deviceCategory, cat3NotificationMode]);
 
   // Main UI countdown tick
   useEffect(() => {

@@ -1,6 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
-import Icon from 'react-native-vector-icons/Feather';
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import { NextPrayerInfo, formatCountdown, getTimezoneAbbreviation } from '../utils/prayerEngine';
 
 interface CountdownDisplayProps {

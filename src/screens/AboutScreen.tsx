@@ -1,119 +1,325 @@
-import React from 'react';
-import { View, Text, ScrollView, Pressable, Linking, StyleSheet, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  Pressable,
+  Linking,
+  StyleSheet,
+  ActivityIndicator,
+  Image,
+  ImageBackground,
+  NativeModules,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { triggerHaptic, HeaderFadeOverlay } from '../../App';
+import {
+  checkForUpdate,
+  markUpdateChecked,
+  openDownloadUrl,
+  UpdateInfo,
+  UPDATE_CHECK_FREQUENCY_KEY,
+} from '../utils/UpdateChecker';
+
+const { PrayerCapsuleModule } = NativeModules;
 
 interface AboutScreenProps {
   onBack: () => void;
 }
 
+const FEATURES = [
+  { icon: 'compass', title: 'Prayer Tracking', desc: 'Accurate times with live capsule overlay' },
+  { icon: 'watch', title: 'Wear OS Sync', desc: 'Seamless smartwatch companion' },
+  { icon: 'bell', title: 'Smart Reminders', desc: '15-min window dynamic alerts' },
+  { icon: 'shield', title: 'Privacy First', desc: 'Fully offline, no data leaves your device' },
+];
+
+const FREQUENCY_OPTIONS = [
+  { value: '1', label: 'Every Day' },
+  { value: '3', label: 'Every 3 Days' },
+  { value: '7', label: 'Every Week' },
+];
+
 export function AboutScreen({ onBack }: AboutScreenProps) {
-  const handleOpenGitHub = () => {
+  const [appVersion, setAppVersion] = useState<string>('...');
+  const [checking, setChecking] = useState(false);
+  const [updateResult, setUpdateResult] = useState<UpdateInfo | null>(null);
+  const [showResult, setShowResult] = useState(false);
+  const [isUpToDate, setIsUpToDate] = useState(false);
+  const [frequency, setFrequency] = useState<string>('3');
+
+  useEffect(() => {
+    // Load app version from native module
+    (async () => {
+      try {
+        const ver = await PrayerCapsuleModule.getAppVersion();
+        setAppVersion(ver || '1.0.0');
+      } catch {
+        setAppVersion('1.0.0');
+      }
+    })();
+
+    // Load saved frequency preference
+    (async () => {
+      try {
+        const saved = await AsyncStorage.getItem(UPDATE_CHECK_FREQUENCY_KEY);
+        if (saved) setFrequency(saved);
+      } catch {}
+    })();
+  }, []);
+
+  const handleCheckUpdates = async () => {
     triggerHaptic();
-    Linking.openURL('https://github.com/syedarhamraza').catch(err =>
-      console.warn('Failed to open URL:', err)
-    );
+    setChecking(true);
+    setShowResult(false);
+    setIsUpToDate(false);
+    setUpdateResult(null);
+
+    try {
+      const result = await checkForUpdate(appVersion);
+      await markUpdateChecked();
+
+      if (result) {
+        setUpdateResult(result);
+        setShowResult(true);
+      } else {
+        setIsUpToDate(true);
+        setShowResult(true);
+      }
+    } catch {
+      setIsUpToDate(true);
+      setShowResult(true);
+    } finally {
+      setChecking(false);
+    }
   };
 
-  const handleCheckUpdates = () => {
+  const handleFrequencyChange = async (value: string) => {
     triggerHaptic();
-    // In a real app this would query a version endpoint. Mocking for premium feedback.
-    Alert.alert('DeenPulse Hub', 'DeenPulse is up to date!\nVersion: 1.0.2 (Stable)');
+    setFrequency(value);
+    try {
+      await AsyncStorage.setItem(UPDATE_CHECK_FREQUENCY_KEY, value);
+    } catch {}
+  };
+
+  const handleOpenGitHub = () => {
+    triggerHaptic();
+    Linking.openURL('https://github.com/syedarhamraza/DeenPulse').catch(() => {});
+  };
+
+  const handleOpenDeveloper = () => {
+    triggerHaptic();
+    Linking.openURL('https://github.com/syedarhamraza').catch(() => {});
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
+    <View style={s.container}>
+      {/* Header */}
+      <View style={s.header}>
         <Pressable
           onPress={() => {
             triggerHaptic();
             onBack();
           }}
-          style={({ pressed }) => [styles.backButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
+          style={({ pressed }) => [s.backButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
         >
           <Icon name="arrow-left" size={20} color="#00F29D" />
         </Pressable>
-        <Text style={styles.title}>About</Text>
+        <Text style={s.headerTitle}>About</Text>
         <HeaderFadeOverlay />
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Branding Hero Block */}
-        <View style={styles.heroSection}>
-          <View style={styles.logoOuterRing}>
-            <View style={styles.logoInnerRing}>
-              <Icon name="activity" size={42} color="#00F29D" style={styles.logoIcon} />
+      <ScrollView contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* ── Hero Section ─────────────────────────────── */}
+        <ImageBackground
+          source={require('../assets/icons/backgound.png')}
+          style={s.heroBg}
+          imageStyle={s.heroBgImage}
+          resizeMode="cover"
+        >
+          <View style={s.heroOverlay}>
+            <View style={s.glowRingOuter}>
+              <View style={s.glowRingInner}>
+                <Image
+                  source={require('../assets/icons/icon.png')}
+                  style={s.heroIcon}
+                  resizeMode="contain"
+                />
+              </View>
+            </View>
+            <Text style={s.appName}>DeenPulse</Text>
+            <Text style={s.appTagline}>Live tracking on your status bar</Text>
+            <View style={s.versionBadge}>
+              <Icon name="tag" size={10} color="#00F29D" />
+              <Text style={s.versionText}>v{appVersion}</Text>
             </View>
           </View>
-          <Text style={styles.appName}>DeenPulse</Text>
-          <Text style={styles.appTagline}>Live tracking on your status bar</Text>
-          <View style={styles.versionBadge}>
-            <Text style={styles.versionText}>v1.0.2 Stable</Text>
+        </ImageBackground>
+
+        {/* ── Feature Cards ────────────────────────────── */}
+        <Text style={s.sectionLabel}>Key Features</Text>
+        <View style={s.featuresGrid}>
+          {FEATURES.map((f) => (
+            <View key={f.icon} style={s.featureCard}>
+              <View style={s.featureIconWrap}>
+                <Icon name={f.icon} size={20} color="#00F29D" />
+              </View>
+              <Text style={s.featureTitle}>{f.title}</Text>
+              <Text style={s.featureDesc}>{f.desc}</Text>
+            </View>
+          ))}
+        </View>
+
+        {/* ── Check for Updates ────────────────────────── */}
+        <Text style={s.sectionLabel}>Updates</Text>
+        <Pressable
+          style={({ pressed }) => [s.updateButton, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
+          onPress={handleCheckUpdates}
+          disabled={checking}
+        >
+          {checking ? (
+            <ActivityIndicator size="small" color="#00F29D" />
+          ) : (
+            <Icon name="refresh-cw" size={16} color="#00F29D" />
+          )}
+          <Text style={s.updateButtonText}>
+            {checking ? 'Checking…' : 'Check for Updates'}
+          </Text>
+        </Pressable>
+
+        {/* Update Result Card */}
+        {showResult && (
+          <View style={s.resultCard}>
+            {isUpToDate ? (
+              <>
+                <View style={s.resultIconRow}>
+                  <View style={s.resultIconCircle}>
+                    <Icon name="check-circle" size={22} color="#00F29D" />
+                  </View>
+                </View>
+                <Text style={s.resultTitle}>You're up to date!</Text>
+                <Text style={s.resultDesc}>
+                  DeenPulse v{appVersion} is the latest version.
+                </Text>
+              </>
+            ) : updateResult ? (
+              <>
+                <View style={s.resultIconRow}>
+                  <View style={[s.resultIconCircle, s.resultIconCircleAvailable]}>
+                    <Icon name="download" size={22} color="#00F29D" />
+                  </View>
+                </View>
+                <Text style={s.resultTitle}>v{updateResult.version} Available</Text>
+                <Text style={s.resultDesc} numberOfLines={4}>
+                  {updateResult.releaseNotes}
+                </Text>
+                {updateResult.publishedAt ? (
+                  <Text style={s.resultDate}>
+                    Released {new Date(updateResult.publishedAt).toLocaleDateString()}
+                  </Text>
+                ) : null}
+                {updateResult.downloadUrl && (
+                  <Pressable
+                    style={({ pressed }) => [s.downloadButton, { transform: [{ scale: pressed ? 0.97 : 1 }] }]}
+                    onPress={() => {
+                      triggerHaptic();
+                      openDownloadUrl(updateResult.downloadUrl!);
+                    }}
+                  >
+                    <Icon name="external-link" size={14} color="#0B0F12" />
+                    <Text style={s.downloadButtonText}>Download Update</Text>
+                  </Pressable>
+                )}
+              </>
+            ) : null}
+          </View>
+        )}
+
+        {/* ── Update Check Frequency ──────────────────── */}
+        <Text style={s.sectionLabel}>Check Frequency</Text>
+        <View style={s.frequencyCard}>
+          <Text style={s.frequencyDesc}>
+            How often should DeenPulse check for new releases automatically?
+          </Text>
+          <View style={s.frequencyOptions}>
+            {FREQUENCY_OPTIONS.map((opt) => {
+              const selected = frequency === opt.value;
+              return (
+                <Pressable
+                  key={opt.value}
+                  onPress={() => handleFrequencyChange(opt.value)}
+                  style={({ pressed }) => [
+                    s.radioRow,
+                    {
+                      borderColor: selected ? '#00F29D' : 'rgba(255,255,255,0.08)',
+                      backgroundColor: selected
+                        ? 'rgba(0, 242, 157, 0.08)'
+                        : 'rgba(255,255,255,0.02)',
+                      opacity: pressed ? 0.7 : 1,
+                    },
+                  ]}
+                >
+                  <View
+                    style={[
+                      s.radioDot,
+                      selected ? s.radioDotSelected : s.radioDotUnselected,
+                    ]}
+                  >
+                    {selected && <View style={s.radioDotFill} />}
+                  </View>
+                  <Text style={s.radioLabel}>{opt.label}</Text>
+                </Pressable>
+              );
+            })}
           </View>
         </View>
 
-        {/* Feature Pillars Grid */}
-        <Text style={styles.sectionLabel}>Key Features</Text>
-        <View style={styles.featuresGrid}>
-          <View style={styles.featureCard}>
-            <Icon name="feather" size={20} color="#00F29D" style={styles.featureIcon} />
-            <Text style={styles.featureTitle}>Live Capsule</Text>
-            <Text style={styles.featureDesc}>Status bar tracking lock-in</Text>
-          </View>
-
-          <View style={styles.featureCard}>
-            <Icon name="watch" size={20} color="#00F29D" style={styles.featureIcon} />
-            <Text style={styles.featureTitle}>Wear OS Sync</Text>
-            <Text style={styles.featureDesc}>Active watch companion sync</Text>
-          </View>
-
-          <View style={styles.featureCard}>
-            <Icon name="bell" size={20} color="#00F29D" style={styles.featureIcon} />
-            <Text style={styles.featureTitle}>Active Alerts</Text>
-            <Text style={styles.featureDesc}>15m window dynamic sounds</Text>
-          </View>
-
-          <View style={styles.featureCard}>
-            <Icon name="sliders" size={20} color="#00F29D" style={styles.featureIcon} />
-            <Text style={styles.featureTitle}>OEM Branching</Text>
-            <Text style={styles.featureDesc}>Specialized brand profiles</Text>
-          </View>
-        </View>
-
-        {/* Credits Card */}
-        <Text style={styles.sectionLabel}>Core Team</Text>
-        <View style={styles.creditsCard}>
-          <View style={styles.creditsHeader}>
+        {/* ── Credits & Links ─────────────────────────── */}
+        <Text style={s.sectionLabel}>Credits</Text>
+        <View style={s.creditsCard}>
+          <View style={s.creditsHeader}>
             <Icon name="code" size={18} color="#00F29D" />
-            <Text style={styles.creditsTitle}>Developer & Owner</Text>
+            <Text style={s.creditsTitle}>Developer & Owner</Text>
           </View>
-          <View style={styles.divider} />
+          <View style={s.divider} />
           <Pressable
-            style={({ pressed }) => [styles.creatorRow, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
-            onPress={handleOpenGitHub}
+            style={({ pressed }) => [s.creatorRow, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
+            onPress={handleOpenDeveloper}
           >
             <View>
-              <Text style={styles.creatorName}>Syed Arham Raza</Text>
-              <Text style={styles.creatorRole}>Lead Software Architect & Engineer</Text>
+              <Text style={s.creatorName}>Syed Arham Raza</Text>
+              <Text style={s.creatorRole}>Lead Software Architect & Engineer</Text>
             </View>
             <Icon name="github" size={20} color="#00F29D" />
           </Pressable>
         </View>
 
-        {/* Update action */}
+        {/* GitHub Repo Link */}
         <Pressable
-          style={({ pressed }) => [styles.updateButton, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
-          onPress={handleCheckUpdates}
+          style={({ pressed }) => [s.linkCard, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
+          onPress={handleOpenGitHub}
         >
-          <Icon name="refresh-cw" size={16} color="#00F29D" />
-          <Text style={styles.updateButtonText}>Check for Updates</Text>
+          <View style={s.linkIconWrap}>
+            <Icon name="github" size={20} color="#00F29D" />
+          </View>
+          <View style={s.linkTextWrap}>
+            <Text style={s.linkTitle}>Source Code</Text>
+            <Text style={s.linkDesc}>View on GitHub</Text>
+          </View>
+          <Icon name="external-link" size={14} color="rgba(255,255,255,0.3)" />
         </Pressable>
+
+        {/* Footer */}
+        <Text style={s.footer}>
+          Made with purpose · DeenPulse © {new Date().getFullYear()}
+        </Text>
       </ScrollView>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const s = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0B0F12',
@@ -141,34 +347,47 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
-  title: {
+  headerTitle: {
     fontSize: 24,
     fontWeight: '700',
     color: '#FFFFFF',
   },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingBottom: 40,
+    paddingBottom: 48,
   },
-  heroSection: {
+
+  /* ── Hero ─────────────────────────────────────────── */
+  heroBg: {
+    borderRadius: 24,
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  heroBgImage: {
+    borderRadius: 24,
+    opacity: 0.35,
+  },
+  heroOverlay: {
     alignItems: 'center',
-    marginVertical: 24,
+    paddingVertical: 32,
+    paddingHorizontal: 16,
+    backgroundColor: 'rgba(11, 15, 18, 0.55)',
   },
-  logoOuterRing: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+  glowRingOuter: {
+    width: 110,
+    height: 110,
+    borderRadius: 55,
     backgroundColor: 'rgba(0, 242, 157, 0.04)',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(0, 242, 157, 0.15)',
+    borderColor: 'rgba(0, 242, 157, 0.12)',
     marginBottom: 16,
   },
-  logoInnerRing: {
-    width: 76,
-    height: 76,
-    borderRadius: 38,
+  glowRingInner: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
     backgroundColor: 'rgba(0, 242, 157, 0.08)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -176,67 +395,79 @@ const styles = StyleSheet.create({
     borderColor: '#00F29D',
     shadowColor: '#00F29D',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
-    elevation: 5,
+    shadowOpacity: 0.4,
+    shadowRadius: 14,
+    elevation: 6,
+    overflow: 'hidden',
   },
-  logoIcon: {
-    shadowColor: '#00F29D',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 6,
+  heroIcon: {
+    width: 56,
+    height: 56,
   },
   appName: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: '800',
     color: '#FFFFFF',
     marginBottom: 4,
+    letterSpacing: 0.5,
   },
   appTagline: {
     fontSize: 13,
     color: 'rgba(255, 255, 255, 0.5)',
-    marginBottom: 12,
+    marginBottom: 14,
   },
   versionBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
     backgroundColor: 'rgba(0, 242, 157, 0.12)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: 'rgba(0, 242, 157, 0.2)',
   },
   versionText: {
     color: '#00F29D',
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
   },
+
+  /* ── Section Label ───────────────────────────────── */
   sectionLabel: {
     fontSize: 11,
     color: 'rgba(255, 255, 255, 0.4)',
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: 12,
-    marginTop: 16,
+    marginTop: 20,
     paddingLeft: 4,
   },
+
+  /* ── Feature Cards ───────────────────────────────── */
   featuresGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginBottom: 16,
-    marginTop: 4,
+    marginBottom: 4,
   },
   featureCard: {
     width: '48%',
     backgroundColor: '#111417',
     borderRadius: 16,
     padding: 16,
-    marginVertical: 6,
+    marginVertical: 5,
     borderWidth: 1,
     borderColor: 'rgba(0, 242, 157, 0.15)',
   },
-  featureIcon: {
-    marginBottom: 8,
+  featureIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: 'rgba(0, 242, 157, 0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
   },
   featureTitle: {
     fontSize: 14,
@@ -246,14 +477,148 @@ const styles = StyleSheet.create({
   },
   featureDesc: {
     fontSize: 11,
-    color: 'rgba(255, 255, 255, 0.4)',
-    lineHeight: 14,
+    color: 'rgba(255, 255, 255, 0.5)',
+    lineHeight: 15,
   },
+
+  /* ── Update Button ───────────────────────────────── */
+  updateButton: {
+    backgroundColor: '#111417',
+    borderRadius: 14,
+    height: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 242, 157, 0.15)',
+  },
+  updateButtonText: {
+    color: '#00F29D',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+
+  /* ── Result Card ─────────────────────────────────── */
+  resultCard: {
+    backgroundColor: '#111417',
+    borderRadius: 20,
+    padding: 22,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 242, 157, 0.15)',
+    alignItems: 'center',
+  },
+  resultIconRow: {
+    marginBottom: 12,
+  },
+  resultIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(0, 242, 157, 0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 242, 157, 0.2)',
+  },
+  resultIconCircleAvailable: {
+    borderColor: '#00F29D',
+  },
+  resultTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 6,
+  },
+  resultDesc: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.5)',
+    textAlign: 'center',
+    lineHeight: 18,
+    paddingHorizontal: 8,
+  },
+  resultDate: {
+    fontSize: 11,
+    color: 'rgba(255, 255, 255, 0.3)',
+    marginTop: 8,
+  },
+  downloadButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#00F29D',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    marginTop: 16,
+  },
+  downloadButtonText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0B0F12',
+  },
+
+  /* ── Frequency Picker ────────────────────────────── */
+  frequencyCard: {
+    backgroundColor: '#111417',
+    borderRadius: 20,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 242, 157, 0.15)',
+    marginBottom: 4,
+  },
+  frequencyDesc: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.5)',
+    marginBottom: 14,
+    lineHeight: 17,
+  },
+  frequencyOptions: {
+    gap: 8,
+  },
+  radioRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 11,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  radioDot: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  radioDotSelected: {
+    borderColor: '#00F29D',
+  },
+  radioDotUnselected: {
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  radioDotFill: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#00F29D',
+  },
+  radioLabel: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+
+  /* ── Credits ─────────────────────────────────────── */
   creditsCard: {
     backgroundColor: '#111417',
     borderRadius: 20,
     padding: 20,
-    marginBottom: 20,
+    marginBottom: 12,
     borderWidth: 1,
     borderColor: 'rgba(0, 242, 157, 0.15)',
   },
@@ -288,21 +653,47 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: 'rgba(255, 255, 255, 0.5)',
   },
-  updateButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.02)',
-    borderRadius: 14,
-    height: 48,
+
+  /* ── Link Card ───────────────────────────────────── */
+  linkCard: {
+    backgroundColor: '#111417',
+    borderRadius: 16,
+    padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
     borderWidth: 1,
     borderColor: 'rgba(0, 242, 157, 0.15)',
-    marginTop: 8,
+    marginBottom: 8,
   },
-  updateButtonText: {
-    color: '#00F29D',
-    fontSize: 13,
+  linkIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0, 242, 157, 0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+  },
+  linkTextWrap: {
+    flex: 1,
+  },
+  linkTitle: {
+    fontSize: 14,
     fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 2,
+  },
+  linkDesc: {
+    fontSize: 11,
+    color: 'rgba(255, 255, 255, 0.4)',
+  },
+
+  /* ── Footer ──────────────────────────────────────── */
+  footer: {
+    textAlign: 'center',
+    fontSize: 11,
+    color: 'rgba(255, 255, 255, 0.2)',
+    marginTop: 24,
+    marginBottom: 8,
   },
 });

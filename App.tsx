@@ -11,7 +11,6 @@ import {
   DeviceEventEmitter,
   Vibration,
   Animated,
-  BackHandler,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PermissionsAndroid } from 'react-native';
@@ -128,6 +127,7 @@ function DeenPulseApp(): React.JSX.Element {
   const [capsuleFormat, setCapsuleFormat] = useState<'name' | 'name_time' | 'time' | 'name_countdown'>('name');
   const [notificationStyle, setNotificationStyle] = useState<'standard' | 'with_time' | 'with_countdown'>('standard');
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+  const [cat3NotificationMode, setCat3NotificationMode] = useState<'ongoing' | 'reminder'>('reminder');
   const [mockPrayerTimes, setMockPrayerTimes] = useState<PrayerTime[] | null>(null);
 
   const [showCapsuleFormatPicker, setShowCapsuleFormatPicker] = useState(false);
@@ -177,7 +177,7 @@ function DeenPulseApp(): React.JSX.Element {
   );
 
   const activePrayerTimes = mockPrayerTimes || prayerTimes;
-  const nextPrayer = usePrayerCountdown(activePrayerTimes, true, capsuleFormat, notificationStyle, location);
+  const nextPrayer = usePrayerCountdown(activePrayerTimes, true, capsuleFormat, notificationStyle, location, profile?.category ?? 3, cat3NotificationMode);
 
   // Load preferences and setup guide state on startup
   useEffect(() => {
@@ -189,6 +189,7 @@ function DeenPulseApp(): React.JSX.Element {
         const format = await AsyncStorage.getItem('@deenpulse_capsule_format');
         const style = await AsyncStorage.getItem('@deenpulse_notification_style');
         const sound = await AsyncStorage.getItem('@deenpulse_adhan_sound_enabled');
+        const cat3Mode = await AsyncStorage.getItem('@deenpulse_cat3_notification_mode');
 
         if (mode !== null) setLocationMode(mode as 'gps' | 'cached');
         if (juristic !== null) setJuristicMethod(juristic as 'standard' | 'hanafi');
@@ -196,6 +197,7 @@ function DeenPulseApp(): React.JSX.Element {
         if (format !== null) setCapsuleFormat(format as 'name' | 'name_time' | 'time' | 'name_countdown');
         if (style !== null) setNotificationStyle(style as 'standard' | 'with_time' | 'with_countdown');
         if (sound !== null) setSoundEnabled(sound === 'true');
+        if (cat3Mode !== null) setCat3NotificationMode(cat3Mode as 'ongoing' | 'reminder');
       } catch (e) {
         console.warn('Failed to load settings:', e);
       }
@@ -437,6 +439,11 @@ function DeenPulseApp(): React.JSX.Element {
             capsuleFormatLabel={getCapsuleFormatLabel()}
             notificationStyleLabel={getNotificationStyleLabel()}
             deviceCategory={profile?.category}
+            cat3NotificationMode={cat3NotificationMode}
+            onCat3ModeChange={async (mode: 'ongoing' | 'reminder') => {
+              setCat3NotificationMode(mode);
+              await AsyncStorage.setItem('@deenpulse_cat3_notification_mode', mode);
+            }}
           />
         );
       case 'oem_guidance':
@@ -965,16 +972,7 @@ export const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 8,
   },
-  accentBar: {
-    // Deprecated in favor of inline typography branding
-  },
 
-  subtitle: {
-    fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.35)',
-    marginTop: 2,
-    letterSpacing: 0.5,
-  },
   headerButtons: {
     flexDirection: 'row',
     gap: 12,
@@ -993,15 +991,7 @@ export const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
-  dashboardContainer: {
-    backgroundColor: '#111417',
-    borderRadius: 20,
-    marginHorizontal: 20,
-    paddingVertical: 16,
-    marginVertical: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 242, 157, 0.2)',
-  },
+
   cardContainer: {
     paddingHorizontal: 20,
     marginTop: 24,
@@ -1126,26 +1116,7 @@ export const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
 
-  scrollLocationBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 6,
-    gap: 6,
-  },
-  locationBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 6,
-    backgroundColor: '#0B0F12',
-  },
-  locationText: {
-    fontSize: 12,
-    color: '#00F29D',
-    fontWeight: '600',
-    fontVariant: ['tabular-nums'],
-  },
+
   loadingContainer: {
     alignItems: 'center',
     justifyContent: 'center',

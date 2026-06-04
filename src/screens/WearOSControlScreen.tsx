@@ -80,16 +80,15 @@ export function WearOSControlScreen({ onBack }: WearOSControlScreenProps) {
       if (PrayerCapsuleModule?.syncToWear) {
         await PrayerCapsuleModule.syncToWear(prayersJson, lat, lng);
         
-        // Wait a brief moment to simulate/allow completion
-        setTimeout(async () => {
-          const timestamp = new Date().toISOString();
-          await AsyncStorage.setItem(LAST_WEAR_SYNC_KEY, timestamp);
-          refreshSyncTime();
-          setSyncing(false);
-          setSyncSuccess(true);
-          triggerHaptic();
-          setTimeout(() => setSyncSuccess(false), 3000);
-        }, 1500);
+        // Update state immediately - no artificial delay
+        const timestamp = new Date().toISOString();
+        await AsyncStorage.setItem(LAST_WEAR_SYNC_KEY, timestamp);
+        refreshSyncTime();
+        setSyncing(false);
+        setSyncSuccess(true);
+        triggerHaptic();
+        // Clear success checkmark after 2 seconds
+        setTimeout(() => setSyncSuccess(false), 2000);
       } else {
         throw new Error('Native sync module is not available.');
       }
@@ -130,7 +129,7 @@ export function WearOSControlScreen({ onBack }: WearOSControlScreenProps) {
           <View style={styles.statusHeader}>
             <View style={styles.statusIndicatorWrapper}>
               <View style={[styles.statusDot, isConnected ? styles.statusDotConnected : styles.statusDotDisconnected]} />
-              <Text style={[styles.statusText, { color: isConnected ? '#00F29D' : '#FF6B6B' }]}>
+              <Text style={[styles.statusText, isConnected ? styles.statusTextConnected : styles.statusTextDisconnected]}>
                 {isConnected ? 'Connected' : 'Not Connected'}
               </Text>
             </View>
@@ -140,7 +139,7 @@ export function WearOSControlScreen({ onBack }: WearOSControlScreenProps) {
             {isConnected ? watchName || 'Galaxy Watch / Wear OS' : 'No companion watch active'}
           </Text>
           <Text style={styles.syncTime}>
-            Last Synced: <Text style={{ color: '#fff', fontWeight: '600' }}>{formatTimestamp(lastSyncTime)}</Text>
+            Last Synced: <Text style={styles.syncTimeHighlight}>{formatTimestamp(lastSyncTime)}</Text>
           </Text>
         </View>
 
@@ -322,6 +321,12 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 1.2,
   },
+  statusTextConnected: {
+    color: '#00F29D',
+  },
+  statusTextDisconnected: {
+    color: '#FF6B6B',
+  },
   watchName: {
     fontSize: 20,
     fontWeight: '800',
@@ -331,6 +336,10 @@ const styles = StyleSheet.create({
   syncTime: {
     fontSize: 12,
     color: 'rgba(255, 255, 255, 0.5)',
+  },
+  syncTimeHighlight: {
+    color: '#ffffff',
+    fontWeight: '600',
   },
   syncButton: {
     backgroundColor: '#00F29D',

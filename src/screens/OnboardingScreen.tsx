@@ -5,7 +5,6 @@ import {
   StyleSheet,
   Pressable,
   Animated,
-  Dimensions,
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,7 +16,7 @@ interface OnboardingScreenProps {
   onComplete: (brand: string) => void;
 }
 
-const { width } = Dimensions.get('window');
+
 
 const BRANDS = [
   { id: 'oppo', name: 'OPPO', icon: 'smartphone', category: 1 },
@@ -175,7 +174,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
                 {brand.name}
               </Text>
               <Text style={styles.categoryLabel}>
-                {brand.category === 1 ? 'Capsule Pill' : brand.category === 2 ? 'Origin Island' : 'Ongoing Notification'}
+                {brand.category === 1 ? 'Capsule Pill' : brand.category === 2 ? 'Origin Island' : 'Reminder Notification'}
               </Text>
             </Pressable>
           );

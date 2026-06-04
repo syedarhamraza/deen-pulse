@@ -7,7 +7,7 @@ import { CountdownDisplay } from '../components/CountdownDisplay';
 import { PrayerCard } from '../components/PrayerCard';
 import { useActiveWindowDetector } from '../hooks/useActiveWindowDetector';
 
-// Shimmer card loading placeholders
+// Shimmer card loading placeholders with detailed high-fidelity inner segments
 function SkeletonCard() {
   const shimmerAnim = useRef(new Animated.Value(0.08)).current;
 
@@ -15,7 +15,7 @@ function SkeletonCard() {
     const animation = Animated.loop(
       Animated.sequence([
         Animated.timing(shimmerAnim, {
-          toValue: 0.25,
+          toValue: 0.22,
           duration: 1200,
           useNativeDriver: true,
         }),
@@ -31,19 +31,67 @@ function SkeletonCard() {
   }, [shimmerAnim]);
 
   return (
-    <Animated.View style={[styles.skeletonCard, { opacity: shimmerAnim }]} />
+    <Animated.View style={[styles.skeletonCard, { opacity: shimmerAnim }]}>
+      {/* Muted circle indicator placeholder */}
+      <View style={styles.skeletonCheck} />
+
+      {/* Micro-icon container placeholder */}
+      <View style={styles.skeletonIcon} />
+
+      {/* Info text stack placeholder */}
+      <View style={styles.skeletonInfo}>
+        <View style={styles.skeletonTextName} />
+        <View style={styles.skeletonTextTime} />
+      </View>
+
+      {/* Badge placeholder */}
+      <View style={styles.skeletonBadge} />
+    </Animated.View>
   );
 }
 
+// Circular countdown gauge placeholder
+function SkeletonCountdown() {
+  const shimmerAnim = useRef(new Animated.Value(0.08)).current;
 
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(shimmerAnim, {
+          toValue: 0.22,
+          duration: 1200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(shimmerAnim, {
+          toValue: 0.08,
+          duration: 1200,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [shimmerAnim]);
+
+  return (
+    <Animated.View style={[styles.skeletonCountdownWrapper, { opacity: shimmerAnim }]}>
+      {/* Thick translucent outer accent ring */}
+      <View style={styles.skeletonCountdownOuterRing} />
+
+      {/* Central countdown circle placeholder */}
+      <View style={styles.skeletonCountdownInnerCircle}>
+        <View style={styles.skeletonCircleTextLarge} />
+        <View style={styles.skeletonCircleTextSmall} />
+      </View>
+    </Animated.View>
+  );
+}
 
 // Full skeleton loader
 function SkeletonLoader() {
   return (
     <View style={styles.skeletonContainer}>
-      <View style={styles.skeletonCountdownWrapper}>
-        <Animated.View style={styles.skeletonCountdownRing} />
-      </View>
+      <SkeletonCountdown />
       <View style={styles.divider}>
         <View style={styles.dividerLine} />
         <Text style={styles.dividerText}>TODAY'S PRAYERS</Text>
@@ -83,9 +131,10 @@ export function DashboardScreen({
       <View style={styles.header}>
         <View>
           <View style={styles.appNameContainer}>
-            <Text style={styles.appName}>DeenPulse</Text>
+            <Text style={styles.appName}>
+              Deen<Text style={styles.appNameHighlight}>Pulse</Text>
+            </Text>
           </View>
-          <View style={styles.accentBar} />
         </View>
         <View style={styles.headerButtons}>
           <Pressable
@@ -95,7 +144,7 @@ export function DashboardScreen({
               onRefresh();
             }}
           >
-            <Icon name="refresh-cw" size={16} color="#00E8A2" />
+            <Icon name="refresh-cw" size={16} color="#00F29D" />
           </Pressable>
           <Pressable
             style={({ pressed }) => [styles.headerButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
@@ -104,7 +153,7 @@ export function DashboardScreen({
               onNavigate('settings');
             }}
           >
-            <Icon name="settings" size={16} color="#00E8A2" />
+            <Icon name="settings" size={16} color="#00F29D" />
           </Pressable>
         </View>
         <HeaderFadeOverlay />
@@ -131,7 +180,7 @@ export function DashboardScreen({
                 onRefresh();
               }}
             >
-              <Icon name="refresh-cw" size={14} color="#00E8A2" />
+              <Icon name="refresh-cw" size={14} color="#00F29D" />
               <Text style={styles.retryText}>Try Again</Text>
             </Pressable>
           </View>

@@ -558,7 +558,7 @@ function DeenPulseApp(): React.JSX.Element {
                 styles.modalItemText,
                 capsuleFormat === 'name' && styles.modalItemTextSelected,
               ]}>Name Only (e.g., Asr)</Text>
-              {capsuleFormat === 'name' && <Icon name="check" size={16} color="#00E8A2" />}
+              {capsuleFormat === 'name' && <Icon name="check" size={16} color="#00F29D" />}
             </Pressable>
             <Pressable
               style={({ pressed }) => [
@@ -575,7 +575,7 @@ function DeenPulseApp(): React.JSX.Element {
                 styles.modalItemText,
                 capsuleFormat === 'name_countdown' && styles.modalItemTextSelected,
               ]}>Name & Countdown (e.g., Asr (16m 10s))</Text>
-              {capsuleFormat === 'name_countdown' && <Icon name="check" size={16} color="#00E8A2" />}
+              {capsuleFormat === 'name_countdown' && <Icon name="check" size={16} color="#00F29D" />}
             </Pressable>
             <Pressable
               style={({ pressed }) => [
@@ -592,7 +592,7 @@ function DeenPulseApp(): React.JSX.Element {
                 styles.modalItemText,
                 capsuleFormat === 'name_time' && styles.modalItemTextSelected,
               ]}>Name & Time (e.g., Asr (5:12 PM))</Text>
-              {capsuleFormat === 'name_time' && <Icon name="check" size={16} color="#00E8A2" />}
+              {capsuleFormat === 'name_time' && <Icon name="check" size={16} color="#00F29D" />}
             </Pressable>
             <Pressable
               style={({ pressed }) => [
@@ -609,7 +609,7 @@ function DeenPulseApp(): React.JSX.Element {
                 styles.modalItemText,
                 capsuleFormat === 'time' && styles.modalItemTextSelected,
               ]}>Time Only (e.g., 5:12 PM)</Text>
-              {capsuleFormat === 'time' && <Icon name="check" size={16} color="#00E8A2" />}
+              {capsuleFormat === 'time' && <Icon name="check" size={16} color="#00F29D" />}
             </Pressable>
           </>
         ) : (
@@ -629,7 +629,7 @@ function DeenPulseApp(): React.JSX.Element {
                 styles.modalItemText,
                 capsuleFormat === 'name' && styles.modalItemTextSelected,
               ]}>Name Only (e.g., Fajr)</Text>
-              {capsuleFormat === 'name' && <Icon name="check" size={16} color="#00E8A2" />}
+              {capsuleFormat === 'name' && <Icon name="check" size={16} color="#00F29D" />}
             </Pressable>
             <Pressable
               style={({ pressed }) => [
@@ -646,7 +646,7 @@ function DeenPulseApp(): React.JSX.Element {
                 styles.modalItemText,
                 capsuleFormat === 'name_time' && styles.modalItemTextSelected,
               ]}>Name & Time (e.g., Fajr (5:12 AM))</Text>
-              {capsuleFormat === 'name_time' && <Icon name="check" size={16} color="#00E8A2" />}
+              {capsuleFormat === 'name_time' && <Icon name="check" size={16} color="#00F29D" />}
             </Pressable>
             <Pressable
               style={({ pressed }) => [
@@ -663,7 +663,7 @@ function DeenPulseApp(): React.JSX.Element {
                 styles.modalItemText,
                 capsuleFormat === 'time' && styles.modalItemTextSelected,
               ]}>Time Only (e.g., 5:12 AM)</Text>
-              {capsuleFormat === 'time' && <Icon name="check" size={16} color="#00E8A2" />}
+              {capsuleFormat === 'time' && <Icon name="check" size={16} color="#00F29D" />}
             </Pressable>
           </>
         )}
@@ -695,7 +695,7 @@ function DeenPulseApp(): React.JSX.Element {
                 styles.modalItemText,
                 notificationStyle === 'standard' && styles.modalItemTextSelected,
               ]}>Name Only (e.g., Asr)</Text>
-              {notificationStyle === 'standard' && <Icon name="check" size={16} color="#00E8A2" />}
+              {notificationStyle === 'standard' && <Icon name="check" size={16} color="#00F29D" />}
             </Pressable>
             <Pressable
               style={({ pressed }) => [
@@ -712,7 +712,7 @@ function DeenPulseApp(): React.JSX.Element {
                 styles.modalItemText,
                 notificationStyle === 'with_countdown' && styles.modalItemTextSelected,
               ]}>Name & Countdown (e.g., Asr in 16m 10s)</Text>
-              {notificationStyle === 'with_countdown' && <Icon name="check" size={16} color="#00E8A2" />}
+              {notificationStyle === 'with_countdown' && <Icon name="check" size={16} color="#00F29D" />}
             </Pressable>
             <Pressable
               style={({ pressed }) => [
@@ -729,7 +729,7 @@ function DeenPulseApp(): React.JSX.Element {
                 styles.modalItemText,
                 notificationStyle === 'with_time' && styles.modalItemTextSelected,
               ]}>Name & Time (e.g., Asr at 5:12 PM)</Text>
-              {notificationStyle === 'with_time' && <Icon name="check" size={16} color="#00E8A2" />}
+              {notificationStyle === 'with_time' && <Icon name="check" size={16} color="#00F29D" />}
             </Pressable>
           </>
         ) : (
@@ -749,7 +749,7 @@ function DeenPulseApp(): React.JSX.Element {
                 styles.modalItemText,
                 notificationStyle === 'standard' && styles.modalItemTextSelected,
               ]}>Standard (e.g., Next Prayer: Fajr)</Text>
-              {notificationStyle === 'standard' && <Icon name="check" size={16} color="#00E8A2" />}
+              {notificationStyle === 'standard' && <Icon name="check" size={16} color="#00F29D" />}
             </Pressable>
             <Pressable
               style={({ pressed }) => [
@@ -766,7 +766,7 @@ function DeenPulseApp(): React.JSX.Element {
                 styles.modalItemText,
                 notificationStyle === 'with_time' && styles.modalItemTextSelected,
               ]}>With Time (e.g., Next Prayer: Fajr (5:12 AM))</Text>
-              {notificationStyle === 'with_time' && <Icon name="check" size={16} color="#00E8A2" />}
+              {notificationStyle === 'with_time' && <Icon name="check" size={16} color="#00F29D" />}
             </Pressable>
             {profile?.category !== 1 && (
               <Pressable
@@ -784,7 +784,7 @@ function DeenPulseApp(): React.JSX.Element {
                   styles.modalItemText,
                   notificationStyle === 'with_countdown' && styles.modalItemTextSelected,
                 ]}>With Countdown (e.g., Next Prayer: Fajr (45m 12s))</Text>
-                {notificationStyle === 'with_countdown' && <Icon name="check" size={16} color="#00E8A2" />}
+                {notificationStyle === 'with_countdown' && <Icon name="check" size={16} color="#00F29D" />}
               </Pressable>
             )}
           </>
@@ -815,7 +815,7 @@ function DeenPulseApp(): React.JSX.Element {
             styles.modalItemText,
             juristicMethod === 'standard' && styles.modalItemTextSelected,
           ]}>Standard (Shafi'i, Maliki, Hanbali)</Text>
-          {juristicMethod === 'standard' && <Icon name="check" size={16} color="#00E8A2" />}
+          {juristicMethod === 'standard' && <Icon name="check" size={16} color="#00F29D" />}
         </Pressable>
         <Pressable
           style={({ pressed }) => [
@@ -832,7 +832,7 @@ function DeenPulseApp(): React.JSX.Element {
             styles.modalItemText,
             juristicMethod === 'hanafi' && styles.modalItemTextSelected,
           ]}>Hanafi</Text>
-          {juristicMethod === 'hanafi' && <Icon name="check" size={16} color="#00E8A2" />}
+          {juristicMethod === 'hanafi' && <Icon name="check" size={16} color="#00F29D" />}
         </Pressable>
       </FluidModal>
 
@@ -869,7 +869,7 @@ function DeenPulseApp(): React.JSX.Element {
                   styles.modalItemText,
                   calculationRule === key && styles.modalItemTextSelected,
                 ]}>{label}</Text>
-                {calculationRule === key && <Icon name="check" size={16} color="#00E8A2" />}
+                {calculationRule === key && <Icon name="check" size={16} color="#00F29D" />}
               </Pressable>
             ))}
           </ScrollView>
@@ -897,12 +897,12 @@ export const styles = StyleSheet.create({
   },
   infoValLink: {
     fontSize: 14,
-    color: '#00E8A2',
+    color: '#00F29D',
     fontWeight: '600',
     textDecorationLine: 'underline',
   },
   linkTextFooter: {
-    color: '#00E8A2',
+    color: '#00F29D',
     fontWeight: '700',
     textDecorationLine: 'underline',
   },
@@ -917,27 +917,27 @@ export const styles = StyleSheet.create({
     gap: 8,
   },
   betaBadge: {
-    backgroundColor: 'rgba(0, 232, 162, 0.15)',
+    backgroundColor: 'rgba(0, 242, 157, 0.15)',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.25)',
+    borderColor: 'rgba(0, 242, 157, 0.25)',
     alignSelf: 'center',
   },
   betaBadgeText: {
-    color: '#00E8A2',
+    color: '#00F29D',
     fontSize: 9,
     fontWeight: '800',
     letterSpacing: 0.5,
   },
   container: {
     flex: 1,
-    backgroundColor: '#080B14',
+    backgroundColor: '#0B0F12',
   },
   screenContainer: {
     flex: 1,
-    backgroundColor: '#080B14',
+    backgroundColor: '#0B0F12',
   },
   scrollContent: {
     paddingBottom: 40,
@@ -950,21 +950,23 @@ export const styles = StyleSheet.create({
     paddingTop: 10,
     paddingBottom: 4,
     marginBottom: 14,
-    backgroundColor: '#080B14',
+    backgroundColor: '#0B0F12',
   },
   appName: {
-    fontSize: 32,
-    fontWeight: '800',
+    fontSize: 28,
+    fontWeight: '400', // Sleek, clean geometric weight
     color: '#FFFFFF',
     letterSpacing: -0.5,
   },
+  appNameHighlight: {
+    fontWeight: '800', // Bold modern weight for "Pulse"
+    color: '#00F29D', // Vibrant neon mint green
+    textShadowColor: 'rgba(0, 242, 157, 0.35)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
+  },
   accentBar: {
-    width: 32,
-    height: 3,
-    backgroundColor: '#00E8A2',
-    borderRadius: 1.5,
-    marginTop: 4,
-    marginBottom: 6,
+    // Deprecated in favor of inline typography branding
   },
 
   subtitle: {
@@ -981,40 +983,44 @@ export const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: 'rgba(0, 232, 162, 0.08)',
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.15)',
+    borderColor: 'rgba(0, 242, 157, 0.15)', // Subtle neon green border tint
+    shadowColor: '#00F29D',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   dashboardContainer: {
-    backgroundColor: '#111827',
+    backgroundColor: '#111417',
     borderRadius: 20,
     marginHorizontal: 20,
     paddingVertical: 16,
     marginVertical: 12,
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.2)',
+    borderColor: 'rgba(0, 242, 157, 0.2)',
   },
   cardContainer: {
     paddingHorizontal: 20,
     marginTop: 24,
   },
   settingsRowCard: {
-    backgroundColor: '#111827',
+    backgroundColor: '#111417',
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.2)',
+    borderColor: 'rgba(0, 242, 157, 0.2)',
   },
   rowIconContainer: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(0, 232, 162, 0.08)',
+    backgroundColor: 'rgba(0, 242, 157, 0.08)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -1036,12 +1042,12 @@ export const styles = StyleSheet.create({
     marginTop: 2,
   },
   menuDetailCard: {
-    backgroundColor: '#111827',
+    backgroundColor: '#111417',
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.2)',
+    borderColor: 'rgba(0, 242, 157, 0.2)',
   },
   menuDetailLabel: {
     fontSize: 16,
@@ -1051,7 +1057,7 @@ export const styles = StyleSheet.create({
   },
   menuDetailValue: {
     fontSize: 14,
-    color: '#00E8A2',
+    color: '#00F29D',
     fontWeight: '600',
     marginBottom: 6,
   },
@@ -1080,7 +1086,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 24,
     paddingVertical: 16,
-    backgroundColor: '#080B14',
+    backgroundColor: '#0B0F12',
   },
   fadeOverlayContainer: {
     position: 'absolute',
@@ -1091,24 +1097,28 @@ export const styles = StyleSheet.create({
     zIndex: 10,
     flexDirection: 'column',
   },
-  fadeLine1: { height: 3, width: '100%', backgroundColor: 'rgba(8, 11, 20, 0.96)' },
-  fadeLine2: { height: 3, width: '100%', backgroundColor: 'rgba(8, 11, 20, 0.88)' },
-  fadeLine3: { height: 3, width: '100%', backgroundColor: 'rgba(8, 11, 20, 0.76)' },
-  fadeLine4: { height: 3, width: '100%', backgroundColor: 'rgba(8, 11, 20, 0.60)' },
-  fadeLine5: { height: 3, width: '100%', backgroundColor: 'rgba(8, 11, 20, 0.44)' },
-  fadeLine6: { height: 3, width: '100%', backgroundColor: 'rgba(8, 11, 20, 0.28)' },
-  fadeLine7: { height: 3, width: '100%', backgroundColor: 'rgba(8, 11, 20, 0.14)' },
-  fadeLine8: { height: 3, width: '100%', backgroundColor: 'rgba(8, 11, 20, 0.05)' },
+  fadeLine1: { height: 3, width: '100%', backgroundColor: 'rgba(11, 15, 18, 0.96)' },
+  fadeLine2: { height: 3, width: '100%', backgroundColor: 'rgba(11, 15, 18, 0.88)' },
+  fadeLine3: { height: 3, width: '100%', backgroundColor: 'rgba(11, 15, 18, 0.76)' },
+  fadeLine4: { height: 3, width: '100%', backgroundColor: 'rgba(11, 15, 18, 0.60)' },
+  fadeLine5: { height: 3, width: '100%', backgroundColor: 'rgba(11, 15, 18, 0.44)' },
+  fadeLine6: { height: 3, width: '100%', backgroundColor: 'rgba(11, 15, 18, 0.28)' },
+  fadeLine7: { height: 3, width: '100%', backgroundColor: 'rgba(11, 15, 18, 0.14)' },
+  fadeLine8: { height: 3, width: '100%', backgroundColor: 'rgba(11, 15, 18, 0.05)' },
   backButton: {
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: 'rgba(0, 232, 162, 0.08)',
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.15)',
+    borderColor: 'rgba(0, 242, 157, 0.15)', // Subtle neon green border tint
     marginRight: 16,
+    shadowColor: '#00F29D',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   subTitle: {
     fontSize: 24,
@@ -1128,11 +1138,11 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 24,
     paddingVertical: 6,
-    backgroundColor: '#080B14',
+    backgroundColor: '#0B0F12',
   },
   locationText: {
     fontSize: 12,
-    color: '#00E8A2',
+    color: '#00F29D',
     fontWeight: '600',
     fontVariant: ['tabular-nums'],
   },
@@ -1167,7 +1177,7 @@ export const styles = StyleSheet.create({
   },
   retryButton: {
     marginTop: 16,
-    backgroundColor: 'rgba(0, 232, 162, 0.15)',
+    backgroundColor: 'rgba(0, 242, 157, 0.15)',
     paddingHorizontal: 24,
     paddingVertical: 10,
     borderRadius: 20,
@@ -1178,7 +1188,7 @@ export const styles = StyleSheet.create({
   retryText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#00E8A2',
+    color: '#00F29D',
   },
   divider: {
     flexDirection: 'row',
@@ -1216,7 +1226,7 @@ export const styles = StyleSheet.create({
     textAlign: 'center',
   },
   footerLink: {
-    color: '#00E8A2',
+    color: '#00F29D',
     fontWeight: '700',
     textDecorationLine: 'underline',
   },
@@ -1236,13 +1246,13 @@ export const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.75)',
   },
   modalContent: {
-    backgroundColor: '#111827',
+    backgroundColor: '#111417',
     borderRadius: 28,
     width: '100%',
     paddingBottom: 20,
     borderWidth: 1.5,
-    borderColor: 'rgba(0, 232, 162, 0.25)',
-    shadowColor: '#00E8A2',
+    borderColor: 'rgba(0, 242, 157, 0.25)',
+    shadowColor: '#00F29D',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.2,
     shadowRadius: 20,
@@ -1290,8 +1300,8 @@ export const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   modalItemSelected: {
-    backgroundColor: 'rgba(0, 232, 162, 0.08)',
-    borderColor: 'rgba(0, 232, 162, 0.2)',
+    backgroundColor: 'rgba(0, 242, 157, 0.08)',
+    borderColor: 'rgba(0, 242, 157, 0.2)',
   },
   modalItemText: {
     flex: 1,
@@ -1299,7 +1309,7 @@ export const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.7)',
   },
   modalItemTextSelected: {
-    color: '#00E8A2',
+    color: '#00F29D',
     fontWeight: '600',
   },
   alertOverlay: {
@@ -1317,13 +1327,13 @@ export const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.65)',
   },
   alertContainer: {
-    backgroundColor: '#111827',
+    backgroundColor: '#111417',
     borderRadius: 16,
     padding: 24,
     width: '85%',
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.2)',
-    shadowColor: '#00E8A2',
+    borderColor: 'rgba(0, 242, 157, 0.2)',
+    shadowColor: '#00F29D',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
@@ -1360,7 +1370,7 @@ export const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.06)',
   },
   alertButtonConfirm: {
-    backgroundColor: 'rgba(0, 232, 162, 0.15)',
+    backgroundColor: 'rgba(0, 242, 157, 0.15)',
   },
   alertButtonDestructive: {
     backgroundColor: 'rgba(255, 107, 107, 0.15)',
@@ -1372,24 +1382,24 @@ export const styles = StyleSheet.create({
     letterSpacing: -0.1,
   },
   alertButtonTextConfirm: {
-    color: '#00E8A2',
+    color: '#00F29D',
     fontWeight: '700',
     fontSize: 14,
     letterSpacing: -0.1,
   },
   aboutHeaderBlock: {
-    backgroundColor: '#111827',
+    backgroundColor: '#111417',
     borderRadius: 16,
     padding: 24,
     alignItems: 'center',
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.2)',
+    borderColor: 'rgba(0, 242, 157, 0.2)',
   },
   aboutAccentBar: {
     width: 40,
     height: 3,
-    backgroundColor: '#00E8A2',
+    backgroundColor: '#00F29D',
     borderRadius: 1.5,
     marginVertical: 10,
   },
@@ -1430,25 +1440,25 @@ export const styles = StyleSheet.create({
     fontWeight: '500',
   },
   versionBadge: {
-    backgroundColor: 'rgba(0, 232, 162, 0.15)',
+    backgroundColor: 'rgba(0, 242, 157, 0.15)',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
   },
   versionBadgeText: {
-    color: '#00E8A2',
+    color: '#00F29D',
     fontSize: 12,
     fontWeight: '700',
   },
   setupGuideCard: {
-    backgroundColor: '#111827',
+    backgroundColor: '#111417',
     borderRadius: 16,
     padding: 16,
     marginBottom: 8,
     marginTop: 8,
     marginHorizontal: 20,
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.2)',
+    borderColor: 'rgba(0, 242, 157, 0.2)',
   },
   setupCardHeader: {
     flexDirection: 'row',
@@ -1475,31 +1485,31 @@ export const styles = StyleSheet.create({
     marginTop: 24,
   },
   guideStepCard: {
-    backgroundColor: '#111827',
+    backgroundColor: '#111417',
     borderRadius: 22,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.2)',
+    borderColor: 'rgba(0, 242, 157, 0.2)',
   },
   stepBadge: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: 'rgba(0, 232, 162, 0.15)',
+    backgroundColor: 'rgba(0, 242, 157, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
   },
   stepBadgeText: {
-    color: '#00E8A2',
+    color: '#00F29D',
     fontWeight: '800',
     fontSize: 14,
   },
   stepNumLabel: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#00E8A2',
+    color: '#00F29D',
     marginBottom: 6,
   },
   stepDesc: {
@@ -1516,7 +1526,7 @@ export const styles = StyleSheet.create({
     resizeMode: 'cover',
   },
   guideCompleteBtn: {
-    backgroundColor: '#00E8A2',
+    backgroundColor: '#00F29D',
     borderRadius: 18,
     borderColor: '#00ffc4ff',
     borderWidth: 1,
@@ -1536,27 +1546,94 @@ export const styles = StyleSheet.create({
     marginVertical: 12,
   },
   skeletonCountdownWrapper: {
+    width: 240,
+    height: 240,
     alignItems: 'center',
     justifyContent: 'center',
-    marginVertical: 30,
-    height: 240,
+    alignSelf: 'center',
+    marginVertical: 15,
+    position: 'relative',
   },
-  skeletonCountdownRing: {
+  skeletonCountdownOuterRing: {
+    position: 'absolute',
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    borderWidth: 6,
+    borderColor: 'rgba(0, 242, 157, 0.05)',
+  },
+  skeletonCountdownInnerCircle: {
     width: 220,
     height: 220,
     borderRadius: 110,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.1)',
-    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    backgroundColor: '#0B0F12',
+    borderWidth: 1.5,
+    borderColor: 'rgba(11, 102, 70, 0.2)', // faint emerald
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+  },
+  skeletonCircleTextLarge: {
+    width: 120,
+    height: 38,
+    borderRadius: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    marginBottom: 10,
+  },
+  skeletonCircleTextSmall: {
+    width: 150,
+    height: 12,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
   },
   skeletonCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#111417', // matching solid card base
     borderRadius: 20,
-    height: 72,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     marginVertical: 6,
     width: '100%',
     borderWidth: 1,
-    borderColor: 'rgba(240, 244, 248, 0.02)',
+    borderColor: '#1C2024',
+  },
+  skeletonCheck: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    marginRight: 12,
+  },
+  skeletonIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    marginRight: 12,
+  },
+  skeletonInfo: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  skeletonTextName: {
+    width: 80,
+    height: 14,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    marginBottom: 6,
+  },
+  skeletonTextTime: {
+    width: 120,
+    height: 10,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+  },
+  skeletonBadge: {
+    width: 60,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
   },
   modalScrollContainer: {
     position: 'relative',

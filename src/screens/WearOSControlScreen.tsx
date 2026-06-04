@@ -119,7 +119,7 @@ export function WearOSControlScreen({ onBack }: WearOSControlScreenProps) {
           }}
           style={({ pressed }) => [styles.backButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
         >
-          <Icon name="arrow-left" size={20} color="#00E8A2" />
+          <Icon name="arrow-left" size={20} color="#00F29D" />
         </Pressable>
         <Text style={styles.title}>Watch Companion</Text>
       </View>
@@ -130,11 +130,11 @@ export function WearOSControlScreen({ onBack }: WearOSControlScreenProps) {
           <View style={styles.statusHeader}>
             <View style={styles.statusIndicatorWrapper}>
               <View style={[styles.statusDot, isConnected ? styles.statusDotConnected : styles.statusDotDisconnected]} />
-              <Text style={[styles.statusText, { color: isConnected ? '#00E8A2' : '#FF6B6B' }]}>
+              <Text style={[styles.statusText, { color: isConnected ? '#00F29D' : '#FF6B6B' }]}>
                 {isConnected ? 'Connected' : 'Not Connected'}
               </Text>
             </View>
-            <Icon name="watch" size={28} color={isConnected ? '#00E8A2' : 'rgba(255,255,255,0.4)'} />
+            <Icon name="watch" size={28} color={isConnected ? '#00F29D' : 'rgba(255,255,255,0.4)'} />
           </View>
           <Text style={styles.watchName}>
             {isConnected ? watchName || 'Galaxy Watch / Wear OS' : 'No companion watch active'}
@@ -149,7 +149,7 @@ export function WearOSControlScreen({ onBack }: WearOSControlScreenProps) {
           style={({ pressed }) => [
             styles.syncButton,
             (!isConnected || syncing) && styles.syncButtonDisabled,
-            { opacity: pressed ? 0.9 : 1 },
+            { transform: [{ scale: pressed && isConnected && !syncing ? 0.98 : 1 }] },
           ]}
           disabled={!isConnected || syncing}
           onPress={handleSyncNow}
@@ -212,7 +212,7 @@ export function WearOSControlScreen({ onBack }: WearOSControlScreenProps) {
         >
           <View style={styles.troubleHeader}>
             <View style={styles.troubleTitleCol}>
-              <Icon name="help-circle" size={18} color="#00E8A2" />
+              <Icon name="help-circle" size={18} color="#00F29D" />
               <Text style={styles.troubleTitle}>Troubleshooting Sync Issues</Text>
             </View>
             <Icon name={troubleOpen ? 'chevron-up' : 'chevron-down'} size={18} color="rgba(255,255,255,0.4)" />
@@ -241,56 +241,58 @@ export function WearOSControlScreen({ onBack }: WearOSControlScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#080B14',
+    backgroundColor: '#0B0F12',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 24,
+    paddingHorizontal: 24,
+    paddingTop: 16,
     paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: '#0B0F12',
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.15)',
+    borderColor: 'rgba(0, 242, 157, 0.15)',
+    shadowColor: '#00F29D',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '800',
+    fontSize: 24,
+    fontWeight: '700',
     color: '#FFFFFF',
-    letterSpacing: -0.3,
   },
   scrollContent: {
-    padding: 20,
+    paddingHorizontal: 24,
     paddingBottom: 40,
   },
   statusCard: {
-    borderRadius: 24,
+    borderRadius: 20,
     padding: 20,
     marginBottom: 20,
-    borderWidth: 1.5,
+    borderWidth: 1,
   },
   statusCardConnected: {
-    backgroundColor: '#102931',
-    borderColor: '#00E8A2',
-    shadowColor: '#00E8A2',
+    backgroundColor: '#141D20',
+    borderColor: 'rgba(0, 242, 157, 0.25)',
+    shadowColor: '#00F29D',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 10,
     elevation: 4,
   },
   statusCardDisconnected: {
-    backgroundColor: '#121624',
-    borderColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: '#111417',
+    borderColor: 'rgba(255, 107, 107, 0.2)',
   },
   statusHeader: {
     flexDirection: 'row',
@@ -309,7 +311,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   statusDotConnected: {
-    backgroundColor: '#00E8A2',
+    backgroundColor: '#00F29D',
   },
   statusDotDisconnected: {
     backgroundColor: '#FF6B6B',
@@ -331,15 +333,15 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.5)',
   },
   syncButton: {
-    backgroundColor: '#00E8A2',
-    borderRadius: 16,
+    backgroundColor: '#00F29D',
+    borderRadius: 14,
     height: 52,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
   },
   syncButtonDisabled: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
   },
   syncButtonInner: {
     flexDirection: 'row',
@@ -358,12 +360,12 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   settingsSection: {
-    backgroundColor: '#121624',
+    backgroundColor: '#111417',
     borderRadius: 20,
     padding: 20,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: 'rgba(0, 242, 157, 0.15)',
   },
   sectionLabel: {
     fontSize: 12,
@@ -396,11 +398,11 @@ const styles = StyleSheet.create({
     lineHeight: 15,
   },
   troubleCard: {
-    backgroundColor: '#121624',
+    backgroundColor: '#111417',
     borderRadius: 20,
     padding: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: 'rgba(0, 242, 157, 0.15)',
   },
   troubleHeader: {
     flexDirection: 'row',

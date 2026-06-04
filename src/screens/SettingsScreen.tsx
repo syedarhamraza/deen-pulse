@@ -19,7 +19,7 @@ export function SettingsScreen({ onBack, onNavigate }: SettingsScreenProps) {
           }}
           style={({ pressed }) => [styles.backButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
         >
-          <Icon name="arrow-left" size={20} color="#00E8A2" />
+          <Icon name="arrow-left" size={20} color="#00F29D" />
         </Pressable>
         <Text style={styles.subTitle}>Settings</Text>
         <HeaderFadeOverlay />
@@ -36,13 +36,13 @@ export function SettingsScreen({ onBack, onNavigate }: SettingsScreenProps) {
             }}
           >
             <View style={styles.rowIconContainer}>
-              <Icon name="book-open" size={18} color="#00E8A2" />
+              <Icon name="book-open" size={18} color="#00F29D" />
             </View>
             <View style={styles.rowInfo}>
               <Text style={styles.rowTitle}>Prayer Rules</Text>
               <Text style={styles.rowDesc}>Juristic settings and calculation methods</Text>
             </View>
-            <Icon name="chevron-right" size={18} color="rgba(0, 232, 162, 0.5)" />
+            <Icon name="chevron-right" size={18} color="rgba(0, 242, 157, 0.5)" />
           </Pressable>
 
           {/* Row 2: Notifications */}
@@ -54,13 +54,13 @@ export function SettingsScreen({ onBack, onNavigate }: SettingsScreenProps) {
             }}
           >
             <View style={styles.rowIconContainer}>
-              <Icon name="bell" size={18} color="#00E8A2" />
+              <Icon name="bell" size={18} color="#00F29D" />
             </View>
             <View style={styles.rowInfo}>
               <Text style={styles.rowTitle}>Notifications</Text>
               <Text style={styles.rowDesc}>Configure system alert permissions</Text>
             </View>
-            <Icon name="chevron-right" size={18} color="rgba(0, 232, 162, 0.5)" />
+            <Icon name="chevron-right" size={18} color="rgba(0, 242, 157, 0.5)" />
           </Pressable>
 
           {/* Row: Watch Companion */}
@@ -72,13 +72,13 @@ export function SettingsScreen({ onBack, onNavigate }: SettingsScreenProps) {
             }}
           >
             <View style={styles.rowIconContainer}>
-              <Icon name="watch" size={18} color="#00E8A2" />
+              <Icon name="watch" size={18} color="#00F29D" />
             </View>
             <View style={styles.rowInfo}>
               <Text style={styles.rowTitle}>Watch Companion</Text>
               <Text style={styles.rowDesc}>Manage Wear OS sync and connection status</Text>
             </View>
-            <Icon name="chevron-right" size={18} color="rgba(0, 232, 162, 0.5)" />
+            <Icon name="chevron-right" size={18} color="rgba(0, 242, 157, 0.5)" />
           </Pressable>
 
           {/* Row 3: Data Management */}
@@ -90,13 +90,13 @@ export function SettingsScreen({ onBack, onNavigate }: SettingsScreenProps) {
             }}
           >
             <View style={styles.rowIconContainer}>
-              <Icon name="database" size={18} color="#00E8A2" />
+              <Icon name="database" size={18} color="#00F29D" />
             </View>
             <View style={styles.rowInfo}>
               <Text style={styles.rowTitle}>Data Management</Text>
               <Text style={styles.rowDesc}>Storage, cache, and GPS positioning</Text>
             </View>
-            <Icon name="chevron-right" size={18} color="rgba(0, 232, 162, 0.5)" />
+            <Icon name="chevron-right" size={18} color="rgba(0, 242, 157, 0.5)" />
           </Pressable>
 
           {/* Row 4: About DeenPulse */}
@@ -108,13 +108,13 @@ export function SettingsScreen({ onBack, onNavigate }: SettingsScreenProps) {
             }}
           >
             <View style={styles.rowIconContainer}>
-              <Icon name="info" size={18} color="#00E8A2" />
+              <Icon name="info" size={18} color="#00F29D" />
             </View>
             <View style={styles.rowInfo}>
               <Text style={styles.rowTitle}>About</Text>
               <Text style={styles.rowDesc}>App information and credits</Text>
             </View>
-            <Icon name="chevron-right" size={18} color="rgba(0, 232, 162, 0.5)" />
+            <Icon name="chevron-right" size={18} color="rgba(0, 242, 157, 0.5)" />
           </Pressable>
 
           {/* Row: Developer Options */}
@@ -126,13 +126,13 @@ export function SettingsScreen({ onBack, onNavigate }: SettingsScreenProps) {
             }}
           >
             <View style={styles.rowIconContainer}>
-              <Icon name="tool" size={18} color="#00E8A2" />
+              <Icon name="tool" size={18} color="#00F29D" />
             </View>
             <View style={styles.rowInfo}>
               <Text style={styles.rowTitle}>Developer Options</Text>
               <Text style={styles.rowDesc}>Trigger test notifications and simulations</Text>
             </View>
-            <Icon name="chevron-right" size={18} color="rgba(0, 232, 162, 0.5)" />
+            <Icon name="chevron-right" size={18} color="rgba(0, 242, 157, 0.5)" />
           </Pressable>
         </View>
       </ScrollView>

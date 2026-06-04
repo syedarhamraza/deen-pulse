@@ -58,14 +58,14 @@ export function OEMGuidanceScreen({ onBack }: OEMGuidanceScreenProps) {
         return (
           <View style={styles.guidanceCard}>
             <View style={styles.cardHeader}>
-              <Icon name="check-circle" size={20} color="#00E8A2" />
+              <Icon name="check-circle" size={20} color="#00F29D" />
               <Text style={styles.cardTitle}>Category 1 Integration (Active)</Text>
             </View>
             <Text style={styles.cardDescription}>
               Your {profile.brand.toUpperCase()} device supports the advanced Status Bar Capsule. We have locked the countdown tracking element into your status bar pill cleanly.
             </Text>
             <View style={styles.tipBox}>
-              <Icon name="info" size={16} color="#00E8A2" style={styles.tipIcon} />
+              <Icon name="info" size={16} color="#00F29D" style={styles.tipIcon} />
               <Text style={styles.tipText}>
                 OPPO / ColorOS / Realme devices sometimes freeze background services. Ensure 'Auto-Launch' is enabled for DeenPulse.
               </Text>
@@ -76,14 +76,14 @@ export function OEMGuidanceScreen({ onBack }: OEMGuidanceScreenProps) {
         return (
           <View style={styles.guidanceCard}>
             <View style={styles.cardHeader}>
-              <Icon name="check-circle" size={20} color="#00E8A2" />
+              <Icon name="check-circle" size={20} color="#00F29D" />
               <Text style={styles.cardTitle}>Category 2 Integration (Active)</Text>
             </View>
             <Text style={styles.cardDescription}>
               Your {profile.brand.toUpperCase()} device utilizes Vivo's Origin Island / Lockscreen display. We bypass custom text wrappers to prevent layout displacement and use a pure native chronometer for clean alignment.
             </Text>
             <View style={styles.tipBox}>
-              <Icon name="info" size={16} color="#00E8A2" style={styles.tipIcon} />
+              <Icon name="info" size={16} color="#00F29D" style={styles.tipIcon} />
               <Text style={styles.tipText}>
                 To prevent countdown stalling, make sure DeenPulse is allowed to start in the background under 'High Background Power Consumption' settings.
               </Text>
@@ -95,7 +95,7 @@ export function OEMGuidanceScreen({ onBack }: OEMGuidanceScreenProps) {
         return (
           <View style={styles.guidanceCard}>
             <View style={styles.cardHeader}>
-              <Icon name="sliders" size={20} color="#00E8A2" />
+              <Icon name="sliders" size={20} color="#00F29D" />
               <Text style={styles.cardTitle}>Category 3 Integration (Standard)</Text>
             </View>
             <Text style={styles.cardDescription}>
@@ -129,7 +129,7 @@ export function OEMGuidanceScreen({ onBack }: OEMGuidanceScreenProps) {
           }}
           style={({ pressed }) => [styles.backButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
         >
-          <Icon name="arrow-left" size={20} color="#00E8A2" />
+          <Icon name="arrow-left" size={20} color="#00F29D" />
         </Pressable>
         <Text style={styles.title}>Device Optimization</Text>
       </View>
@@ -187,7 +187,7 @@ export function OEMGuidanceScreen({ onBack }: OEMGuidanceScreenProps) {
           </View>
 
           <Pressable
-            style={({ pressed }) => [styles.settingsButton, { opacity: pressed ? 0.9 : 1 }]}
+            style={({ pressed }) => [styles.settingsButton, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
             onPress={handleOpenSettings}
           >
             <Icon name="external-link" size={16} color="#000" />
@@ -202,45 +202,47 @@ export function OEMGuidanceScreen({ onBack }: OEMGuidanceScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#080B14',
+    backgroundColor: '#0B0F12',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 24,
+    paddingHorizontal: 24,
+    paddingTop: 16,
     paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: '#0B0F12',
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.15)',
+    borderColor: 'rgba(0, 242, 157, 0.15)',
+    shadowColor: '#00F29D',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '800',
+    fontSize: 24,
+    fontWeight: '700',
     color: '#FFFFFF',
-    letterSpacing: -0.3,
   },
   scrollContent: {
-    padding: 20,
+    paddingHorizontal: 24,
     paddingBottom: 40,
   },
   profileSection: {
-    backgroundColor: '#121624',
+    backgroundColor: '#111417',
     borderRadius: 16,
     padding: 16,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: 'rgba(0, 242, 157, 0.15)',
   },
   label: {
     fontSize: 12,
@@ -252,15 +254,15 @@ const styles = StyleSheet.create({
   profileValue: {
     fontSize: 22,
     fontWeight: '800',
-    color: '#00E8A2',
+    color: '#00F29D',
   },
   guidanceCard: {
-    backgroundColor: '#121624',
+    backgroundColor: '#111417',
     borderRadius: 20,
     padding: 20,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.2)',
+    borderColor: 'rgba(0, 242, 157, 0.2)',
   },
   cardHeader: {
     flexDirection: 'row',
@@ -280,13 +282,13 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   tipBox: {
-    backgroundColor: 'rgba(0, 232, 162, 0.05)',
+    backgroundColor: 'rgba(0, 242, 157, 0.05)',
     borderRadius: 12,
     padding: 12,
     flexDirection: 'row',
     alignItems: 'flex-start',
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.1)',
+    borderColor: 'rgba(0, 242, 157, 0.1)',
   },
   tipIcon: {
     marginTop: 2,
@@ -295,7 +297,7 @@ const styles = StyleSheet.create({
   tipText: {
     flex: 1,
     fontSize: 12,
-    color: 'rgba(0, 232, 162, 0.9)',
+    color: 'rgba(0, 242, 157, 0.9)',
     lineHeight: 18,
   },
   toggleRow: {
@@ -323,11 +325,11 @@ const styles = StyleSheet.create({
     lineHeight: 15,
   },
   generalCard: {
-    backgroundColor: '#121624',
+    backgroundColor: '#111417',
     borderRadius: 20,
     padding: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: 'rgba(0, 242, 157, 0.15)',
   },
   generalTitle: {
     fontSize: 16,
@@ -350,13 +352,13 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: 'rgba(0, 232, 162, 0.1)',
+    backgroundColor: 'rgba(0, 242, 157, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
   bulletNumber: {
-    color: '#00E8A2',
+    color: '#00F29D',
     fontWeight: '800',
     fontSize: 12,
   },
@@ -375,7 +377,7 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   settingsButton: {
-    backgroundColor: '#00E8A2',
+    backgroundColor: '#00F29D',
     borderRadius: 14,
     height: 48,
     flexDirection: 'row',

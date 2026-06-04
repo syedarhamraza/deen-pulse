@@ -312,7 +312,7 @@ fun DeenPulseWearApp(isAmbient: Boolean) {
                     val backgroundColor = if (isAmbient) {
                         Color.Black
                     } else {
-                        if (isNext) DeenPulseSurface else Color(0xFF070B14)
+                        if (isNext) DeenPulseSurface else Color(0xFF0B0F12)
                     }
 
                     val borderColor = if (isAmbient) {

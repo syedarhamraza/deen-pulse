@@ -22,7 +22,7 @@ export function Cat1NotificationGuideScreen({
           }}
           style={({ pressed }) => [styles.backButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
         >
-          <Icon name="arrow-left" size={20} color="#00E8A2" />
+          <Icon name="arrow-left" size={20} color="#00F29D" />
         </Pressable>
         <Text style={styles.title}>Notification Settings</Text>
         <HeaderFadeOverlay />
@@ -78,7 +78,7 @@ export function Cat1NotificationGuideScreen({
 
         {/* CTAs */}
         <Pressable
-          style={({ pressed }) => [styles.primaryButton, { opacity: pressed ? 0.9 : 1 }]}
+          style={({ pressed }) => [styles.primaryButton, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
           onPress={() => {
             triggerHaptic();
             onOpenSettings();
@@ -89,13 +89,13 @@ export function Cat1NotificationGuideScreen({
         </Pressable>
 
         <Pressable
-          style={({ pressed }) => [styles.secondaryButton, { opacity: pressed ? 0.8 : 1 }]}
+          style={({ pressed }) => [styles.secondaryButton, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
           onPress={() => {
             triggerHaptic();
             onBack();
           }}
         >
-          <Icon name="check" size={16} color="#00E8A2" />
+          <Icon name="check" size={16} color="#00F29D" />
           <Text style={styles.secondaryButtonText}>I have configured these settings</Text>
         </Pressable>
       </ScrollView>
@@ -106,41 +106,44 @@ export function Cat1NotificationGuideScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#080B14',
+    backgroundColor: '#0B0F12',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 24,
+    paddingHorizontal: 24,
+    paddingTop: 16,
     paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: '#0B0F12',
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.15)',
+    borderColor: 'rgba(0, 242, 157, 0.15)',
+    shadowColor: '#00F29D',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '800',
+    fontSize: 24,
+    fontWeight: '700',
     color: '#FFFFFF',
-    letterSpacing: -0.3,
   },
   scrollContent: {
-    padding: 20,
+    paddingHorizontal: 24,
     paddingBottom: 40,
   },
   introSection: {
     marginBottom: 20,
     paddingHorizontal: 4,
+    marginTop: 8,
   },
   introText: {
     fontSize: 13,
@@ -148,19 +151,19 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   brandHighlight: {
-    color: '#00E8A2',
+    color: '#00F29D',
     fontWeight: '700',
   },
   cardContainer: {
     marginBottom: 24,
   },
   guideCard: {
-    backgroundColor: '#121624',
+    backgroundColor: '#111417',
     borderRadius: 20,
     padding: 20,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.03)',
+    borderColor: 'rgba(0, 242, 157, 0.15)',
   },
   stepHeader: {
     flexDirection: 'row',
@@ -172,14 +175,14 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: 'rgba(0, 232, 162, 0.12)',
+    backgroundColor: 'rgba(0, 242, 157, 0.12)',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.25)',
+    borderColor: 'rgba(0, 242, 157, 0.25)',
   },
   stepNumber: {
-    color: '#00E8A2',
+    color: '#00F29D',
     fontSize: 11,
     fontWeight: '800',
   },
@@ -198,7 +201,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.8)',
   },
   primaryButton: {
-    backgroundColor: '#00E8A2',
+    backgroundColor: '#00F29D',
     borderRadius: 14,
     height: 48,
     flexDirection: 'row',
@@ -221,10 +224,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.15)',
+    borderColor: 'rgba(0, 242, 157, 0.15)',
   },
   secondaryButtonText: {
-    color: '#00E8A2',
+    color: '#00F29D',
     fontSize: 13,
     fontWeight: '700',
   },

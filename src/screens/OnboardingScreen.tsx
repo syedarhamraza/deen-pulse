@@ -111,7 +111,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
       <View style={styles.heroContainer}>
         <Animated.View style={[styles.logoPulseRing, { transform: [{ scale: pulseAnim }] }]}>
           <View style={styles.logoContainer}>
-            <Icon name="activity" size={50} color="#00E8A2" />
+            <Icon name="activity" size={50} color="#00F29D" />
           </View>
         </Animated.View>
         <Text style={styles.welcomeTitle}>DeenPulse</Text>
@@ -119,14 +119,14 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
       </View>
 
       <View style={styles.introCard}>
-        <Icon name="check-circle" size={20} color="#00E8A2" style={styles.introCardIcon} />
+        <Icon name="check-circle" size={20} color="#00F29D" style={styles.introCardIcon} />
         <Text style={styles.introCardText}>
           Track remaining prayer times directly in your status bar pill, notification shade, and Wear OS smartwatch.
         </Text>
       </View>
 
       <Pressable
-        style={({ pressed }) => [styles.primaryButton, { opacity: pressed ? 0.9 : 1 }]}
+        style={({ pressed }) => [styles.primaryButton, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
         onPress={() => transitionToStep(1)}
       >
         <Text style={styles.primaryButtonText}>Get Started</Text>
@@ -164,7 +164,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
               }}
             >
               <View style={styles.gridCardHeader}>
-                <Icon name={brand.icon} size={24} color={isSelected ? '#00E8A2' : 'rgba(255,255,255,0.6)'} />
+                <Icon name={brand.icon} size={24} color={isSelected ? '#00F29D' : 'rgba(255,255,255,0.6)'} />
                 {isDetected && (
                   <View style={styles.detectedBadge}>
                     <Text style={styles.detectedBadgeText}>Detected</Text>
@@ -184,15 +184,15 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
 
       <View style={styles.navRow}>
         <Pressable
-          style={({ pressed }) => [styles.secondaryButton, { opacity: pressed ? 0.7 : 1 }]}
+          style={({ pressed }) => [styles.secondaryButton, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
           onPress={() => transitionToStep(0)}
         >
-          <Icon name="arrow-left" size={18} color="#00E8A2" />
+          <Icon name="arrow-left" size={18} color="#00F29D" />
           <Text style={styles.secondaryButtonText}>Back</Text>
         </Pressable>
 
         <Pressable
-          style={({ pressed }) => [styles.primaryButton, { flex: 1, marginLeft: 12, opacity: pressed ? 0.9 : 1 }]}
+          style={({ pressed }) => [styles.primaryButton, { flex: 1, marginLeft: 12, transform: [{ scale: pressed ? 0.98 : 1 }] }]}
           onPress={() => transitionToStep(2)}
         >
           <Text style={styles.primaryButtonText}>Next</Text>
@@ -216,7 +216,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
             <Icon
               name={brandInfo.category === 1 ? 'feather' : brandInfo.category === 2 ? 'aperture' : 'bell'}
               size={32}
-              color="#00E8A2"
+              color="#00F29D"
             />
             <View style={styles.explanationTitleCol}>
               <Text style={styles.explanationTypeTitle}>
@@ -235,7 +235,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
           <View style={styles.divider} />
 
           <View style={styles.infoPoint}>
-            <Icon name="zap" size={16} color="#00E8A2" style={styles.infoPointIcon} />
+            <Icon name="zap" size={16} color="#00F29D" style={styles.infoPointIcon} />
             <Text style={styles.infoPointText}>
               {brandInfo.category === 1
                 ? 'Optimized to lock tracking elements inside the status bar pill using Android 14+ promoted system flags.'
@@ -246,7 +246,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
           </View>
 
           <View style={styles.infoPoint}>
-            <Icon name="battery" size={16} color="#00E8A2" style={styles.infoPointIcon} />
+            <Icon name="battery" size={16} color="#00F29D" style={styles.infoPointIcon} />
             <Text style={styles.infoPointText}>
               Includes specialized battery optimizations. We recommend disabling battery restrictions in system settings for best performance.
             </Text>
@@ -255,15 +255,15 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
 
         <View style={styles.navRow}>
           <Pressable
-            style={({ pressed }) => [styles.secondaryButton, { opacity: pressed ? 0.7 : 1 }]}
+            style={({ pressed }) => [styles.secondaryButton, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
             onPress={() => transitionToStep(1)}
           >
-            <Icon name="arrow-left" size={18} color="#00E8A2" />
+            <Icon name="arrow-left" size={18} color="#00F29D" />
             <Text style={styles.secondaryButtonText}>Back</Text>
           </Pressable>
 
           <Pressable
-            style={({ pressed }) => [styles.primaryButton, { flex: 1, marginLeft: 12, opacity: pressed ? 0.9 : 1 }]}
+            style={({ pressed }) => [styles.primaryButton, { flex: 1, marginLeft: 12, transform: [{ scale: pressed ? 0.98 : 1 }] }]}
             onPress={handleFinish}
           >
             <Text style={styles.primaryButtonText}>Finish Setup</Text>
@@ -296,7 +296,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#080B14',
+    backgroundColor: '#0B0F12',
   },
   content: {
     flex: 1,
@@ -316,22 +316,22 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: 'rgba(0, 232, 162, 0.05)',
+    backgroundColor: 'rgba(0, 242, 157, 0.05)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.15)',
+    borderColor: 'rgba(0, 242, 157, 0.15)',
   },
   logoContainer: {
     width: 90,
     height: 90,
     borderRadius: 45,
-    backgroundColor: 'rgba(0, 232, 162, 0.1)',
+    backgroundColor: 'rgba(0, 242, 157, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: '#00E8A2',
+    borderColor: '#00F29D',
   },
   welcomeTitle: {
     fontSize: 32,
@@ -347,14 +347,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   introCard: {
-    backgroundColor: '#121624',
+    backgroundColor: '#111417',
     borderRadius: 20,
     padding: 20,
     flexDirection: 'row',
     alignItems: 'flex-start',
     marginBottom: 40,
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.15)',
+    borderColor: 'rgba(0, 242, 157, 0.15)',
   },
   introCardIcon: {
     marginTop: 2,
@@ -391,20 +391,20 @@ const styles = StyleSheet.create({
   },
   gridCard: {
     width: '48%',
-    backgroundColor: '#121624',
+    backgroundColor: '#111417',
     borderRadius: 16,
     padding: 16,
     marginVertical: 6,
     borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.03)',
+    borderColor: 'rgba(0, 242, 157, 0.15)',
   },
   gridCardSelected: {
-    borderColor: '#00E8A2',
-    backgroundColor: 'rgba(0, 232, 162, 0.08)',
+    borderColor: '#00F29D',
+    backgroundColor: 'rgba(0, 242, 157, 0.08)',
   },
   gridCardDetected: {
     borderStyle: 'dashed',
-    borderColor: 'rgba(0, 232, 162, 0.5)',
+    borderColor: 'rgba(0, 242, 157, 0.5)',
   },
   gridCardHeader: {
     flexDirection: 'row',
@@ -413,13 +413,13 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   detectedBadge: {
-    backgroundColor: 'rgba(0, 232, 162, 0.15)',
+    backgroundColor: 'rgba(0, 242, 157, 0.15)',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 8,
   },
   detectedBadgeText: {
-    color: '#00E8A2',
+    color: '#00F29D',
     fontSize: 9,
     fontWeight: '700',
   },
@@ -430,18 +430,18 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   brandNameSelected: {
-    color: '#00E8A2',
+    color: '#00F29D',
   },
   categoryLabel: {
     fontSize: 11,
     color: 'rgba(255, 255, 255, 0.4)',
   },
   explanationCard: {
-    backgroundColor: '#121624',
+    backgroundColor: '#111417',
     borderRadius: 24,
     padding: 24,
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.2)',
+    borderColor: 'rgba(0, 242, 157, 0.15)',
     flex: 1,
     marginBottom: 30,
     maxHeight: 400,
@@ -463,7 +463,7 @@ const styles = StyleSheet.create({
   },
   explanationCategorySub: {
     fontSize: 12,
-    color: 'rgba(0, 232, 162, 0.8)',
+    color: 'rgba(0, 242, 157, 0.8)',
     fontWeight: '600',
   },
   divider: {
@@ -493,8 +493,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   primaryButton: {
-    backgroundColor: '#00E8A2',
-    borderRadius: 18,
+    backgroundColor: '#00F29D',
+    borderRadius: 14,
     height: 56,
     flexDirection: 'row',
     alignItems: 'center',
@@ -507,10 +507,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   secondaryButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.2)',
-    borderRadius: 18,
+    borderColor: 'rgba(0, 242, 157, 0.15)',
+    borderRadius: 14,
     height: 56,
     paddingHorizontal: 24,
     flexDirection: 'row',
@@ -519,7 +519,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   secondaryButtonText: {
-    color: '#00E8A2',
+    color: '#00F29D',
     fontSize: 15,
     fontWeight: '600',
   },

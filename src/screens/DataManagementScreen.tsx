@@ -60,7 +60,7 @@ export function DataManagementScreen({
           }}
           style={({ pressed }) => [styles.backButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
         >
-          <Icon name="arrow-left" size={20} color="#00E8A2" />
+          <Icon name="arrow-left" size={20} color="#00F29D" />
         </Pressable>
         <Text style={styles.title}>Data Management</Text>
         <HeaderFadeOverlay />
@@ -91,7 +91,7 @@ export function DataManagementScreen({
 
           {/* Force GPS Permission Request */}
           <Pressable
-            style={({ pressed }) => [styles.card, { opacity: pressed ? 0.75 : 1 }]}
+            style={({ pressed }) => [styles.card, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
             onPress={handleRequestGPS}
           >
             <View style={styles.rowLayout}>
@@ -117,7 +117,7 @@ export function DataManagementScreen({
                   <Text
                     style={[
                       styles.statusText,
-                      { color: gpsGranted ? '#00E8A2' : '#FF6B6B' },
+                      { color: gpsGranted ? '#00F29D' : '#FF6B6B' },
                     ]}
                   >
                     {gpsGranted ? 'Active' : 'Setup'}
@@ -132,7 +132,7 @@ export function DataManagementScreen({
             style={({ pressed }) => [
               styles.card,
               styles.destructiveBorder,
-              { opacity: pressed ? 0.75 : 1 },
+              { transform: [{ scale: pressed ? 0.98 : 1 }] },
             ]}
             onPress={() => {
               triggerHaptic();
@@ -155,53 +155,56 @@ export function DataManagementScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#080B14',
+    backgroundColor: '#0B0F12',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 24,
+    paddingHorizontal: 24,
+    paddingTop: 16,
     paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: '#0B0F12',
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.15)',
+    borderColor: 'rgba(0, 242, 157, 0.15)',
+    shadowColor: '#00F29D',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '800',
+    fontSize: 24,
+    fontWeight: '700',
     color: '#FFFFFF',
-    letterSpacing: -0.3,
   },
   scrollContent: {
-    padding: 20,
+    paddingHorizontal: 24,
     paddingBottom: 40,
   },
   cardContainer: {
     gap: 12,
+    marginTop: 8,
   },
   card: {
-    backgroundColor: '#121624',
+    backgroundColor: '#111417',
     borderRadius: 20,
     padding: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.03)',
+    borderColor: 'rgba(0, 242, 157, 0.15)',
   },
   destructiveBorder: {
-    borderColor: 'rgba(239, 68, 68, 0.2)',
+    borderColor: 'rgba(255, 107, 107, 0.25)',
   },
   destructiveText: {
-    color: '#EF4444',
+    color: '#FF6B6B',
   },
   switchRow: {
     flexDirection: 'row',
@@ -242,8 +245,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   statusBadgeGranted: {
-    backgroundColor: 'rgba(0, 232, 162, 0.08)',
-    borderColor: 'rgba(0, 232, 162, 0.2)',
+    backgroundColor: 'rgba(0, 242, 157, 0.08)',
+    borderColor: 'rgba(0, 242, 157, 0.2)',
   },
   statusBadgeDenied: {
     backgroundColor: 'rgba(255, 107, 107, 0.08)',
@@ -255,7 +258,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   statusDotGranted: {
-    backgroundColor: '#00E8A2',
+    backgroundColor: '#00F29D',
   },
   statusDotDenied: {
     backgroundColor: '#FF6B6B',

@@ -26,9 +26,9 @@ export function PrayerRulesScreen({
             triggerHaptic();
             onBack();
           }}
-          style={({ pressed }) => [styles.backButton, { opacity: pressed ? 0.7 : 1 }]}
+          style={({ pressed }) => [styles.backButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
         >
-          <Icon name="arrow-left" size={20} color="#00E8A2" />
+          <Icon name="arrow-left" size={20} color="#00F29D" />
         </Pressable>
         <Text style={styles.subTitle}>Prayer Rules</Text>
         <HeaderFadeOverlay />

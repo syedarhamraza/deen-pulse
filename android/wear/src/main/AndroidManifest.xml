@@ -70,34 +70,5 @@
                 <data android:scheme="wear" android:host="*" android:pathPrefix="/deenpulse" />
             </intent-filter>
         </service>
-
-        <service
-            android:name=".tile.PrayerListTileService"
-            android:exported="true"
-            android:label="Prayer List"
-            android:icon="@mipmap/ic_launcher"
-            android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER">
-            <intent-filter>
-                <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
-            </intent-filter>
-            <meta-data
-                android:name="androidx.wear.tiles.PREVIEW"
-                android:resource="@drawable/tile_preview" />
-        </service>
-
-        <service
-            android:name=".tile.QiblaTileService"
-            android:exported="true"
-            android:label="Qibla Direction"
-            android:icon="@mipmap/ic_launcher"
-            android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER">
-            <intent-filter>
-                <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
-            </intent-filter>
-            <meta-data
-                android:name="androidx.wear.tiles.PREVIEW"
-                android:resource="@drawable/tile_preview" />
-        </service>
-
     </application>
 </manifest>

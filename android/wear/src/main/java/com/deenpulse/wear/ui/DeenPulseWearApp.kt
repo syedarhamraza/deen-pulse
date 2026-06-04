@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -75,69 +76,71 @@ fun DeenPulseWearApp(isAmbient: Boolean) {
     ) {
         if (prayers.isEmpty()) {
             // No data synced yet
-            ScalingLazyColumn(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black)
-                    .focusRequester(emptyFocusRequester)
-                    .rotaryScrollable(
-                        behavior = RotaryScrollableDefaults.behavior(emptyListState),
-                        focusRequester = emptyFocusRequester
-                    ),
-                state = emptyListState,
-                horizontalAlignment = Alignment.CenterHorizontally,
+                    .background(DeenPulseSurface)
+                    .padding(horizontal = 12.dp),
                 verticalArrangement = Arrangement.Center,
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 20.dp)
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                item {
-                    Text(
-                        text = "Waiting for Sync",
-                        color = Color.White,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
-                    )
+                Card(
+                    onClick = { /* No-op */ },
+                    backgroundPainter = CardDefaults.cardBackgroundPainter(
+                        startBackgroundColor = DeenPulseTrack,
+                        endBackgroundColor = DeenPulseTrack
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(BorderStroke(1.dp, DeenPulseAccent.copy(alpha = 0.15f)), RoundedCornerShape(20.dp)),
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 12.dp)
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Waiting for Sync",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Open DeenPulse on your phone to sync prayer times",
+                            color = DeenPulseTextSecondary,
+                            fontSize = 11.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
-                item {
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-                item {
-                    Text(
-                        text = "Open DeenPulse on your phone to sync prayer times",
-                        color = DeenPulseTextSecondary,
-                        fontSize = 12.sp,
-                        textAlign = TextAlign.Center
-                    )
-                }
-                item {
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-                item {
-                    Chip(
-                        onClick = {
-                            WearDataListenerService.requestSyncFromPhone(context)
-                        },
-                        label = {
-                            Text(
-                                text = "Sync Now",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp
-                            )
-                        },
-                        colors = ChipDefaults.primaryChipColors(
-                            backgroundColor = DeenPulseAccent,
-                            contentColor = Color.Black
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                    )
-                }
+                Spacer(modifier = Modifier.height(10.dp))
+                Chip(
+                    onClick = {
+                        WearDataListenerService.requestSyncFromPhone(context)
+                    },
+                    label = {
+                        Text(
+                            text = "Sync Now",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    },
+                    colors = ChipDefaults.primaryChipColors(
+                        backgroundColor = DeenPulseAccent,
+                        contentColor = Color.Black
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp)
+                )
             }
 
             // Request sync on start
             LaunchedEffect(Unit) {
-                emptyFocusRequester.requestFocus()
                 WearDataListenerService.requestSyncFromPhone(context)
             }
         } else {
@@ -188,7 +191,7 @@ fun DeenPulseWearApp(isAmbient: Boolean) {
             ScalingLazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black)
+                    .background(DeenPulseSurface)
                     .focusRequester(focusRequester)
                     .rotaryScrollable(
                         behavior = RotaryScrollableDefaults.behavior(listState),
@@ -312,13 +315,13 @@ fun DeenPulseWearApp(isAmbient: Boolean) {
                     val backgroundColor = if (isAmbient) {
                         Color.Black
                     } else {
-                        if (isNext) DeenPulseSurface else Color(0xFF0B0F12)
+                        DeenPulseTrack
                     }
 
                     val borderColor = if (isAmbient) {
                         if (isNext) Color.White else Color.Transparent
                     } else {
-                        if (isNext) DeenPulseAccent else Color.Transparent
+                        if (isNext) DeenPulseAccent else DeenPulseAccent.copy(alpha = 0.15f)
                     }
 
                     val nameColor = if (isAmbient) {
@@ -419,15 +422,20 @@ fun DeenPulseWearApp(isAmbient: Boolean) {
                         )
                     ) {
                         Canvas(modifier = Modifier.size(16.dp)) {
+                            val strokeWidth = 2.dp.toPx()
                             val path = Path().apply {
-                                moveTo(size.width / 2f, 0f)
-                                lineTo(size.width, size.height)
-                                lineTo(0f, size.height)
-                                close()
+                                moveTo(0f, size.height * 0.7f)
+                                lineTo(size.width / 2f, size.height * 0.3f)
+                                lineTo(size.width, size.height * 0.7f)
                             }
                             drawPath(
                                 path = path,
-                                color = DeenPulseAccent
+                                color = DeenPulseAccent,
+                                style = Stroke(
+                                    width = strokeWidth,
+                                    cap = StrokeCap.Round,
+                                    join = StrokeJoin.Round
+                                )
                             )
                         }
                     }

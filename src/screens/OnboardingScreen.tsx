@@ -6,6 +6,7 @@ import {
   Pressable,
   Animated,
   ScrollView,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Feather';
@@ -110,7 +111,11 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
       <View style={styles.heroContainer}>
         <Animated.View style={[styles.logoPulseRing, { transform: [{ scale: pulseAnim }] }]}>
           <View style={styles.logoContainer}>
-            <Icon name="activity" size={50} color="#00F29D" />
+            <Image
+              source={require('../assets/icons/icon.png')}
+              style={styles.logoIcon}
+              resizeMode="contain"
+            />
           </View>
         </Animated.View>
         <Text style={styles.welcomeTitle}>DeenPulse</Text>
@@ -326,11 +331,13 @@ const styles = StyleSheet.create({
     width: 90,
     height: 90,
     borderRadius: 45,
-    backgroundColor: 'rgba(0, 242, 157, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: '#00F29D',
+    overflow: 'hidden',
+  },
+  logoIcon: {
+    width: 70,
+    height: 70,
   },
   welcomeTitle: {
     fontSize: 32,

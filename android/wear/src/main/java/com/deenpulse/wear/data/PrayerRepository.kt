@@ -121,12 +121,4 @@ class PrayerRepository(context: Context) {
         val category = prefs.getInt("device_category", 3)
         return Triple(juristic, rule, category)
     }
-
-    fun getLocation(): Pair<Double, Double>? {
-        if (!prefs.contains(KEY_LATITUDE) || !prefs.contains(KEY_LONGITUDE)) return null
-        val lat = prefs.getFloat(KEY_LATITUDE, 0f).toDouble()
-        val lng = prefs.getFloat(KEY_LONGITUDE, 0f).toDouble()
-        if (lat == 0.0 && lng == 0.0) return null
-        return Pair(lat, lng)
-    }
 }

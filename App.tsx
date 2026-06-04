@@ -93,18 +93,7 @@ export const triggerHaptic = () => {
 
 // Smooth feathered gradient overlay to fade out scrolling content under sticky headers
 export function HeaderFadeOverlay() {
-  return (
-    <View style={styles.fadeOverlayContainer} pointerEvents="none">
-      <View style={styles.fadeLine1} />
-      <View style={styles.fadeLine2} />
-      <View style={styles.fadeLine3} />
-      <View style={styles.fadeLine4} />
-      <View style={styles.fadeLine5} />
-      <View style={styles.fadeLine6} />
-      <View style={styles.fadeLine7} />
-      <View style={styles.fadeLine8} />
-    </View>
-  );
+  return null;
 }
 
 

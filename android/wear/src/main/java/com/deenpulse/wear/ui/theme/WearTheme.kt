@@ -3,7 +3,7 @@ package com.deenpulse.wear.ui.theme
 import androidx.compose.ui.graphics.Color
 
 // Interactive mode colors
-val DeenPulseAccent = Color(0xFF00F29D)        // Mint green
+val DeenPulseAccent = Color(0xFF00E8A2)        // Mint green
 val DeenPulseBackground = Color.Black
 val DeenPulseSurface = Color(0xFF0B0F12)
 val DeenPulseTrack = Color(0xFF111417)

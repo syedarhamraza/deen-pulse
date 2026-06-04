@@ -229,7 +229,7 @@ export function DashboardScreen({
               }}
             >
               <Text style={styles.footerText}>
-                DeenPulse • Crafted by <Text style={styles.footerLink}>Syed Arham Raza</Text>
+                Syed Arham Raza · DeenPulse © {new Date().getFullYear()}
               </Text>
             </Pressable>
           </View>

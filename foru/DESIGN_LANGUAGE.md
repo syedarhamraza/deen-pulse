@@ -1,4 +1,4 @@
-# Deen Pulse — Design Language Specification
+﻿# Deen Pulse — Design Language Specification
 
 This document defines the unified **"Obsidian Mint"** design system and visual language shared between the **React Native Phone App** and the **Wear OS Watch App**.
 
@@ -16,7 +16,7 @@ The design language is characterized by an ultra-premium, dark-mode-only aesthet
 | :--- | :--- | :--- | :--- |
 | **Obsidian Dark** | `#0B0F12` | `rgb(11, 15, 18)` | App-wide screen background |
 | **Midnight Gray** | `#111417` | `rgb(17, 20, 23)` | Card layers, containers, modals, watch surface |
-| **Mint Accent** | `#00F29D` | `rgb(0, 242, 157)` | Highlights, countdown clocks, primary controls |
+| **Mint Accent** | `#00E8A2` | `rgb(0, 232, 162)` | Highlights, countdown clocks, primary controls |
 
 ### Text Colors & Opacities
 | Token Name | Value / Opacity | Usage |
@@ -28,9 +28,9 @@ The design language is characterized by an ultra-premium, dark-mode-only aesthet
 ### Mint Accent Overlays
 | Token Name | Opacity | Usage |
 | :--- | :--- | :--- |
-| **Mint Glow 8** | `rgba(0, 242, 157, 0.08)` | Selected item backdrops, badge wrappers |
-| **Mint Active 15**| `rgba(0, 242, 157, 0.15)` | Primary call-to-actions, tag buttons |
-| **Mint Border 25**| `rgba(0, 242, 157, 0.25)` | Card and modal borders (glassmorphism edge) |
+| **Mint Glow 8** | `rgba(0, 232, 162, 0.08)` | Selected item backdrops, badge wrappers |
+| **Mint Active 15**| `rgba(0, 232, 162, 0.15)` | Primary call-to-actions, tag buttons |
+| **Mint Border 25**| `rgba(0, 232, 162, 0.25)` | Card and modal borders (glassmorphism edge) |
 
 ---
 
@@ -55,21 +55,21 @@ We enforce a consistent rounding system to keep the layout feeling premium and o
 To create depth in a dark interface, we use **Mint-themed shadow glows** instead of generic black drop shadows:
 
 ### Modal Sheet Drop Shadow (Phone)
-- **Color**: `#00F29D` (Mint Green)
+- **Color**: `#00E8A2` (Mint Green)
 - **Offset**: `{ width: 0, height: 8 }`
 - **Opacity**: `0.2`
 - **Radius**: `20`
 - **Elevation (Android)**: `8`
 
 ### Alert Modal Glow (Phone)
-- **Color**: `#00F29D`
+- **Color**: `#00E8A2`
 - **Offset**: `{ width: 0, height: 4 }`
 - **Opacity**: `0.3`
 - **Radius**: `10`
 - **Elevation**: `8`
 
 ### Text Glow (Countdown Timer)
-- **Shadow Color**: `rgba(0, 242, 157, 0.35)`
+- **Shadow Color**: `rgba(0, 232, 162, 0.35)`
 - **Offset**: `{ width: 0, height: 0 }`
 - **Radius**: `10`
 
@@ -142,11 +142,11 @@ To ensure a seamless, pixel-perfect visual design across mobile and watch form f
 To maintain absolute theme parity across all secondary pages, we enforce these guidelines:
 
 ### Solid Card Backgrounds
-- **Background Rule**: Settings cards, feature listings, onboarding options, troubleshooting blocks, and step panels must use solid `#111417` (Midnight Gray) backgrounds. Muted borders should use `rgba(0, 242, 157, 0.15)`.
+- **Background Rule**: Settings cards, feature listings, onboarding options, troubleshooting blocks, and step panels must use solid `#111417` (Midnight Gray) backgrounds. Muted borders should use `rgba(0, 232, 162, 0.15)`.
 
 ### Uniform Headers & Back Controls
 - **Headers & Padding**: Sub-headers must use 24px horizontal padding (`paddingHorizontal: 24` or `paddingHorizontal: 20` if card margins match) to avoid horizontal jumpiness on navigation transitions.
-- **Glassmorphic Back Button**: Back buttons must match `App.tsx` global styling: width `38`, height `38`, border radius `19`, background `rgba(255, 255, 255, 0.02)`, and a neon mint border tint `rgba(0, 242, 157, 0.15)`.
+- **Glassmorphic Back Button**: Back buttons must match `App.tsx` global styling: width `38`, height `38`, border radius `19`, background `rgba(255, 255, 255, 0.02)`, and a neon mint border tint `rgba(0, 232, 162, 0.15)`.
 - **Haptic Scale Feedbacks**: Button pressed interactions must employ springy scale transforms (`scale: pressed ? 0.92 : 1` for small icons, and `scale: pressed ? 0.98 : 1` for action cards/buttons) to provide mechanical tactility.
 
 

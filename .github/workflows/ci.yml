@@ -168,3 +168,54 @@ jobs:
             android/wear/build/outputs/apk/release/*.apk
             android/wear/build/outputs/apk/debug/*.apk
           retention-days: 14
+
+  # ─────────────────────────────────────────────
+  # Job 4: Create GitHub Release with APKs
+  # Runs after both builds succeed on 'main'
+  # ─────────────────────────────────────────────
+  create-release:
+    name: Create GitHub Release
+    needs: [android-mobile-build, wearos-companion-build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Download Mobile APK artifact built in Job 2
+      - name: Download Mobile Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: DeenPulse-Mobile-${{ github.run_number }}
+          path: build-artifacts/mobile
+
+      # Download Wear OS APK artifact built in Job 3
+      - name: Download WearOS Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: DeenPulse-WearOS-${{ github.run_number }}
+          path: build-artifacts/wearos
+
+      # Rename and gather the APK files for the release
+      - name: Prepare Release Assets
+        run: |
+          mkdir release-assets
+          find build-artifacts/mobile -name "*release.apk" -exec cp {} release-assets/DeenPulse-Mobile-Release.apk \;
+          find build-artifacts/wearos -name "*release.apk" -exec cp {} release-assets/DeenPulse-WearOS-Release.apk \;
+
+      # Publish GitHub Release and attach the APKs
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.1.0-b${{ github.run_number }}
+          name: DeenPulse Release v1.1.0 (Build #${{ github.run_number }})
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            release-assets/DeenPulse-Mobile-Release.apk
+            release-assets/DeenPulse-WearOS-Release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

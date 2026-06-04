@@ -78,12 +78,22 @@ android {
     compileSdk rootProject.ext.compileSdkVersion
 
     namespace "com.deenpulse"
+
+    def versionMajor = 1
+    def versionMinor = 1
+    def versionPatch = 0
+    def ciRunNumber = (System.getenv("GITHUB_RUN_NUMBER") ?: "0").toInteger()
+
     defaultConfig {
         applicationId "com.deenpulse"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode versionMajor * 10000 + versionMinor * 100 + versionPatch + ciRunNumber
+        versionName "${versionMajor}.${versionMinor}.${versionPatch}"
+    }
+
+    buildFeatures {
+        buildConfig true
     }
     signingConfigs {
         debug {

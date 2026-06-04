@@ -28,7 +28,7 @@ export function useActiveWindowDetector(nextPrayer: NextPrayerInfo | null) {
     const { name, remainingMinutes, remainingSeconds } = nextPrayer;
 
     // Detect the exact transition to 00:00:00 (or if it went slightly past but hasn't triggered yet)
-    if (remainingMinutes === 0 && remainingSeconds === 0) {
+    if (remainingMinutes <= 0 && remainingSeconds <= 0) {
       if (lastTriggeredPrayer.current !== name) {
         lastTriggeredPrayer.current = name;
         

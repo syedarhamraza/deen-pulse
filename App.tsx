@@ -128,6 +128,7 @@ function DeenPulseApp(): React.JSX.Element {
   const [capsuleFormat, setCapsuleFormat] = useState<'name' | 'name_time' | 'time' | 'name_countdown'>('name');
   const [notificationStyle, setNotificationStyle] = useState<'standard' | 'with_time' | 'with_countdown'>('standard');
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+  const [cat3NotificationMode, setCat3NotificationMode] = useState<'ongoing' | 'reminder'>('reminder');
   const [mockPrayerTimes, setMockPrayerTimes] = useState<PrayerTime[] | null>(null);
 
   const [showCapsuleFormatPicker, setShowCapsuleFormatPicker] = useState(false);
@@ -177,7 +178,7 @@ function DeenPulseApp(): React.JSX.Element {
   );
 
   const activePrayerTimes = mockPrayerTimes || prayerTimes;
-  const nextPrayer = usePrayerCountdown(activePrayerTimes, true, capsuleFormat, notificationStyle, location);
+  const nextPrayer = usePrayerCountdown(activePrayerTimes, true, capsuleFormat, notificationStyle, location, profile?.category ?? 3, cat3NotificationMode);
 
   // Load preferences and setup guide state on startup
   useEffect(() => {
@@ -189,6 +190,7 @@ function DeenPulseApp(): React.JSX.Element {
         const format = await AsyncStorage.getItem('@deenpulse_capsule_format');
         const style = await AsyncStorage.getItem('@deenpulse_notification_style');
         const sound = await AsyncStorage.getItem('@deenpulse_adhan_sound_enabled');
+        const cat3Mode = await AsyncStorage.getItem('@deenpulse_cat3_notification_mode');
 
         if (mode !== null) setLocationMode(mode as 'gps' | 'cached');
         if (juristic !== null) setJuristicMethod(juristic as 'standard' | 'hanafi');
@@ -196,6 +198,7 @@ function DeenPulseApp(): React.JSX.Element {
         if (format !== null) setCapsuleFormat(format as 'name' | 'name_time' | 'time' | 'name_countdown');
         if (style !== null) setNotificationStyle(style as 'standard' | 'with_time' | 'with_countdown');
         if (sound !== null) setSoundEnabled(sound === 'true');
+        if (cat3Mode !== null) setCat3NotificationMode(cat3Mode as 'ongoing' | 'reminder');
       } catch (e) {
         console.warn('Failed to load settings:', e);
       }
@@ -437,6 +440,11 @@ function DeenPulseApp(): React.JSX.Element {
             capsuleFormatLabel={getCapsuleFormatLabel()}
             notificationStyleLabel={getNotificationStyleLabel()}
             deviceCategory={profile?.category}
+            cat3NotificationMode={cat3NotificationMode}
+            onCat3ModeChange={async (mode: 'ongoing' | 'reminder') => {
+              setCat3NotificationMode(mode);
+              await AsyncStorage.setItem('@deenpulse_cat3_notification_mode', mode);
+            }}
           />
         );
       case 'oem_guidance':

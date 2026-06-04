@@ -80,16 +80,15 @@ export function WearOSControlScreen({ onBack }: WearOSControlScreenProps) {
       if (PrayerCapsuleModule?.syncToWear) {
         await PrayerCapsuleModule.syncToWear(prayersJson, lat, lng);
         
-        // Wait a brief moment to simulate/allow completion
-        setTimeout(async () => {
-          const timestamp = new Date().toISOString();
-          await AsyncStorage.setItem(LAST_WEAR_SYNC_KEY, timestamp);
-          refreshSyncTime();
-          setSyncing(false);
-          setSyncSuccess(true);
-          triggerHaptic();
-          setTimeout(() => setSyncSuccess(false), 3000);
-        }, 1500);
+        // Update state immediately - no artificial delay
+        const timestamp = new Date().toISOString();
+        await AsyncStorage.setItem(LAST_WEAR_SYNC_KEY, timestamp);
+        refreshSyncTime();
+        setSyncing(false);
+        setSyncSuccess(true);
+        triggerHaptic();
+        // Clear success checkmark after 2 seconds
+        setTimeout(() => setSyncSuccess(false), 2000);
       } else {
         throw new Error('Native sync module is not available.');
       }

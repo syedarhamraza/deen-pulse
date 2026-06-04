@@ -15,6 +15,8 @@ interface NotificationsScreenProps {
   capsuleFormatLabel: string;
   notificationStyleLabel: string;
   deviceCategory?: number;
+  cat3NotificationMode?: 'ongoing' | 'reminder';
+  onCat3ModeChange?: (mode: 'ongoing' | 'reminder') => void;
 }
 
 export function NotificationsScreen({
@@ -28,6 +30,8 @@ export function NotificationsScreen({
   capsuleFormatLabel,
   notificationStyleLabel,
   deviceCategory,
+  cat3NotificationMode = 'reminder',
+  onCat3ModeChange,
 }: NotificationsScreenProps) {
   return (
     <View style={styles.screenContainer}>
@@ -85,8 +89,87 @@ export function NotificationsScreen({
             />
           </View>
 
+          {/* Cat3 Notification Mode Toggle */}
+          {deviceCategory === 3 && (
+            <View style={styles.menuDetailCard}>
+              <Text style={styles.menuDetailLabel}>Background Notification Mode</Text>
+              <Text style={styles.menuDetailDesc}>
+                Choose how DeenPulse notifies you about upcoming prayers on your device.
+              </Text>
+              <View style={{ marginTop: 12, gap: 8 }}>
+                <Pressable
+                  onPress={() => {
+                    triggerHaptic();
+                    onCat3ModeChange?.('reminder');
+                  }}
+                  style={({ pressed }) => [{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    paddingVertical: 10,
+                    paddingHorizontal: 14,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: cat3NotificationMode === 'reminder' ? '#00F29D' : 'rgba(255,255,255,0.08)',
+                    backgroundColor: cat3NotificationMode === 'reminder' ? 'rgba(0, 242, 157, 0.08)' : 'rgba(255,255,255,0.02)',
+                    opacity: pressed ? 0.7 : 1,
+                  }]}
+                >
+                  <View style={{
+                    width: 18, height: 18, borderRadius: 9, borderWidth: 2,
+                    borderColor: cat3NotificationMode === 'reminder' ? '#00F29D' : 'rgba(255,255,255,0.3)',
+                    alignItems: 'center', justifyContent: 'center', marginRight: 12,
+                  }}>
+                    {cat3NotificationMode === 'reminder' && (
+                      <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#00F29D' }} />
+                    )}
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '700' }}>15-Minute Reminder</Text>
+                    <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, marginTop: 2 }}>
+                      Sends a one-time notification 15 minutes before each prayer. Battery efficient.
+                    </Text>
+                  </View>
+                </Pressable>
+
+                <Pressable
+                  onPress={() => {
+                    triggerHaptic();
+                    onCat3ModeChange?.('ongoing');
+                  }}
+                  style={({ pressed }) => [{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    paddingVertical: 10,
+                    paddingHorizontal: 14,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: cat3NotificationMode === 'ongoing' ? '#00F29D' : 'rgba(255,255,255,0.08)',
+                    backgroundColor: cat3NotificationMode === 'ongoing' ? 'rgba(0, 242, 157, 0.08)' : 'rgba(255,255,255,0.02)',
+                    opacity: pressed ? 0.7 : 1,
+                  }]}
+                >
+                  <View style={{
+                    width: 18, height: 18, borderRadius: 9, borderWidth: 2,
+                    borderColor: cat3NotificationMode === 'ongoing' ? '#00F29D' : 'rgba(255,255,255,0.3)',
+                    alignItems: 'center', justifyContent: 'center', marginRight: 12,
+                  }}>
+                    {cat3NotificationMode === 'ongoing' && (
+                      <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#00F29D' }} />
+                    )}
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '700' }}>Ongoing Notification</Text>
+                    <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, marginTop: 2 }}>
+                      Persistent countdown in the notification drawer. Uses more battery but always visible.
+                    </Text>
+                  </View>
+                </Pressable>
+              </View>
+            </View>
+          )}
+
           {/* Status Bar Capsule Format Choice */}
-          {deviceCategory !== 3 && (
+          {(deviceCategory === 1 || deviceCategory === 2) && (
             <Pressable
               style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
               onPress={() => {
@@ -100,8 +183,8 @@ export function NotificationsScreen({
             </Pressable>
           )}
 
-          {/* Notification Title Format Choice */}
-          {deviceCategory !== 1 && (
+          {/* Notification Title Format Choice — Cat3 only shows when in 'ongoing' mode */}
+          {((deviceCategory === 2) || (deviceCategory === 3 && cat3NotificationMode === 'ongoing')) && (
             <Pressable
               style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
               onPress={() => {

@@ -313,7 +313,7 @@ class PrayerCapsuleForegroundService : Service() {
         val contentText: String
         val shortText: String
 
-        // shortText is always computed standardly based on capsuleFormat setting so capsule works on all devices
+        // shortText for status bar capsule — always computed from capsuleFormat
         shortText = if (activePrayerName != null) {
             "Active"
         } else {
@@ -326,26 +326,29 @@ class PrayerCapsuleForegroundService : Service() {
         }
 
         if (activePrayerName != null) {
-            contentTitle = if (isVivo) "Active" else "Prayer Active: $activePrayerName"
-            contentText = if (isVivo) "Prayer Active: $activePrayerName" else "Active"
+            // Active prayer state — same for all devices
+            contentTitle = "Prayer Active: $activePrayerName"
+            contentText = "Active"
         } else if (isVivo) {
-            contentTitle = "Next Prayer:"
+            // Vivo/iQOO: Use simple, clean title. No string concatenation in contentText.
+            // OriginOS rejects complex text layouts and breaks animation transitions.
+            contentTitle = "Next Prayer: $currentPrayerName"
             contentText = when (notificationStyle) {
-                "with_countdown" -> "$currentPrayerName in $countdownStr"
-                "with_time" -> "$currentPrayerName at $formattedTime"
-                else -> currentPrayerName
+                "with_countdown" -> countdownStr
+                "with_time" -> formattedTime
+                else -> ""
             }
         } else {
-            contentTitle = if (notificationStyle == "with_time") {
-                "Next Prayer: $currentPrayerName ($formattedTime)"
-            } else if (notificationStyle == "with_countdown") {
-                "Next Prayer: $currentPrayerName ($countdownStr)"
-            } else {
-                "Next Prayer: $currentPrayerName"
+            // Cat1 (OPPO/OnePlus/Realme) and Cat3 (Samsung/Xiaomi/Pixel)
+            contentTitle = when (notificationStyle) {
+                "with_time" -> "Next Prayer: $currentPrayerName ($formattedTime)"
+                "with_countdown" -> "Next Prayer: $currentPrayerName ($countdownStr)"
+                else -> "Next Prayer: $currentPrayerName"
             }
             contentText = shortText
         }
 
+        // Chronometer disabled for Vivo (breaks alignment on OriginOS)
         val useChronometer = !isVivo && (notificationStyle != "with_countdown") && (activePrayerName == null)
 
         return NotificationTexts(contentTitle, contentText, shortText, useChronometer)

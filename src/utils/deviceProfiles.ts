@@ -74,7 +74,7 @@ export function buildDeviceProfile(selectedBrand: string): DeviceProfile {
 
   return {
     brand: brandLower,
-    manufacturer: brandLower === detected.brand ? detected.manufacturer : selectedBrand,
+    manufacturer: detected.manufacturer,
     category,
   };
 }

@@ -1,0 +1,158 @@
+name: DeenPulse CI/CD
+
+on:
+  push:
+    branches: [main, 'v2/**']
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ─────────────────────────────────────────────
+  # Job 1: Lint + TypeScript + Unit Tests
+  # Runs on ALL pushes and PRs to any branch
+  # ─────────────────────────────────────────────
+  lint-and-test:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript type check
+        run: npx tsc --noEmit
+
+      - name: ESLint
+        run: npx eslint . --ext .ts,.tsx --max-warnings 0
+        continue-on-error: true  # Don't fail the build on lint warnings for now
+
+      - name: Unit tests
+        run: npm test -- --passWithNoTests
+        continue-on-error: true
+
+  # ─────────────────────────────────────────────
+  # Job 2: Build Phone APK (release)
+  # Runs ONLY on push to main branch
+  # ─────────────────────────────────────────────
+  android-mobile-build:
+    name: Build Phone APK
+    needs: lint-and-test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: temurin
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install JS dependencies
+        run: npm ci
+
+      - name: Setup Gradle cache
+        uses: gradle/actions/setup-gradle@v4
+
+      # ── Signing (fork-safe: secrets only available in main repo) ──
+      - name: Decode Keystore
+        if: env.KEYSTORE_BASE64 != ''
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > android/app/deenpulse-release.keystore
+
+      - name: Build Release APK
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        working-directory: android
+        run: |
+          if [ -f "app/deenpulse-release.keystore" ]; then
+            ./gradlew :app:assembleRelease \
+              -Pandroid.injected.signing.store.file=$PWD/app/deenpulse-release.keystore \
+              -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
+              -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+              -Pandroid.injected.signing.key.password="$KEY_PASSWORD"
+          else
+            echo "⚠️ No keystore found — building debug APK instead"
+            ./gradlew :app:assembleDebug
+          fi
+
+      - name: Upload Phone APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: DeenPulse-Mobile-${{ github.run_number }}
+          path: |
+            android/app/build/outputs/apk/release/*.apk
+            android/app/build/outputs/apk/debug/*.apk
+          retention-days: 14
+
+  # ─────────────────────────────────────────────
+  # Job 3: Build Wear OS APK (release)
+  # Runs ONLY on push to main branch
+  # ─────────────────────────────────────────────
+  wearos-companion-build:
+    name: Build Wear OS APK
+    needs: lint-and-test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: temurin
+
+      - name: Setup Gradle cache
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Decode Keystore
+        if: env.KEYSTORE_BASE64 != ''
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > android/wear/deenpulse-release.keystore
+
+      - name: Build Wear Release APK
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        working-directory: android
+        run: |
+          if [ -f "wear/deenpulse-release.keystore" ]; then
+            ./gradlew :wear:assembleRelease \
+              -Pandroid.injected.signing.store.file=$PWD/wear/deenpulse-release.keystore \
+              -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
+              -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+              -Pandroid.injected.signing.key.password="$KEY_PASSWORD"
+          else
+            echo "⚠️ No keystore found — building debug APK instead"
+            ./gradlew :wear:assembleDebug
+          fi
+
+      - name: Upload Wear APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: DeenPulse-WearOS-${{ github.run_number }}
+          path: |
+            android/wear/build/outputs/apk/release/*.apk
+            android/wear/build/outputs/apk/debug/*.apk
+          retention-days: 14

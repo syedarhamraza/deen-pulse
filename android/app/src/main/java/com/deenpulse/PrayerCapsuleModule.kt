@@ -196,4 +196,97 @@ class PrayerCapsuleModule(reactContext: ReactApplicationContext) :
         val category = prefs.getInt("device_category", 3)
         WearDataSyncService.pushSettingsToWear(reactApplicationContext, juristicMethod, calculationRule, category)
     }
+
+    /**
+     * Schedule AlarmManager reminders for Cat3 devices.
+     * Each prayer gets a reminder 15 minutes before its scheduled time.
+     * Called from React Native when device is Category 3 and user prefers reminders over ongoing notification.
+     */
+    @ReactMethod
+    fun scheduleReminders(prayersJson: String) {
+        try {
+            val context = reactApplicationContext
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as android.app.AlarmManager
+            val jsonArray = org.json.JSONArray(prayersJson)
+            val now = System.currentTimeMillis()
+            val fifteenMinMs = 15L * 60L * 1000L
+            val sdf = java.text.SimpleDateFormat("h:mm a", java.util.Locale.getDefault())
+
+            // Cancel existing alarms first
+            cancelAllReminders(context, jsonArray.length())
+
+            var scheduledCount = 0
+            for (i in 0 until jsonArray.length()) {
+                val obj = jsonArray.getJSONObject(i)
+                val name = obj.getString("name")
+                val timestamp = obj.getLong("timestamp")
+                val reminderTime = timestamp - fifteenMinMs
+
+                // Only schedule future reminders
+                if (reminderTime > now) {
+                    val formattedTime = sdf.format(java.util.Date(timestamp))
+                    val intent = Intent(context, PrayerReminderReceiver::class.java).apply {
+                        putExtra(PrayerReminderReceiver.EXTRA_PRAYER_NAME, name)
+                        putExtra(PrayerReminderReceiver.EXTRA_PRAYER_TIME, formattedTime)
+                    }
+                    val pendingIntent = PendingIntent.getBroadcast(
+                        context, 9000 + i, intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    )
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        alarmManager.setExactAndAllowWhileIdle(
+                            android.app.AlarmManager.RTC_WAKEUP, reminderTime, pendingIntent
+                        )
+                    } else {
+                        alarmManager.setExact(
+                            android.app.AlarmManager.RTC_WAKEUP, reminderTime, pendingIntent
+                        )
+                    }
+                    scheduledCount++
+                }
+            }
+
+            // Store the scheduled count for cleanup
+            val prefs = context.getSharedPreferences("DeenPulsePrefs", Context.MODE_PRIVATE)
+            prefs.edit().putInt("scheduled_reminder_count", jsonArray.length()).apply()
+
+            android.util.Log.d("PrayerCapsuleModule", "Scheduled $scheduledCount prayer reminders for Cat3 device")
+        } catch (e: Exception) {
+            android.util.Log.e("PrayerCapsuleModule", "Failed to schedule reminders", e)
+        }
+    }
+
+    @ReactMethod
+    fun cancelReminders() {
+        val context = reactApplicationContext
+        val prefs = context.getSharedPreferences("DeenPulsePrefs", Context.MODE_PRIVATE)
+        val count = prefs.getInt("scheduled_reminder_count", 10)
+        cancelAllReminders(context, count)
+    }
+
+    private fun cancelAllReminders(context: Context, count: Int) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as android.app.AlarmManager
+        for (i in 0 until count) {
+            val intent = Intent(context, PrayerReminderReceiver::class.java)
+            val pendingIntent = PendingIntent.getBroadcast(
+                context, 9000 + i, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            alarmManager.cancel(pendingIntent)
+        }
+    }
+
+    /**
+     * Returns the app version string from BuildConfig.
+     */
+    @ReactMethod
+    fun getAppVersion(promise: Promise) {
+        try {
+            val pInfo = reactApplicationContext.packageManager.getPackageInfo(reactApplicationContext.packageName, 0)
+            promise.resolve(pInfo.versionName ?: "1.0.0")
+        } catch (e: Exception) {
+            promise.resolve("1.0.0")
+        }
+    }
 }

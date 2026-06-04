@@ -6,17 +6,20 @@ android {
     namespace 'com.deenpulse.wear'
     compileSdk rootProject.ext.compileSdkVersion
 
-    def versionMajor = 1
-    def versionMinor = 1
-    def versionPatch = 0
-    def ciRunNumber = (System.getenv("GITHUB_RUN_NUMBER") ?: "0").toInteger()
+    // Version is injected by CI via -Pandroid.injected.version.name / .code
+    // For local dev builds, fall back to reading package.json version
+    def fallbackVersion = "1.0.0"
+    try {
+        def packageJson = new groovy.json.JsonSlurper().parseText(file("../../package.json").text)
+        fallbackVersion = packageJson.version ?: "1.0.0"
+    } catch (Exception ignored) {}
 
     defaultConfig {
         applicationId 'com.deenpulse'
         minSdk 30
         targetSdk rootProject.ext.targetSdkVersion
-        versionCode versionMajor * 10000 + versionMinor * 100 + versionPatch + ciRunNumber
-        versionName "${versionMajor}.${versionMinor}.${versionPatch}"
+        versionCode 1
+        versionName fallbackVersion
     }
 
     compileOptions {

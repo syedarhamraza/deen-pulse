@@ -18,22 +18,7 @@ const localStyles = StyleSheet.create({
 });
 
 export function ModalFadeOverlay({ position }: { position: 'top' | 'bottom' }) {
-  const steps = 24;
-  const lines = [];
-
-  for (let i = 0; i < steps; i++) {
-    const ratio = i / (steps - 1);
-    const easeOpacity = position === 'top' ? Math.pow(1 - ratio, 1.5) : Math.pow(ratio, 1.5);
-    lines.push(easeOpacity.toFixed(3));
-  }
-
-  return (
-    <View style={position === 'top' ? styles.modalFadeOverlayTop : styles.modalFadeOverlayBottom} pointerEvents="none">
-      {lines.map((op, idx) => (
-        <View key={idx} style={[localStyles.overlayLine, { backgroundColor: `rgba(17, 24, 39, ${op})` }]} />
-      ))}
-    </View>
-  );
+  return null;
 }
 
 export function FluidModal({ visible, onClose, title, children }: FluidModalProps): React.JSX.Element | null {

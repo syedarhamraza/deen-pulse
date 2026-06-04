@@ -65,7 +65,7 @@ export function AboutScreen({ onBack }: AboutScreenProps) {
       try {
         const saved = await AsyncStorage.getItem(UPDATE_CHECK_FREQUENCY_KEY);
         if (saved) setFrequency(saved);
-      } catch {}
+      } catch { }
     })();
   }, []);
 
@@ -100,17 +100,17 @@ export function AboutScreen({ onBack }: AboutScreenProps) {
     setFrequency(value);
     try {
       await AsyncStorage.setItem(UPDATE_CHECK_FREQUENCY_KEY, value);
-    } catch {}
+    } catch { }
   };
 
   const handleOpenGitHub = () => {
     triggerHaptic();
-    Linking.openURL('https://github.com/syedarhamraza/DeenPulse').catch(() => {});
+    Linking.openURL('https://github.com/syedarhamraza/deen-pulse').catch(() => { });
   };
 
   const handleOpenDeveloper = () => {
     triggerHaptic();
-    Linking.openURL('https://github.com/syedarhamraza').catch(() => {});
+    Linking.openURL('https://github.com/syedarhamraza').catch(() => { });
   };
 
   return (
@@ -151,8 +151,8 @@ export function AboutScreen({ onBack }: AboutScreenProps) {
             <Text style={s.appName}>DeenPulse</Text>
             <Text style={s.appTagline}>Live tracking on your status bar</Text>
             <View style={s.versionBadge}>
-              <Icon name="tag" size={10} color="#00F29D" />
-              <Text style={s.versionText}>v{appVersion}</Text>
+
+              <Text style={s.versionText}>Version {appVersion}</Text>
             </View>
           </View>
         </ImageBackground>
@@ -289,7 +289,7 @@ export function AboutScreen({ onBack }: AboutScreenProps) {
           >
             <View>
               <Text style={s.creatorName}>Syed Arham Raza</Text>
-              <Text style={s.creatorRole}>Lead Software Architect & Engineer</Text>
+              <Text style={s.creatorRole}>Web Developer</Text>
             </View>
             <Icon name="github" size={20} color="#00F29D" />
           </Pressable>
@@ -362,6 +362,9 @@ const s = StyleSheet.create({
     borderRadius: 24,
     overflow: 'hidden',
     marginBottom: 8,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 242, 157, 0.12)',
   },
   heroBgImage: {
     borderRadius: 24,
@@ -388,22 +391,15 @@ const s = StyleSheet.create({
     width: 84,
     height: 84,
     borderRadius: 42,
-    backgroundColor: 'rgba(0, 242, 157, 0.08)',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: '#00F29D',
-    shadowColor: '#00F29D',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 14,
-    elevation: 6,
     overflow: 'hidden',
   },
   heroIcon: {
-    width: 56,
-    height: 56,
+    width: 64,
+    height: 64,
   },
+
   appName: {
     fontSize: 28,
     fontWeight: '800',

@@ -118,61 +118,72 @@ export function WearOSControlScreen({ onBack }: WearOSControlScreenProps) {
           }}
           style={({ pressed }) => [styles.backButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
         >
-          <Icon name="arrow-left" size={20} color="#00F29D" />
+          <Icon name="arrow-left" size={20} color="#00E8A2" />
         </Pressable>
         <Text style={styles.title}>Watch Companion</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Connection Card */}
-        <View style={[styles.statusCard, isConnected ? styles.statusCardConnected : styles.statusCardDisconnected]}>
-          <View style={styles.statusHeader}>
-            <View style={styles.statusIndicatorWrapper}>
-              <View style={[styles.statusDot, isConnected ? styles.statusDotConnected : styles.statusDotDisconnected]} />
-              <Text style={[styles.statusText, isConnected ? styles.statusTextConnected : styles.statusTextDisconnected]}>
-                {isConnected ? 'Connected' : 'Not Connected'}
-              </Text>
-            </View>
-            <Icon name="watch" size={28} color={isConnected ? '#00F29D' : 'rgba(255,255,255,0.4)'} />
+        {/* Centered Circular Connection Status Badge */}
+        <View style={styles.badgeSection}>
+          <View style={[styles.badgeCircle, isConnected ? styles.badgeConnected : styles.badgeDisconnected]}>
+            <Icon name="watch" size={38} color={isConnected ? '#00E8A2' : 'rgba(255,255,255,0.4)'} />
+            <View style={[styles.badgeIndicator, isConnected ? styles.badgeIndicatorConnected : styles.badgeIndicatorDisconnected]} />
           </View>
-          <Text style={styles.watchName}>
-            {isConnected ? watchName || 'Galaxy Watch / Wear OS' : 'No companion watch active'}
+          <Text style={styles.watchLabel}>
+            {isConnected ? watchName || 'Wear OS Smartwatch' : 'No Watch Connected'}
           </Text>
-          <Text style={styles.syncTime}>
-            Last Synced: <Text style={styles.syncTimeHighlight}>{formatTimestamp(lastSyncTime)}</Text>
+          <View style={[styles.statusBadgePill, isConnected ? styles.statusBadgeConnected : styles.statusBadgeDisconnected]}>
+            <Text style={[styles.statusBadgeText, isConnected ? styles.statusBadgeTextConnected : styles.statusBadgeTextDisconnected]}>
+              {isConnected ? 'Sync Active' : 'Offline'}
+            </Text>
+          </View>
+        </View>
+
+        {/* Dynamic Last Synced Time Card */}
+        <View style={styles.syncStatusCard}>
+          <Text style={styles.syncStatusTitle}>Last Synchronized</Text>
+          <Text style={styles.syncStatusTime}>{formatTimestamp(lastSyncTime)}</Text>
+          <Text style={styles.syncStatusSubtitle}>
+            {isConnected ? 'Ready to sync live timings and preferences' : 'Connect via Bluetooth to sync timings'}
           </Text>
         </View>
 
-        {/* Action Button */}
+        {/* Centered touch-friendly Sync Now button */}
         <Pressable
           style={({ pressed }) => [
-            styles.syncButton,
-            (!isConnected || syncing) && styles.syncButtonDisabled,
+            styles.syncBtn,
+            (!isConnected || syncing) && styles.syncBtnDisabled,
             { transform: [{ scale: pressed && isConnected && !syncing ? 0.98 : 1 }] },
           ]}
           disabled={!isConnected || syncing}
           onPress={handleSyncNow}
         >
           {syncing ? (
-            <ActivityIndicator size="small" color="#000" />
+            <ActivityIndicator size="small" color="#0B0F12" />
           ) : syncSuccess ? (
-            <View style={styles.syncButtonInner}>
-              <Icon name="check" size={16} color="#000" />
-              <Text style={styles.syncButtonText}>Synced Successfully</Text>
+            <View style={styles.syncBtnInner}>
+              <Icon name="check" size={18} color="#0B0F12" />
+              <Text style={styles.syncBtnText}>Synced Successfully</Text>
             </View>
           ) : (
-            <View style={styles.syncButtonInner}>
-              <Icon name="refresh-cw" size={16} color="#000" />
-              <Text style={styles.syncButtonText}>Sync Timing to Watch</Text>
+            <View style={styles.syncBtnInner}>
+              <Icon name="refresh-cw" size={18} color="#0B0F12" />
+              <Text style={styles.syncBtnText}>Sync Now</Text>
             </View>
           )}
         </Pressable>
 
-        {syncError && <Text style={styles.errorText}>{syncError}</Text>}
+        {syncError && (
+          <View style={styles.errorContainer}>
+            <Icon name="alert-circle" size={14} color="#FF6B6B" />
+            <Text style={styles.errorText}>{syncError}</Text>
+          </View>
+        )}
 
         {/* Settings List */}
         <View style={styles.settingsSection}>
-          <Text style={styles.sectionLabel}>Preferences</Text>
+          <Text style={styles.sectionLabel}>Sync Preferences</Text>
 
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
@@ -187,7 +198,7 @@ export function WearOSControlScreen({ onBack }: WearOSControlScreenProps) {
             />
           </View>
 
-          <View style={styles.settingRow}>
+          <View style={styles.settingRowNoBorder}>
             <View style={styles.settingInfo}>
               <Text style={styles.settingLabel}>Sync Calculation Settings</Text>
               <Text style={styles.settingDesc}>
@@ -202,36 +213,54 @@ export function WearOSControlScreen({ onBack }: WearOSControlScreenProps) {
         </View>
 
         {/* Troubleshooting Section */}
-        <Pressable
-          style={styles.troubleCard}
-          onPress={() => {
-            triggerHaptic();
-            setTroubleOpen(!troubleOpen);
-          }}
-        >
-          <View style={styles.troubleHeader}>
+        <View style={styles.troubleCard}>
+          <Pressable
+            style={styles.troubleHeader}
+            onPress={() => {
+              triggerHaptic();
+              setTroubleOpen(!troubleOpen);
+            }}
+          >
             <View style={styles.troubleTitleCol}>
-              <Icon name="help-circle" size={18} color="#00F29D" />
+              <Icon name="help-circle" size={18} color="#00E8A2" />
               <Text style={styles.troubleTitle}>Troubleshooting Sync Issues</Text>
             </View>
             <Icon name={troubleOpen ? 'chevron-up' : 'chevron-down'} size={18} color="rgba(255,255,255,0.4)" />
-          </View>
+          </Pressable>
 
           {troubleOpen && (
             <View style={styles.troubleContent}>
               <View style={styles.divider} />
-              <Text style={styles.troubleParagraph}>
-                1. Make sure your watch is powered on and connected to this phone via Bluetooth (check Galaxy Wearable or Pixel Watch app).
-              </Text>
-              <Text style={styles.troubleParagraph}>
-                2. Install the DeenPulse companion watch app on your Wear OS watch from the Google Play Store.
-              </Text>
-              <Text style={styles.troubleParagraph}>
-                3. Open the watch app. It will show "Waiting for Sync". Press "Sync Now" on this page to force timing updates.
-              </Text>
+              
+              <View style={styles.stepItem}>
+                <View style={styles.stepNumberBadge}>
+                  <Text style={styles.stepNumberText}>1</Text>
+                </View>
+                <Text style={styles.troubleParagraph}>
+                  Make sure your watch is powered on and connected to this phone via Bluetooth (check Galaxy Wearable or Pixel Watch app).
+                </Text>
+              </View>
+
+              <View style={styles.stepItem}>
+                <View style={styles.stepNumberBadge}>
+                  <Text style={styles.stepNumberText}>2</Text>
+                </View>
+                <Text style={styles.troubleParagraph}>
+                  Install the DeenPulse companion watch app on your Wear OS watch from the Google Play Store.
+                </Text>
+              </View>
+
+              <View style={styles.stepItem}>
+                <View style={styles.stepNumberBadge}>
+                  <Text style={styles.stepNumberText}>3</Text>
+                </View>
+                <Text style={styles.troubleParagraph}>
+                  Open the watch app. It will show "Waiting for Sync". Press "Sync Now" on this page to force timing updates.
+                </Text>
+              </View>
             </View>
           )}
-        </Pressable>
+        </View>
       </ScrollView>
     </View>
   );
@@ -259,8 +288,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 16,
     borderWidth: 1,
-    borderColor: 'rgba(0, 242, 157, 0.15)',
-    shadowColor: '#00F29D',
+    borderColor: 'rgba(0, 232, 162, 0.15)',
+    shadowColor: '#00E8A2',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -273,100 +302,157 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 24,
     paddingBottom: 40,
+    alignItems: 'center',
   },
-  statusCard: {
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 20,
-    borderWidth: 1,
+  badgeSection: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+    marginBottom: 24,
+    width: '100%',
   },
-  statusCardConnected: {
-    backgroundColor: '#141D20',
-    borderColor: 'rgba(0, 242, 157, 0.25)',
-    shadowColor: '#00F29D',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
+  badgeCircle: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: '#111417',
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  badgeConnected: {
+    borderColor: 'rgba(0, 232, 162, 0.25)',
+    shadowColor: '#00E8A2',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
     elevation: 4,
   },
-  statusCardDisconnected: {
-    backgroundColor: '#111417',
+  badgeDisconnected: {
     borderColor: 'rgba(255, 107, 107, 0.2)',
   },
-  statusHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
+  badgeIndicator: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    position: 'absolute',
+    bottom: 4,
+    right: 4,
+    borderWidth: 2,
+    borderColor: '#0B0F12',
   },
-  statusIndicatorWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  badgeIndicatorConnected: {
+    backgroundColor: '#00E8A2',
   },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  statusDotConnected: {
-    backgroundColor: '#00F29D',
-  },
-  statusDotDisconnected: {
+  badgeIndicatorDisconnected: {
     backgroundColor: '#FF6B6B',
   },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 1.2,
-  },
-  statusTextConnected: {
-    color: '#00F29D',
-  },
-  statusTextDisconnected: {
-    color: '#FF6B6B',
-  },
-  watchName: {
+  watchLabel: {
     fontSize: 20,
     fontWeight: '800',
     color: '#FFFFFF',
+    marginTop: 16,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  statusBadgePill: {
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  statusBadgeConnected: {
+    backgroundColor: 'rgba(0, 232, 162, 0.08)',
+    borderColor: 'rgba(0, 232, 162, 0.25)',
+  },
+  statusBadgeDisconnected: {
+    backgroundColor: 'rgba(255, 107, 107, 0.08)',
+    borderColor: 'rgba(255, 107, 107, 0.2)',
+  },
+  statusBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+  },
+  statusBadgeTextConnected: {
+    color: '#00E8A2',
+  },
+  statusBadgeTextDisconnected: {
+    color: '#FF6B6B',
+  },
+  syncStatusCard: {
+    width: '100%',
+    backgroundColor: '#111417',
+    borderRadius: 20,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 232, 162, 0.15)',
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  syncStatusTitle: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: 'rgba(255, 255, 255, 0.4)',
+    letterSpacing: 1.5,
     marginBottom: 6,
+    textTransform: 'uppercase',
   },
-  syncTime: {
-    fontSize: 12,
+  syncStatusTime: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 6,
+    textAlign: 'center',
+  },
+  syncStatusSubtitle: {
+    fontSize: 11,
     color: 'rgba(255, 255, 255, 0.5)',
+    textAlign: 'center',
   },
-  syncTimeHighlight: {
-    color: '#ffffff',
-    fontWeight: '600',
-  },
-  syncButton: {
-    backgroundColor: '#00F29D',
-    borderRadius: 14,
-    height: 52,
+  syncBtn: {
+    backgroundColor: '#00E8A2',
+    borderRadius: 16,
+    height: 56,
+    width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
   },
-  syncButtonDisabled: {
+  syncBtnDisabled: {
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
   },
-  syncButtonInner: {
+  syncBtnInner: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
   },
-  syncButtonText: {
-    color: '#000000',
+  syncBtnText: {
+    color: '#0B0F12',
     fontSize: 15,
     fontWeight: '700',
+  },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 107, 107, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 107, 107, 0.15)',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    width: '100%',
+    marginBottom: 20,
+    gap: 8,
   },
   errorText: {
     color: '#FF6B6B',
     fontSize: 12,
-    textAlign: 'center',
-    marginBottom: 20,
+    fontWeight: '500',
   },
   settingsSection: {
     backgroundColor: '#111417',
@@ -374,14 +460,16 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: 'rgba(0, 242, 157, 0.15)',
+    borderColor: 'rgba(0, 232, 162, 0.15)',
+    width: '100%',
   },
   sectionLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: 'rgba(255, 255, 255, 0.4)',
     textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 16,
+    letterSpacing: 1.5,
+    marginBottom: 8,
+    fontWeight: '800',
   },
   settingRow: {
     flexDirection: 'row',
@@ -390,6 +478,12 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  settingRowNoBorder: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
   },
   settingInfo: {
     flex: 1,
@@ -411,7 +505,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     borderWidth: 1,
-    borderColor: 'rgba(0, 242, 157, 0.15)',
+    borderColor: 'rgba(0, 232, 162, 0.15)',
+    width: '100%',
   },
   troubleHeader: {
     flexDirection: 'row',
@@ -434,12 +529,34 @@ const styles = StyleSheet.create({
   divider: {
     height: 1,
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    marginBottom: 12,
+    marginBottom: 16,
+  },
+  stepItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 14,
+    gap: 12,
+  },
+  stepNumberBadge: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: 'rgba(0, 232, 162, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 232, 162, 0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 1,
+  },
+  stepNumberText: {
+    color: '#00E8A2',
+    fontSize: 10,
+    fontWeight: '800',
   },
   troubleParagraph: {
+    flex: 1,
     fontSize: 12,
     color: 'rgba(255, 255, 255, 0.6)',
     lineHeight: 18,
-    marginBottom: 10,
   },
 });

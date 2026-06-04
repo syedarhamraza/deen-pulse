@@ -84,7 +84,7 @@ class DeenPulseTileService : TileService() {
         val nextPrayer = PrayerEngine.getNextPrayer(prayers, nowMs)
         val progressRatio = PrayerEngine.getProgressRatio(prayers, nowMs)
 
-        val accentColor = 0xFF00F29D.toInt()
+        val accentColor = 0xFF00E8A2.toInt()
         val trackColor = 0xFF111417.toInt() // DeenPulseTrack
         val textColorPrimary = 0xFFFFFFFF.toInt()
         val textColorMuted = 0x99FFFFFF.toInt()

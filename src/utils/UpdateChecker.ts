@@ -11,8 +11,7 @@ export interface UpdateInfo {
   publishedAt: string;
 }
 
-// Default GitHub repo - user should change this
-const GITHUB_REPO = 'syedarhamraza/DeenPulse';
+const GITHUB_REPO = 'syedarhamraza/deen-pulse';
 const RELEASES_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
 
 function compareVersions(a: string, b: string): number {
@@ -25,6 +24,20 @@ function compareVersions(a: string, b: string): number {
     if (numA < numB) return -1;
   }
   return 0;
+}
+
+/**
+ * Find the Phone APK download URL from release assets.
+ * Prefers assets with "Phone" in the name, falls back to first .apk.
+ */
+function findPhoneApkUrl(release: any): string | null {
+  const assets = release.assets || [];
+  // Prefer the phone APK (named DeenPulse-Phone-vX.Y.Z.apk by CI)
+  const phoneApk = assets.find((a: any) => /phone/i.test(a.name) && a.name.endsWith('.apk'));
+  if (phoneApk) return phoneApk.browser_download_url;
+  // Fall back to first APK asset
+  const anyApk = assets.find((a: any) => a.name.endsWith('.apk'));
+  return anyApk?.browser_download_url || null;
 }
 
 export async function checkForUpdate(currentVersion: string): Promise<UpdateInfo | null> {
@@ -40,7 +53,7 @@ export async function checkForUpdate(currentVersion: string): Promise<UpdateInfo
       return {
         version: latestVersion,
         releaseNotes: release.body || 'No release notes available.',
-        downloadUrl: release.assets?.[0]?.browser_download_url || release.html_url || null,
+        downloadUrl: findPhoneApkUrl(release) || release.html_url || null,
         publishedAt: release.published_at || '',
       };
     }

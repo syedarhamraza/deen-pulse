@@ -2,52 +2,23 @@ name: DeenPulse CI/CD
 
 on:
   push:
-    branches: [main, 'v2/**']
-  pull_request:
-    branches: [main]
+    tags:
+      - 'v*'
+  workflow_dispatch:
 
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+# Permissions needed to create a draft release on your repository
+permissions:
+  contents: write
 
 jobs:
   # ─────────────────────────────────────────────
-  # Job 1: Lint + TypeScript + Unit Tests
-  # Runs on ALL pushes and PRs to any branch
-  # ─────────────────────────────────────────────
-  lint-and-test:
-    name: Lint & Test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: TypeScript type check
-        run: npx tsc --noEmit
-
-      - name: ESLint
-        run: npx eslint . --ext .ts,.tsx --max-warnings 0
-        continue-on-error: true  # Don't fail the build on lint warnings for now
-
-      - name: Unit tests
-        run: npm test -- --passWithNoTests
-        continue-on-error: true
-
-  # ─────────────────────────────────────────────
-  # Job 2: Build Phone APK (release)
-  # Runs ONLY on push to main branch
+  # Job 1: Build Phone APK (Auto-Versioned)
   # ─────────────────────────────────────────────
   android-mobile-build:
     name: Build Phone APK
-    needs: lint-and-test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -70,49 +41,63 @@ jobs:
       - name: Setup Gradle cache
         uses: gradle/actions/setup-gradle@v4
 
-      # ── Signing (fork-safe: secrets only available in main repo) ──
       - name: Decode Keystore
-        if: env.KEYSTORE_BASE64 != ''
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
-          echo "$KEYSTORE_BASE64" | base64 -d > android/app/deenpulse-release.keystore
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > android/app/deenpulse-release.keystore
+          fi
 
-      - name: Build Release APK
+      - name: Build Release APK with Dynamic Versioning
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         working-directory: android
         run: |
+          if [[ "${{ github.ref_name }}" == v* ]]; then
+            VERSION_NAME=${{ github.ref_name }}
+            VERSION_NAME=${VERSION_NAME#v}
+          else
+            VERSION_NAME="0.0.1-manual"
+          fi
+          VERSION_CODE=${{ github.run_number }}
+
           if [ -f "app/deenpulse-release.keystore" ]; then
             ./gradlew :app:assembleRelease \
               -Pandroid.injected.signing.store.file=$PWD/app/deenpulse-release.keystore \
               -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
               -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
-              -Pandroid.injected.signing.key.password="$KEY_PASSWORD"
+              -Pandroid.injected.signing.key.password="$KEY_PASSWORD" \
+              -Pandroid.injected.version.name="$VERSION_NAME" \
+              -Pandroid.injected.version.code=$VERSION_CODE
           else
-            echo "⚠️ No keystore found — building debug APK instead"
+            echo "⚠️ No release credentials found — running debug fallback"
             ./gradlew :app:assembleDebug
           fi
 
-      - name: Upload Phone APK
+      - name: Clean & Rename Mobile APK
+        run: |
+          mkdir -p build-artifacts
+          if [ -f "android/app/build/outputs/apk/release/app-release.apk" ]; then
+            cp android/app/build/outputs/apk/release/app-release.apk build-artifacts/DeenPulse-Phone-${{ github.ref_name || 'manual' }}.apk
+          else
+            cp android/app/build/outputs/apk/debug/app-debug.apk build-artifacts/DeenPulse-Phone-Debug.apk
+          fi
+
+      - name: Upload Phone Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: DeenPulse-Mobile-${{ github.run_number }}
-          path: |
-            android/app/build/outputs/apk/release/*.apk
-            android/app/build/outputs/apk/debug/*.apk
-          retention-days: 14
+          name: phone-apk
+          path: build-artifacts/*.apk
+          retention-days: 1
 
   # ─────────────────────────────────────────────
-  # Job 3: Build Wear OS APK (release)
-  # Runs ONLY on push to main branch
+  # Job 2: Build Wear OS APK (Auto-Versioned)
   # ─────────────────────────────────────────────
   wearos-companion-build:
     name: Build Wear OS APK
-    needs: lint-and-test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -136,86 +121,88 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Decode Keystore
-        if: env.KEYSTORE_BASE64 != ''
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
-          echo "$KEYSTORE_BASE64" | base64 -d > android/wear/deenpulse-release.keystore
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > android/wear/deenpulse-release.keystore
+          fi
 
-      - name: Build Wear Release APK
+      - name: Build Wear Release APK with Dynamic Versioning
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         working-directory: android
         run: |
+          if [[ "${{ github.ref_name }}" == v* ]]; then
+            VERSION_NAME=${{ github.ref_name }}
+            VERSION_NAME=${VERSION_NAME#v}
+          else
+            VERSION_NAME="0.0.1-manual"
+          fi
+          VERSION_CODE=${{ github.run_number }}
+
           if [ -f "wear/deenpulse-release.keystore" ]; then
             ./gradlew :wear:assembleRelease \
               -Pandroid.injected.signing.store.file=$PWD/wear/deenpulse-release.keystore \
               -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
               -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
-              -Pandroid.injected.signing.key.password="$KEY_PASSWORD"
+              -Pandroid.injected.signing.key.password="$KEY_PASSWORD" \
+              -Pandroid.injected.version.name="$VERSION_NAME" \
+              -Pandroid.injected.version.code=$VERSION_CODE
           else
-            echo "⚠️ No keystore found — building debug APK instead"
+            echo "⚠️ No release credentials found — running debug fallback"
             ./gradlew :wear:assembleDebug
           fi
 
-      - name: Upload Wear APK
+      - name: Clean & Rename Wear APK
+        run: |
+          mkdir -p build-artifacts
+          if [ -f "android/wear/build/outputs/apk/release/wear-release.apk" ]; then
+            cp android/wear/build/outputs/apk/release/wear-release.apk build-artifacts/DeenPulse-WearOS-${{ github.ref_name || 'manual' }}.apk
+          else
+            cp android/wear/build/outputs/apk/debug/wear-debug.apk build-artifacts/DeenPulse-WearOS-Debug.apk
+          fi
+
+      - name: Upload Wear Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: DeenPulse-WearOS-${{ github.run_number }}
-          path: |
-            android/wear/build/outputs/apk/release/*.apk
-            android/wear/build/outputs/apk/debug/*.apk
-          retention-days: 14
+          name: wear-apk
+          path: build-artifacts/*.apk
+          retention-days: 1
 
   # ─────────────────────────────────────────────
-  # Job 4: Create GitHub Release with APKs
-  # Runs after both builds succeed on 'main'
+  # Job 3: Create GitHub Release Draft & Attach APKs
+  # Runs ONLY when a tag is pushed
   # ─────────────────────────────────────────────
-  create-release:
-    name: Create GitHub Release
+  create-release-draft:
+    name: Create Release Draft
     needs: [android-mobile-build, wearos-companion-build]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      # Download Mobile APK artifact built in Job 2
-      - name: Download Mobile Artifact
+      - name: Download Phone APK
         uses: actions/download-artifact@v4
         with:
-          name: DeenPulse-Mobile-${{ github.run_number }}
-          path: build-artifacts/mobile
+          name: phone-apk
+          path: release-assets
 
-      # Download Wear OS APK artifact built in Job 3
-      - name: Download WearOS Artifact
+      - name: Download Wear APK
         uses: actions/download-artifact@v4
         with:
-          name: DeenPulse-WearOS-${{ github.run_number }}
-          path: build-artifacts/wearos
+          name: wear-apk
+          path: release-assets
 
-      # Rename and gather the APK files for the release
-      - name: Prepare Release Assets
-        run: |
-          mkdir release-assets
-          find build-artifacts/mobile -name "*release.apk" -exec cp {} release-assets/DeenPulse-Mobile-Release.apk \;
-          find build-artifacts/wearos -name "*release.apk" -exec cp {} release-assets/DeenPulse-WearOS-Release.apk \;
-
-      # Publish GitHub Release and attach the APKs
-      - name: Create Release
+      - name: Create Draft Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.1.0-b${{ github.run_number }}
-          name: DeenPulse Release v1.1.0 (Build #${{ github.run_number }})
-          draft: false
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          draft: true
           prerelease: false
           generate_release_notes: true
           files: |
-            release-assets/DeenPulse-Mobile-Release.apk
-            release-assets/DeenPulse-WearOS-Release.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            release-assets/*.apk

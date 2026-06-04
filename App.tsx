@@ -973,16 +973,7 @@ export const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 8,
   },
-  accentBar: {
-    // Deprecated in favor of inline typography branding
-  },
 
-  subtitle: {
-    fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.35)',
-    marginTop: 2,
-    letterSpacing: 0.5,
-  },
   headerButtons: {
     flexDirection: 'row',
     gap: 12,
@@ -1001,15 +992,7 @@ export const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
-  dashboardContainer: {
-    backgroundColor: '#111417',
-    borderRadius: 20,
-    marginHorizontal: 20,
-    paddingVertical: 16,
-    marginVertical: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 242, 157, 0.2)',
-  },
+
   cardContainer: {
     paddingHorizontal: 20,
     marginTop: 24,
@@ -1134,26 +1117,7 @@ export const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
 
-  scrollLocationBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 6,
-    gap: 6,
-  },
-  locationBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 6,
-    backgroundColor: '#0B0F12',
-  },
-  locationText: {
-    fontSize: 12,
-    color: '#00F29D',
-    fontWeight: '600',
-    fontVariant: ['tabular-nums'],
-  },
+
   loadingContainer: {
     alignItems: 'center',
     justifyContent: 'center',

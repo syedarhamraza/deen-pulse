@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { View, Text, ScrollView, Pressable, Animated, Linking } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { styles, triggerHaptic, HeaderFadeOverlay, Screen } from '../../App';
@@ -126,6 +126,13 @@ export function DashboardScreen({
   nextPrayer,
 }: DashboardScreenProps) {
   const { isWindowActive } = useActiveWindowDetector(nextPrayer);
+  const scrollRef = useRef<ScrollView>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  const handleScroll = useCallback((e: any) => {
+    const offsetY = e.nativeEvent.contentOffset.y;
+    setShowScrollTop(offsetY > 300);
+  }, []);
   return (
     <View style={styles.screenContainer}>
       <View style={styles.header}>
@@ -159,7 +166,7 @@ export function DashboardScreen({
         <HeaderFadeOverlay />
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView ref={scrollRef} onScroll={handleScroll} scrollEventThrottle={16} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
 
 
@@ -228,6 +235,33 @@ export function DashboardScreen({
           </View>
         )}
       </ScrollView>
+      {showScrollTop && (
+        <Pressable
+          onPress={() => {
+            triggerHaptic();
+            scrollRef.current?.scrollTo({ y: 0, animated: true });
+          }}
+          style={({ pressed }) => [{
+            position: 'absolute',
+            bottom: 24,
+            right: 20,
+            width: 44,
+            height: 44,
+            borderRadius: 22,
+            backgroundColor: '#00F29D',
+            alignItems: 'center',
+            justifyContent: 'center',
+            elevation: 6,
+            shadowColor: '#00F29D',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.35,
+            shadowRadius: 8,
+            opacity: pressed ? 0.7 : 0.9,
+          }]}
+        >
+          <Icon name="chevron-up" size={22} color="#0B0F12" />
+        </Pressable>
+      )}
     </View>
   );
 }

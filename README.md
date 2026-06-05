@@ -1,5 +1,3 @@
-# DeenPulse
-
 ![DeenPulse Banner](src/assets/readmeHero.png)
 [![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20WearOS-00F29D?style=flat-square)](https://developer.android.com/)
 [![React Native](https://img.shields.io/badge/React%20Native-0.85+-61DAFB?style=flat-square)](https://reactnative.dev/)
@@ -7,6 +5,24 @@
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 
 DeenPulse is a premium, privacy-focused utility built with React Native and Kotlin. It brings real-time Islamic prayer times directly to your Android device's status bar via a high-fidelity Live Capsule overlay, accompanied by a native Wear OS companion module.
+
+---
+
+## Download
+
+You can access the official release distributions and build artifacts directly via the portal below:
+
+* **[Download DeenPulse](https://deenpulse.example.com)** — Get the latest stable Android APKs, Wear OS bundle packages, and release logs.
+
+---
+
+## Screenshots
+
+*Place your application screenshots in the assets directory (e.g. `src/assets/screenshots/`) and reference them below:*
+
+| Mobile Dashboard | Live Status Bar Capsule | Wear OS Complications & Tiles |
+| :---: | :---: | :---: |
+| ![Mobile Dashboard UI](https://via.placeholder.com/300x600?text=Mobile+Dashboard+UI) | ![Live Status Bar Capsule](https://via.placeholder.com/300x600?text=Live+Capsule+UI) | ![Wear OS Tiles](https://via.placeholder.com/300x300?text=Wear+OS+Complications) |
 
 ---
 

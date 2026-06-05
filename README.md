@@ -1,5 +1,5 @@
 # 🕌 DeenPulse
-
+![img](src/assets/readmeHero.svg)
 [![DeenPulse CI/CD](https://github.com/syedarhamraza/deen-pulse/actions/workflows/ci.yml/badge.svg)](https://github.com/syedarhamraza/deen-pulse/actions/workflows/ci.yml)
 [![Platform: Android & WearOS](https://img.shields.io/badge/Platform-Android%20%7C%20WearOS-00F29D?style=flat-square&logo=android)](https://developer.android.com/)
 [![React Native](https://img.shields.io/badge/React%20Native-0.74+-61DAFB?style=flat-square&logo=react)](https://reactnative.dev/)

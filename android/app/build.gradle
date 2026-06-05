@@ -87,12 +87,15 @@ android {
         fallbackVersion = packageJson.version ?: "1.0.0"
     } catch (Exception ignored) {}
 
+    def finalVersionName = project.hasProperty('android.injected.version.name') ? project.property('android.injected.version.name') : fallbackVersion
+    def finalVersionCode = project.hasProperty('android.injected.version.code') ? project.property('android.injected.version.code').toInteger() : 1
+
     defaultConfig {
         applicationId "com.deenpulse"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName fallbackVersion
+        versionCode finalVersionCode
+        versionName finalVersionName
     }
 
     buildFeatures {

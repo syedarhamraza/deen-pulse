@@ -74,7 +74,9 @@ jobs:
               -Pandroid.injected.version.code=$VERSION_CODE
           else
             echo "⚠️ No release credentials found — running debug fallback"
-            ./gradlew :app:assembleDebug
+            ./gradlew :app:assembleDebug \
+              -Pandroid.injected.version.name="$VERSION_NAME" \
+              -Pandroid.injected.version.code=$VERSION_CODE
           fi
 
       - name: Clean & Rename Mobile APK
@@ -153,7 +155,9 @@ jobs:
               -Pandroid.injected.version.code=$VERSION_CODE
           else
             echo "⚠️ No release credentials found — running debug fallback"
-            ./gradlew :wear:assembleDebug
+            ./gradlew :wear:assembleDebug \
+              -Pandroid.injected.version.name="$VERSION_NAME" \
+              -Pandroid.injected.version.code=$VERSION_CODE
           fi
 
       - name: Clean & Rename Wear APK

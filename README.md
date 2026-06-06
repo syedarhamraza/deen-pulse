@@ -30,6 +30,12 @@ You can access the official release distributions and build artifacts directly v
 | :---: | :---: |
 | ![Live Status Bar Capsule Collapsed](src/assets/screenshots/capsule.jpeg) | ![Live Status Bar Capsule Expanded](src/assets/screenshots/capsule_expanded.jpeg) |
 
+### Prayer Active Status (Lockscreen & Notifications)
+
+| Live Lockscreen Space | Expanded Notification View | Simple Notification |
+| :---: | :---: | :---: |
+| ![Live Lockscreen Space](src/assets/screenshots/lockscreen_livespace_prayeractive_live.jpeg) | ![Expanded Notification View](src/assets/screenshots/lockscreen_livespace_prayeractive_expanded_view.jpeg) | ![Simple Notification](src/assets/screenshots/lockscreen_livespace_prayeractive_simple_notification.jpeg) |
+
 ### Wear OS Companion
 
 | Watch App Interface | Quick-Swipe Tile | Watch Face Complications |

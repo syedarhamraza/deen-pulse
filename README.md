@@ -108,7 +108,7 @@ The React Native layer communicates with the native Android Wearable APIs. Confi
 
 Contributions are welcome! Please follow these guidelines:
 - **Issues**: Before starting, please open an issue to discuss your proposal. Use our **[Bug Report](.github/ISSUE_TEMPLATE/01-bug_report.md)** or **[Feature Request](.github/ISSUE_TEMPLATE/02-feature_request.md)** templates.
-- **Pull Requests**: Submit a PR to the `main` branch. Please fill out the **[Pull Request Template](.github/pull_request_template.md)** completely and ensure all new files have the GPL v3.0 license header.
+- **Pull Requests**: Submit a PR to the `main` branch. Please select and fill out either our **[Bug Fix](.github/PULL_REQUEST_TEMPLATE/01-bug_fix.md)** or **[Feature Implementation](.github/PULL_REQUEST_TEMPLATE/02-feature_implementation.md)** templates completely, and ensure all new files have the GPL v3.0 license header.
 
 ---
 

@@ -1,4 +1,4 @@
-﻿# Deen Pulse — Design Language Specification
+# Deen Pulse — Design Language Specification
 
 This document defines the unified **"Obsidian Mint"** design system and visual language shared between the **React Native Phone App** and the **Wear OS Watch App**.
 
@@ -148,5 +148,22 @@ To maintain absolute theme parity across all secondary pages, we enforce these g
 - **Headers & Padding**: Sub-headers must use 24px horizontal padding (`paddingHorizontal: 24` or `paddingHorizontal: 20` if card margins match) to avoid horizontal jumpiness on navigation transitions.
 - **Glassmorphic Back Button**: Back buttons must match `App.tsx` global styling: width `38`, height `38`, border radius `19`, background `rgba(255, 255, 255, 0.02)`, and a neon mint border tint `rgba(0, 232, 162, 0.15)`.
 - **Haptic Scale Feedbacks**: Button pressed interactions must employ springy scale transforms (`scale: pressed ? 0.92 : 1` for small icons, and `scale: pressed ? 0.98 : 1` for action cards/buttons) to provide mechanical tactility.
+
+---
+
+## 10. Licensing & Open Source Notices
+
+To align with the project's open-source distribution model, the following standards apply:
+
+### Global Source File Headers
+- **Rule**: Every source file (`.js`, `.jsx`, `.ts`, `.tsx`, `.kt`, `.java`) must contain the official GNU GPL v3.0 copyright comment block prepended at the top.
+
+### Dashboard Screen Footer
+- **Rule**: The main dashboard screen must feature a centered, muted footer containing developer credit and copyright information, followed by the text: `Licensed under GNU GPL v3.0`.
+- **Interaction**: Tapping this footer must redirect the user to the official open-source GitHub repository.
+
+### About Screen Link Cards
+- **Rule**: The About screen must feature a dedicated License card styled as a standard `linkCard` alongside the "Source Code" card. 
+- **Icon & Label**: Use a file icon (e.g. `file-text` in Feather icons) colored in Mint Accent (`#00E8A2`), with the title `License` and the subtitle `GNU GPL v3.0 (Open Source)`. Selecting this card must open the official GNU GPL v3.0 license web page.
 
 

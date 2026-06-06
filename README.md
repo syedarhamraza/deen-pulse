@@ -87,7 +87,7 @@ DeenPulse categorizes devices into three primary tiers:
 
 For setup instructions, system prerequisites, and guides on building and running the mobile application and Wear OS companion, please refer to the official documentation:
 
-**[DeenPulse Web Documentation](https://deenpulse-web.vercel.app/#docs)**
+**[DeenPulse Documentation](https://deenpulse-web.vercel.app/#docs)**
 
 ---
 

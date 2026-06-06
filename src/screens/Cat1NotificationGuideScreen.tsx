@@ -1,24 +1,24 @@
 import React from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Feather';
 import { triggerHaptic, HeaderFadeOverlay } from '../../App';
 
 interface Cat1NotificationGuideScreenProps {
-  onBack: () => void;
   onOpenSettings: () => void;
 }
 
 export function Cat1NotificationGuideScreen({
-  onBack,
   onOpenSettings,
 }: Cat1NotificationGuideScreenProps) {
+  const navigation = useNavigation();
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Pressable
           onPress={() => {
             triggerHaptic();
-            onBack();
+            navigation.goBack();
           }}
           style={({ pressed }) => [styles.backButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
         >
@@ -92,7 +92,7 @@ export function Cat1NotificationGuideScreen({
           style={({ pressed }) => [styles.secondaryButton, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
           onPress={() => {
             triggerHaptic();
-            onBack();
+            navigation.goBack();
           }}
         >
           <Icon name="check" size={16} color="#00F29D" />

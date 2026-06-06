@@ -1,15 +1,16 @@
 import React from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Icon from 'react-native-vector-icons/Feather';
 import { styles, triggerHaptic, HeaderFadeOverlay } from '../../App';
 import { ColorOSSwitch } from '../components/ColorOSSwitch';
+import { RootStackParamList } from '../navigation/types';
 
 interface NotificationsScreenProps {
-  onBack: () => void;
   onAllowNotificationsPress: () => void;
   onCapsuleFormatPress: () => void;
   onNotificationStylePress: () => void;
-  onOptimizePress: () => void;
   soundEnabled: boolean;
   onSoundToggle: (val: boolean) => void;
   capsuleFormatLabel: string;
@@ -20,11 +21,9 @@ interface NotificationsScreenProps {
 }
 
 export function NotificationsScreen({
-  onBack,
   onAllowNotificationsPress,
   onCapsuleFormatPress,
   onNotificationStylePress,
-  onOptimizePress,
   soundEnabled,
   onSoundToggle,
   capsuleFormatLabel,
@@ -33,13 +32,14 @@ export function NotificationsScreen({
   cat3NotificationMode = 'reminder',
   onCat3ModeChange,
 }: NotificationsScreenProps) {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   return (
     <View style={styles.screenContainer}>
       <View style={styles.subHeader}>
         <Pressable
           onPress={() => {
             triggerHaptic();
-            onBack();
+            navigation.goBack();
           }}
           style={({ pressed }) => [styles.backButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
         >
@@ -55,7 +55,11 @@ export function NotificationsScreen({
             style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
             onPress={() => {
               triggerHaptic();
-              onAllowNotificationsPress();
+              if (deviceCategory === 1) {
+                navigation.navigate('cat1_notification_guide');
+              } else {
+                onAllowNotificationsPress();
+              }
             }}
           >
             <Text style={styles.menuDetailLabel}>Allow Notifications</Text>
@@ -67,7 +71,7 @@ export function NotificationsScreen({
             style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
             onPress={() => {
               triggerHaptic();
-              onOptimizePress();
+              navigation.navigate('oem_guidance');
             }}
           >
             <Text style={styles.menuDetailLabel}>Optimize for Your Device</Text>

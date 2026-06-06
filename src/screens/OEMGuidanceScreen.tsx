@@ -7,6 +7,7 @@ import {
   ScrollView,
   NativeModules,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Feather';
 import { triggerHaptic } from '../../App';
 import { ColorOSSwitch } from '../components/ColorOSSwitch';
@@ -19,11 +20,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { PrayerCapsuleModule } = NativeModules;
 
-interface OEMGuidanceScreenProps {
-  onBack: () => void;
-}
-
-export function OEMGuidanceScreen({ onBack }: OEMGuidanceScreenProps) {
+export function OEMGuidanceScreen() {
+  const navigation = useNavigation();
   const [profile, setProfile] = useState<DeviceProfile | null>(null);
   const [forceCapsule, setForceCapsule] = useState(false);
 
@@ -125,7 +123,7 @@ export function OEMGuidanceScreen({ onBack }: OEMGuidanceScreenProps) {
         <Pressable
           onPress={() => {
             triggerHaptic();
-            onBack();
+            navigation.goBack();
           }}
           style={({ pressed }) => [styles.backButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
         >

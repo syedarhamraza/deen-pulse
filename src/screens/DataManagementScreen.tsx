@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, Pressable, Platform, PermissionsAndroid, StyleSheet } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Feather';
 import { triggerHaptic, HeaderFadeOverlay } from '../../App';
 import { ColorOSSwitch } from '../components/ColorOSSwitch';
 
 interface DataManagementScreenProps {
-  onBack: () => void;
   locationMode: 'gps' | 'cached';
   onLocationModeChange: (val: boolean) => void;
   onRequestGPS: () => void;
@@ -13,12 +13,12 @@ interface DataManagementScreenProps {
 }
 
 export function DataManagementScreen({
-  onBack,
   locationMode,
   onLocationModeChange,
   onRequestGPS,
   onClearCacheReset,
 }: DataManagementScreenProps) {
+  const navigation = useNavigation();
   const [gpsGranted, setGpsGranted] = useState<boolean | null>(null);
 
   const checkGPSPermission = async () => {
@@ -56,7 +56,7 @@ export function DataManagementScreen({
         <Pressable
           onPress={() => {
             triggerHaptic();
-            onBack();
+            navigation.goBack();
           }}
           style={({ pressed }) => [styles.backButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
         >

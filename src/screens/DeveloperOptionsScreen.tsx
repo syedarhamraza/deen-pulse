@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Feather';
 import { triggerHaptic, HeaderFadeOverlay } from '../../App';
 
 interface DeveloperOptionsScreenProps {
-  onBack: () => void;
   isSimulating: boolean;
   onSimulatePrayer: () => void;
   onClearSimulation: () => void;
@@ -12,19 +12,19 @@ interface DeveloperOptionsScreenProps {
 }
 
 export function DeveloperOptionsScreen({
-  onBack,
   isSimulating,
   onSimulatePrayer,
   onClearSimulation,
   onTriggerImmediateAlert,
 }: DeveloperOptionsScreenProps) {
+  const navigation = useNavigation();
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Pressable
           onPress={() => {
             triggerHaptic();
-            onBack();
+            navigation.goBack();
           }}
           style={({ pressed }) => [styles.backButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
         >

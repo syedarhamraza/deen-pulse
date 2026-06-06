@@ -1,7 +1,10 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { View, Text, ScrollView, Pressable, Animated, Linking } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Icon from 'react-native-vector-icons/Feather';
-import { styles, triggerHaptic, HeaderFadeOverlay, Screen } from '../../App';
+import { styles, triggerHaptic, HeaderFadeOverlay } from '../../App';
+import { RootStackParamList } from '../navigation/types';
 import { PrayerTime, NextPrayerInfo } from '../utils/prayerEngine';
 import { CountdownDisplay } from '../components/CountdownDisplay';
 import { PrayerCard } from '../components/PrayerCard';
@@ -109,7 +112,6 @@ function SkeletonLoader() {
 
 
 interface DashboardScreenProps {
-  onNavigate: (screen: Screen) => void;
   onRefresh: () => void;
   loading: boolean;
   error: string | null;
@@ -118,13 +120,13 @@ interface DashboardScreenProps {
 }
 
 export function DashboardScreen({
-  onNavigate,
   onRefresh,
   loading,
   error,
   prayerTimes,
   nextPrayer,
 }: DashboardScreenProps) {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { isWindowActive } = useActiveWindowDetector(nextPrayer);
   const scrollRef = useRef<ScrollView>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -157,7 +159,7 @@ export function DashboardScreen({
             style={({ pressed }) => [styles.headerButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
             onPress={() => {
               triggerHaptic();
-              onNavigate('settings');
+              navigation.navigate('settings');
             }}
           >
             <Icon name="settings" size={16} color="#00F29D" />

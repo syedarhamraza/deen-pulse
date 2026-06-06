@@ -2,7 +2,7 @@
 [![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20WearOS-00F29D?style=flat-square)](https://developer.android.com/)
 [![React Native](https://img.shields.io/badge/React%20Native-0.85+-61DAFB?style=flat-square)](https://reactnative.dev/)
 [![Node Version](https://img.shields.io/badge/Node-22%2B-339933?style=flat-square)](https://nodejs.org/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg?style=flat-square)](https://www.gnu.org/licenses/gpl-3.0)
 
 DeenPulse is a premium, privacy-focused utility built with React Native and Kotlin. It brings real-time Islamic prayer times directly to your Android device's status bar via a high-fidelity Live Capsule overlay, accompanied by a native Wear OS companion module.
 
@@ -55,8 +55,7 @@ You can access the official release distributions and build artifacts directly v
 ---
 
 ## OEM Optimization Tiers
-
-To prevent aggressive background termination by OEM task killers, DeenPulse categorizes devices into three primary tiers:
+DeenPulse categorizes devices into three primary tiers:
 
 | Tier | Target Manufacturers | Behavior & Mitigations |
 | :--- | :--- | :--- |
@@ -127,6 +126,6 @@ The React Native layer communicates with the native Android Wearable APIs. Confi
 
 ## License
 
-DeenPulse is open-source software licensed under the [MIT License](LICENSE).
+DeenPulse is open-source software licensed under the [GNU GPL v3.0 License](LICENSE).
 
 Developed by [Syed Arham Raza](https://github.com/syedarhamraza).

@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2026 Syed Arham Raza
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -304,6 +321,24 @@ export function AboutScreen() {
           <View style={s.linkTextWrap}>
             <Text style={s.linkTitle}>Source Code</Text>
             <Text style={s.linkDesc}>View on GitHub</Text>
+          </View>
+          <Icon name="external-link" size={14} color="rgba(255,255,255,0.3)" />
+        </Pressable>
+
+        {/* License Card */}
+        <Pressable
+          style={({ pressed }) => [s.linkCard, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
+          onPress={() => {
+            triggerHaptic();
+            Linking.openURL('https://www.gnu.org/licenses/gpl-3.0.html').catch(() => { });
+          }}
+        >
+          <View style={s.linkIconWrap}>
+            <Icon name="file-text" size={20} color="#00F29D" />
+          </View>
+          <View style={s.linkTextWrap}>
+            <Text style={s.linkTitle}>License</Text>
+            <Text style={s.linkDesc}>GNU GPL v3.0 (Open Source)</Text>
           </View>
           <Icon name="external-link" size={14} color="rgba(255,255,255,0.3)" />
         </Pressable>

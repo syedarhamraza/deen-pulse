@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2026 Syed Arham Raza
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { View, Text, ScrollView, Pressable, Animated, Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -225,13 +242,14 @@ export function DashboardScreen({
               style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
               onPress={() => {
                 triggerHaptic();
-                Linking.openURL('https://github.com/syedarhamraza').catch(err =>
+                Linking.openURL('https://github.com/syedarhamraza/deen-pulse').catch(err =>
                   console.warn('Failed to open URL:', err)
                 );
               }}
             >
               <Text style={styles.footerText}>
-                Syed Arham Raza · DeenPulse © {new Date().getFullYear()}
+                Syed Arham Raza · DeenPulse © {new Date().getFullYear()}{'\n'}
+                Licensed under GNU GPL v3.0
               </Text>
             </Pressable>
           </View>

@@ -2,6 +2,7 @@
   "name": "DeenPulse",
   "version": "1.0.1",
   "private": true,
+  "license": "GPL-3.0-only",
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",

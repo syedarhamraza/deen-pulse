@@ -4,7 +4,7 @@
 [![Node Version](https://img.shields.io/badge/Node-22%2B-339933?style=flat-square)](https://nodejs.org/)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg?style=flat-square)](https://www.gnu.org/licenses/gpl-3.0)
 
-DeenPulse is a premium, privacy-focused utility built with React Native and Kotlin. It brings real-time Islamic prayer times directly to your Android device's status bar via a high-fidelity Live Capsule overlay, accompanied by a native Wear OS companion module.
+DeenPulse turns your static notifications into glanceable Live Prayer Alerts for ongoing status, upcoming countdowns, and Wear OS syncs. Built around native Android APIs and tuned to bypass aggressive OEM battery limits.
 
 ---
 

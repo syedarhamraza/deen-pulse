@@ -65,49 +65,11 @@ DeenPulse categorizes devices into three primary tiers:
 
 ---
 
-## Getting Started
+## Documentation
 
-### Prerequisites
+For setup instructions, system prerequisites, and guides on building and running the mobile application and Wear OS companion, please refer to the official documentation:
 
-* **Node.js**: Version 22.x or higher
-* **Java Development Kit (JDK)**: JDK 17 (recommended for modern React Native)
-* **Android SDK**: API Level 34+ configured with Android Virtual Device (AVD) or a physical debugging device
-* **React Native CLI**: Installed globally or executed via `npx`
-
-### Installation
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/syedarhamraza/deen-pulse.git
-   cd deen-pulse
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-3. **Install Android dependencies:**
-   Ensure your Android environment variables are correctly set (e.g., `ANDROID_HOME`). Navigate to the `android/` directory to verify setup:
-   ```bash
-   cd android && ./gradlew clean && cd ..
-   ```
-
-### Running the Application
-
-1. **Start the Metro Bundler:**
-   ```bash
-   npm start
-   ```
-
-2. **Run the Phone Application (Android):**
-   In a separate terminal window, launch the React Native application:
-   ```bash
-   npm run android
-   ```
-
-3. **Build and Deploy the Wear OS Companion:**
-   Open the `android/` project in Android Studio. Select the `wear` run configuration and target a Wear OS emulator or connected smartwatch.
+👉 **[DeenPulse Web Documentation](https://deenpulse-web.vercel.app/#docs)**
 
 ---
 

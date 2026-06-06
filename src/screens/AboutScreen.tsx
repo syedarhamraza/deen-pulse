@@ -11,6 +11,7 @@ import {
   ImageBackground,
   NativeModules,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Feather';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { triggerHaptic, HeaderFadeOverlay } from '../../App';
@@ -23,10 +24,6 @@ import {
 } from '../utils/UpdateChecker';
 
 const { PrayerCapsuleModule } = NativeModules;
-
-interface AboutScreenProps {
-  onBack: () => void;
-}
 
 const FEATURES = [
   { icon: 'compass', title: 'Prayer Tracking', desc: 'Accurate times with live capsule overlay' },
@@ -41,7 +38,8 @@ const FREQUENCY_OPTIONS = [
   { value: '7', label: 'Every Week' },
 ];
 
-export function AboutScreen({ onBack }: AboutScreenProps) {
+export function AboutScreen() {
+  const navigation = useNavigation();
   const [appVersion, setAppVersion] = useState<string>('...');
   const [checking, setChecking] = useState(false);
   const [updateResult, setUpdateResult] = useState<UpdateInfo | null>(null);
@@ -120,7 +118,7 @@ export function AboutScreen({ onBack }: AboutScreenProps) {
         <Pressable
           onPress={() => {
             triggerHaptic();
-            onBack();
+            navigation.goBack();
           }}
           style={({ pressed }) => [s.backButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
         >

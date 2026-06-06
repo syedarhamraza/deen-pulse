@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   NativeModules,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Feather';
 import { triggerHaptic } from '../../App';
 import { ColorOSSwitch } from '../components/ColorOSSwitch';
@@ -19,11 +20,8 @@ const { PrayerCapsuleModule } = NativeModules;
 const AUTO_SYNC_WEAR_KEY = '@deenpulse_auto_sync_wear';
 const SYNC_SETTINGS_TO_WEAR_KEY = '@deenpulse_sync_settings_to_wear';
 
-interface WearOSControlScreenProps {
-  onBack: () => void;
-}
-
-export function WearOSControlScreen({ onBack }: WearOSControlScreenProps) {
+export function WearOSControlScreen() {
+  const navigation = useNavigation();
   const { isConnected, watchName, lastSyncTime, refreshSyncTime } = useWearConnection();
 
   const [autoSync, setAutoSync] = useState(true);
@@ -114,7 +112,7 @@ export function WearOSControlScreen({ onBack }: WearOSControlScreenProps) {
         <Pressable
           onPress={() => {
             triggerHaptic();
-            onBack();
+            navigation.goBack();
           }}
           style={({ pressed }) => [styles.backButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
         >

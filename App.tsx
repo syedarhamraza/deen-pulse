@@ -10,8 +10,9 @@ import {
   Linking,
   DeviceEventEmitter,
   Vibration,
-  Animated,
 } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PermissionsAndroid } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -30,17 +31,19 @@ import { PrayerRulesScreen } from './src/screens/PrayerRulesScreen';
 import { NotificationsScreen } from './src/screens/NotificationsScreen';
 import { DataManagementScreen } from './src/screens/DataManagementScreen';
 import { AboutScreen } from './src/screens/AboutScreen';
-import { OnboardingScreen } from './src/screens/OnboardingScreen';
 import { OEMGuidanceScreen } from './src/screens/OEMGuidanceScreen';
 import { WearOSControlScreen } from './src/screens/WearOSControlScreen';
 import { Cat1NotificationGuideScreen } from './src/screens/Cat1NotificationGuideScreen';
 import { DeveloperOptionsScreen } from './src/screens/DeveloperOptionsScreen';
 import { useDeviceProfile } from './src/hooks/useDeviceProfile';
-import { useGestureNavigation } from './src/hooks/useGestureNavigation';
+import { OnboardingRoute } from './src/navigation/OnboardingRoute';
+import { RootStackParamList } from './src/navigation/types';
 
 const { PrayerCapsuleModule } = NativeModules;
 
-export type Screen = 'dashboard' | 'settings' | 'prayer_rules' | 'notifications' | 'data_management' | 'about' | 'onboarding' | 'oem_guidance' | 'wearos_control' | 'cat1_notification_guide' | 'developer_options';
+const Stack = createNativeStackNavigator<RootStackParamList>();
+
+export type { Screen } from './src/navigation/types';
 
 const CALCULATION_LABELS: Record<CalculationMethod, string> = {
   auto: 'Auto-Detect by Region',
@@ -108,7 +111,6 @@ export default function App(): React.JSX.Element {
 function DeenPulseApp(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const { profile, isOnboardingComplete, isLoading: isProfileLoading, completeOnboarding } = useDeviceProfile();
-  const { currentScreen, navigateTo, goBack } = useGestureNavigation('dashboard');
   const [locationMode, setLocationMode] = useState<'gps' | 'cached'>('gps');
   const [juristicMethod, setJuristicMethod] = useState<'standard' | 'hanafi'>('standard');
   const [calculationRule, setCalculationRule] = useState<CalculationMethod>('auto');
@@ -124,31 +126,6 @@ function DeenPulseApp(): React.JSX.Element {
 
   const [showJuristicPicker, setShowJuristicPicker] = useState(false);
   const [showCalculationPicker, setShowCalculationPicker] = useState(false);
-
-  // Screen transition animations
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(25)).current;
-
-  useEffect(() => {
-    fadeAnim.setValue(0);
-    slideAnim.setValue(25);
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        damping: 24,
-        mass: 0.8,
-        stiffness: 130,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [currentScreen, fadeAnim, slideAnim]);
-
-  // Note: Android back-press & swipe gestures are now handled internally by useGestureNavigation hook
 
   // Custom alert modal config
   const [alertConfig, setAlertConfig] = useState<CustomAlertConfig>({
@@ -373,160 +350,130 @@ function DeenPulseApp(): React.JSX.Element {
     return () => sub.remove();
   }, [refresh]);
 
-  const renderScreen = () => {
-    if (isProfileLoading) {
-      return <View style={styles.screenContainer} />;
-    }
-    if (!isOnboardingComplete) {
-      return (
-        <OnboardingScreen
-          onComplete={(brand) => {
-            completeOnboarding(brand);
-            navigateTo('dashboard');
-          }}
-        />
-      );
-    }
-
-    switch (currentScreen) {
-      case 'settings':
-        return (
-          <SettingsScreen
-            onBack={goBack}
-            onNavigate={(screen) => navigateTo(screen)}
-          />
-        );
-      case 'prayer_rules':
-        return (
-          <PrayerRulesScreen
-            onBack={goBack}
-            onJuristicMethodPress={() => setShowJuristicPicker(true)}
-            onCalculationRulePress={() => setShowCalculationPicker(true)}
-            juristicMethodLabel={getJuristicLabel()}
-            calculationRuleLabel={getCalculationLabel()}
-          />
-        );
-      case 'notifications':
-        return (
-          <NotificationsScreen
-            onBack={goBack}
-            onAllowNotificationsPress={() => {
-              if (profile?.category === 1) {
-                navigateTo('cat1_notification_guide');
-              } else {
-                openAppNotificationSettings();
-              }
-            }}
-            onCapsuleFormatPress={() => setShowCapsuleFormatPicker(true)}
-            onNotificationStylePress={() => setShowNotificationStylePicker(true)}
-            onOptimizePress={() => navigateTo('oem_guidance')}
-            soundEnabled={soundEnabled}
-            onSoundToggle={async (val) => {
-              setSoundEnabled(val);
-              await AsyncStorage.setItem('@deenpulse_adhan_sound_enabled', val ? 'true' : 'false');
-            }}
-            capsuleFormatLabel={getCapsuleFormatLabel()}
-            notificationStyleLabel={getNotificationStyleLabel()}
-            deviceCategory={profile?.category}
-            cat3NotificationMode={cat3NotificationMode}
-            onCat3ModeChange={async (mode: 'ongoing' | 'reminder') => {
-              setCat3NotificationMode(mode);
-              await AsyncStorage.setItem('@deenpulse_cat3_notification_mode', mode);
-            }}
-          />
-        );
-      case 'oem_guidance':
-        return (
-          <OEMGuidanceScreen
-            onBack={goBack}
-          />
-        );
-      case 'wearos_control':
-        return (
-          <WearOSControlScreen
-            onBack={goBack}
-          />
-        );
-      case 'cat1_notification_guide':
-        return (
-          <Cat1NotificationGuideScreen
-            onBack={goBack}
-            onOpenSettings={() => openAppNotificationSettings()}
-          />
-        );
-      case 'data_management':
-        return (
-          <DataManagementScreen
-            onBack={goBack}
-            locationMode={locationMode}
-            onLocationModeChange={(val) => handleLocationModeChange(val)}
-            onRequestGPS={() => handleRequestGPS()}
-            onClearCacheReset={() => handleAppReset()}
-          />
-        );
-      case 'about':
-        return (
-          <AboutScreen
-            onBack={goBack}
-          />
-        );
-      case 'developer_options':
-        return (
-          <DeveloperOptionsScreen
-            onBack={goBack}
-            isSimulating={mockPrayerTimes !== null}
-            onSimulatePrayer={() => {
-              const now = new Date();
-              const mockDate = new Date(now.getTime() + 1000);
-              
-              const formatTimeStr = (d: Date) => {
-                let hours = d.getHours();
-                const minutes = d.getMinutes();
-                const ampm = hours >= 12 ? 'PM' : 'AM';
-                hours = hours % 12;
-                hours = hours ? hours : 12;
-                const minStr = minutes < 10 ? '0' + minutes : minutes;
-                return `${hours}:${minStr} ${ampm}`;
-              };
-
-              const mockPrayers = [
-                {
-                  name: 'Test Prayer',
-                  time: formatTimeStr(mockDate),
-                  date: mockDate
-                }
-              ];
-              setMockPrayerTimes(mockPrayers);
-            }}
-            onClearSimulation={() => {
-              setMockPrayerTimes(null);
-            }}
-            onTriggerImmediateAlert={() => {
-              PrayerCapsuleModule?.playPrayerAlert('Test Prayer');
-            }}
-          />
-        );
-      default: // dashboard
-        return (
-          <DashboardScreen
-            onNavigate={(screen) => navigateTo(screen)}
-            onRefresh={() => refresh()}
-            loading={loading && !mockPrayerTimes}
-            error={error}
-            prayerTimes={activePrayerTimes}
-            nextPrayer={nextPrayer}
-          />
-        );
-    }
-  };
-
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
-      <Animated.View style={[styles.flex1, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
-        {renderScreen()}
-      </Animated.View>
+      {isProfileLoading ? (
+        <View style={styles.flex1}>
+          <View style={styles.screenContainer} />
+        </View>
+      ) : (
+        <NavigationContainer>
+          <Stack.Navigator
+            initialRouteName={isOnboardingComplete ? 'dashboard' : 'onboarding'}
+            screenOptions={{
+              headerShown: false,
+              animation: 'slide_from_right',
+              gestureEnabled: true,
+            }}
+          >
+            <Stack.Screen name="onboarding" options={{ gestureEnabled: false }}>
+              {() => <OnboardingRoute onComplete={completeOnboarding} />}
+            </Stack.Screen>
+            <Stack.Screen name="dashboard" options={{ gestureEnabled: false }}>
+              {() => (
+                <DashboardScreen
+                  onRefresh={() => refresh()}
+                  loading={loading && !mockPrayerTimes}
+                  error={error}
+                  prayerTimes={activePrayerTimes}
+                  nextPrayer={nextPrayer}
+                />
+              )}
+            </Stack.Screen>
+            <Stack.Screen name="settings" component={SettingsScreen} />
+            <Stack.Screen name="prayer_rules">
+              {() => (
+                <PrayerRulesScreen
+                  onJuristicMethodPress={() => setShowJuristicPicker(true)}
+                  onCalculationRulePress={() => setShowCalculationPicker(true)}
+                  juristicMethodLabel={getJuristicLabel()}
+                  calculationRuleLabel={getCalculationLabel()}
+                />
+              )}
+            </Stack.Screen>
+            <Stack.Screen name="notifications">
+              {() => (
+                <NotificationsScreen
+                  onAllowNotificationsPress={() => openAppNotificationSettings()}
+                  onCapsuleFormatPress={() => setShowCapsuleFormatPicker(true)}
+                  onNotificationStylePress={() => setShowNotificationStylePicker(true)}
+                  soundEnabled={soundEnabled}
+                  onSoundToggle={async (val) => {
+                    setSoundEnabled(val);
+                    await AsyncStorage.setItem('@deenpulse_adhan_sound_enabled', val ? 'true' : 'false');
+                  }}
+                  capsuleFormatLabel={getCapsuleFormatLabel()}
+                  notificationStyleLabel={getNotificationStyleLabel()}
+                  deviceCategory={profile?.category}
+                  cat3NotificationMode={cat3NotificationMode}
+                  onCat3ModeChange={async (mode: 'ongoing' | 'reminder') => {
+                    setCat3NotificationMode(mode);
+                    await AsyncStorage.setItem('@deenpulse_cat3_notification_mode', mode);
+                  }}
+                />
+              )}
+            </Stack.Screen>
+            <Stack.Screen name="oem_guidance" component={OEMGuidanceScreen} />
+            <Stack.Screen name="wearos_control" component={WearOSControlScreen} />
+            <Stack.Screen name="cat1_notification_guide">
+              {() => (
+                <Cat1NotificationGuideScreen
+                  onOpenSettings={() => openAppNotificationSettings()}
+                />
+              )}
+            </Stack.Screen>
+            <Stack.Screen name="data_management">
+              {() => (
+                <DataManagementScreen
+                  locationMode={locationMode}
+                  onLocationModeChange={(val) => handleLocationModeChange(val)}
+                  onRequestGPS={() => handleRequestGPS()}
+                  onClearCacheReset={() => handleAppReset()}
+                />
+              )}
+            </Stack.Screen>
+            <Stack.Screen name="about" component={AboutScreen} />
+            <Stack.Screen name="developer_options">
+              {() => (
+                <DeveloperOptionsScreen
+                  isSimulating={mockPrayerTimes !== null}
+                  onSimulatePrayer={() => {
+                    const now = new Date();
+                    const mockDate = new Date(now.getTime() + 1000);
+
+                    const formatTimeStr = (d: Date) => {
+                      let hours = d.getHours();
+                      const minutes = d.getMinutes();
+                      const ampm = hours >= 12 ? 'PM' : 'AM';
+                      hours = hours % 12;
+                      hours = hours ? hours : 12;
+                      const minStr = minutes < 10 ? '0' + minutes : minutes;
+                      return `${hours}:${minStr} ${ampm}`;
+                    };
+
+                    const mockPrayers = [
+                      {
+                        name: 'Test Prayer',
+                        time: formatTimeStr(mockDate),
+                        date: mockDate,
+                      },
+                    ];
+                    setMockPrayerTimes(mockPrayers);
+                  }}
+                  onClearSimulation={() => {
+                    setMockPrayerTimes(null);
+                  }}
+                  onTriggerImmediateAlert={() => {
+                    PrayerCapsuleModule?.playPrayerAlert('Test Prayer');
+                  }}
+                />
+              )}
+            </Stack.Screen>
+          </Stack.Navigator>
+        </NavigationContainer>
+      )}
 
       {/* Status Bar Capsule Format Picker Modal */}
       <FluidModal

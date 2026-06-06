@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Feather';
 import { styles, triggerHaptic, HeaderFadeOverlay } from '../../App';
 
 interface PrayerRulesScreenProps {
-  onBack: () => void;
   onJuristicMethodPress: () => void;
   onCalculationRulePress: () => void;
   juristicMethodLabel: string;
@@ -12,19 +12,19 @@ interface PrayerRulesScreenProps {
 }
 
 export function PrayerRulesScreen({
-  onBack,
   onJuristicMethodPress,
   onCalculationRulePress,
   juristicMethodLabel,
   calculationRuleLabel,
 }: PrayerRulesScreenProps) {
+  const navigation = useNavigation();
   return (
     <View style={styles.screenContainer}>
       <View style={styles.subHeader}>
         <Pressable
           onPress={() => {
             triggerHaptic();
-            onBack();
+            navigation.goBack();
           }}
           style={({ pressed }) => [styles.backButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
         >

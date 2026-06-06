@@ -1,21 +1,20 @@
 import React from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Icon from 'react-native-vector-icons/Feather';
-import { styles, triggerHaptic, HeaderFadeOverlay, Screen } from '../../App';
+import { styles, triggerHaptic, HeaderFadeOverlay } from '../../App';
+import { RootStackParamList } from '../navigation/types';
 
-interface SettingsScreenProps {
-  onBack: () => void;
-  onNavigate: (screen: Screen) => void;
-}
-
-export function SettingsScreen({ onBack, onNavigate }: SettingsScreenProps) {
+export function SettingsScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   return (
     <View style={styles.screenContainer}>
       <View style={styles.subHeader}>
         <Pressable
           onPress={() => {
             triggerHaptic();
-            onBack();
+            navigation.goBack();
           }}
           style={({ pressed }) => [styles.backButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
         >
@@ -32,7 +31,7 @@ export function SettingsScreen({ onBack, onNavigate }: SettingsScreenProps) {
             style={({ pressed }) => [styles.settingsRowCard, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
             onPress={() => {
               triggerHaptic();
-              onNavigate('prayer_rules');
+              navigation.navigate('prayer_rules');
             }}
           >
             <View style={styles.rowIconContainer}>
@@ -50,7 +49,7 @@ export function SettingsScreen({ onBack, onNavigate }: SettingsScreenProps) {
             style={({ pressed }) => [styles.settingsRowCard, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
             onPress={() => {
               triggerHaptic();
-              onNavigate('notifications');
+              navigation.navigate('notifications');
             }}
           >
             <View style={styles.rowIconContainer}>
@@ -68,7 +67,7 @@ export function SettingsScreen({ onBack, onNavigate }: SettingsScreenProps) {
             style={({ pressed }) => [styles.settingsRowCard, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
             onPress={() => {
               triggerHaptic();
-              onNavigate('wearos_control');
+              navigation.navigate('wearos_control');
             }}
           >
             <View style={styles.rowIconContainer}>
@@ -86,7 +85,7 @@ export function SettingsScreen({ onBack, onNavigate }: SettingsScreenProps) {
             style={({ pressed }) => [styles.settingsRowCard, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
             onPress={() => {
               triggerHaptic();
-              onNavigate('data_management');
+              navigation.navigate('data_management');
             }}
           >
             <View style={styles.rowIconContainer}>
@@ -104,7 +103,7 @@ export function SettingsScreen({ onBack, onNavigate }: SettingsScreenProps) {
             style={({ pressed }) => [styles.settingsRowCard, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
             onPress={() => {
               triggerHaptic();
-              onNavigate('about');
+              navigation.navigate('about');
             }}
           >
             <View style={styles.rowIconContainer}>
@@ -122,7 +121,7 @@ export function SettingsScreen({ onBack, onNavigate }: SettingsScreenProps) {
             style={({ pressed }) => [styles.settingsRowCard, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
             onPress={() => {
               triggerHaptic();
-              onNavigate('developer_options');
+              navigation.navigate('developer_options');
             }}
           >
             <View style={styles.rowIconContainer}>

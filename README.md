@@ -12,17 +12,29 @@ DeenPulse is a premium, privacy-focused utility built with React Native and Kotl
 
 You can access the official release distributions and build artifacts directly via the portal below:
 
-* **[Download DeenPulse](https://deenpulse.example.com)** — Get the latest stable Android APKs, Wear OS bundle packages, and release logs.
+* **[Download DeenPulse](https://deenpulse-web.vercel.app/#downloads)** — Get the latest stable Android APKs, Wear OS bundle packages, and release logs.
 
 ---
 
 ## Screenshots
 
-*Place your application screenshots in the assets directory (e.g. `src/assets/screenshots/`) and reference them below:*
+### Mobile & Lockscreen UI
 
-| Mobile Dashboard | Live Status Bar Capsule | Wear OS Complications & Tiles |
-| :---: | :---: | :---: |
-| ![Mobile Dashboard UI](https://via.placeholder.com/300x600?text=Mobile+Dashboard+UI) | ![Live Status Bar Capsule](https://via.placeholder.com/300x600?text=Live+Capsule+UI) | ![Wear OS Tiles](https://via.placeholder.com/300x300?text=Wear+OS+Complications) |
+| Mobile Dashboard | Lockscreen Live Capsule |
+| :---: | :---: |
+| ![Mobile Dashboard UI](src/assets/screenshots/dashboard.jpeg) | ![Lockscreen Live Capsule](src/assets/screenshots/lockscreen_livespace.jpeg) |
+
+### Live Status Bar Capsule (System Overlay)
+
+| Collapsed State | Expanded Notification State |
+| :---: | :---: |
+| ![Live Status Bar Capsule Collapsed](src/assets/screenshots/capsule.jpeg) | ![Live Status Bar Capsule Expanded](src/assets/screenshots/capsule_expanded.jpeg) |
+
+### Wear OS Companion
+
+| Watch App Interface |
+| :---: |
+| ![Wear OS Tiles & Complications](src/assets/screenshots/wearos.jpeg) |
 
 ---
 
@@ -69,7 +81,7 @@ DeenPulse categorizes devices into three primary tiers:
 
 For setup instructions, system prerequisites, and guides on building and running the mobile application and Wear OS companion, please refer to the official documentation:
 
-👉 **[DeenPulse Web Documentation](https://deenpulse-web.vercel.app/#docs)**
+**[DeenPulse Web Documentation](https://deenpulse-web.vercel.app/#docs)**
 
 ---
 

@@ -32,9 +32,9 @@ You can access the official release distributions and build artifacts directly v
 
 ### Wear OS Companion
 
-| Watch App Interface |
-| :---: |
-| ![Wear OS Tiles & Complications](src/assets/screenshots/wearos.jpeg) |
+| Watch App Interface | Quick-Swipe Tile | Watch Face Complications |
+| :---: | :---: | :---: |
+| ![Watch App Interface](src/assets/screenshots/wearos_app_interface.jpeg) | ![Quick-Swipe Tile](src/assets/screenshots/wearos_tile.jpeg) | ![Watch Face Complications](src/assets/screenshots/wearos_watchface_complication.jpeg) |
 
 ---
 

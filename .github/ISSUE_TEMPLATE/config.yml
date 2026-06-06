@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: DeenPulse Official Documentation
+    url: https://deenpulse-web.vercel.app/#docs
+    about: Read guides, setup prerequisites, and API details.
+  - name: GitHub Community Discussions
+    url: https://github.com/syedarhamraza/deen-pulse/discussions
+    about: Ask questions, share ideas, and connect with other developers.

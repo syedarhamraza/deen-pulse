@@ -104,6 +104,14 @@ The React Native layer communicates with the native Android Wearable APIs. Confi
 
 ---
 
+## Contributing
+
+Contributions are welcome! Please follow these guidelines:
+- **Issues**: Before starting, please open an issue to discuss your proposal. Use our **[Bug Report](.github/ISSUE_TEMPLATE/bug_report.md)** or **[Feature Request](.github/ISSUE_TEMPLATE/feature_request.md)** templates.
+- **Pull Requests**: Submit a PR to the `main` branch. Please fill out the **[Pull Request Template](.github/pull_request_template.md)** completely and ensure all new files have the GPL v3.0 license header.
+
+---
+
 ## License
 
 DeenPulse is open-source software licensed under the [GNU GPL v3.0 License](LICENSE).

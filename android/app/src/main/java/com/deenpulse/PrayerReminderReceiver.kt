@@ -24,29 +24,93 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.PowerManager
+import android.util.Log
 import androidx.core.app.NotificationCompat
 
 /**
  * BroadcastReceiver that fires when an AlarmManager-scheduled prayer reminder triggers.
- * Used exclusively for Category 3 devices (Samsung, Xiaomi, Pixel, etc.) that opt out of
- * the continuous foreground service in favor of one-shot 15-minute-before reminders.
+ *
+ * Used for:
+ *  - Category 2 (Vivo/iQOO) — triggered by [AlarmManager.setAlarmClock], which forces
+ *    the device to exit Doze mode and fires exactly on time, bypassing Funtouch OS
+ *    deep-sleep deferral.
+ *  - Category 3 (Samsung/Xiaomi/Pixel, etc.) — triggered by setExactAndAllowWhileIdle().
+ *
+ * Bug 1 Fix — Vivo stale-notification guard:
+ *   Because Funtouch OS can still batch-deliver deferred alarms in edge cases, this
+ *   receiver checks whether the alarm fired more than [STALE_THRESHOLD_MS] late.
+ *   If so, the notification is silently discarded to avoid showing a prayer reminder
+ *   after the prayer time has already passed.
+ *
+ * WakeLock:
+ *   A short partial WakeLock is acquired immediately on [onReceive] to prevent the
+ *   CPU from sleeping before the notification is posted, since [onReceive] runs on
+ *   the main thread with no guaranteed CPU retention on restrictive OEMs.
  */
 class PrayerReminderReceiver : BroadcastReceiver() {
 
     companion object {
         const val EXTRA_PRAYER_NAME = "prayer_name"
         const val EXTRA_PRAYER_TIME = "prayer_time"
+
+        /**
+         * The epoch-millisecond time at which this alarm was originally scheduled to fire.
+         * Used to detect Funtouch OS stale-delivery (Bug 1 fix).
+         */
+        const val EXTRA_SCHEDULED_TIME = "scheduled_time"
+
         const val CHANNEL_ID = "deenpulse_prayer_reminder"
         const val CHANNEL_NAME = "Prayer Reminders"
         private const val NOTIFICATION_ID_BASE = 8000
+        private const val TAG = "PrayerReminderReceiver"
+
+        /** Alarms delayed more than 5 minutes are considered stale and are discarded. */
+        private const val STALE_THRESHOLD_MS = 5 * 60 * 1000L
+
+        /** WakeLock timeout — enough to post a notification; auto-releases as a safety net. */
+        private const val WAKELOCK_TIMEOUT_MS = 15_000L
     }
 
     override fun onReceive(context: Context, intent: Intent) {
-        val prayerName = intent.getStringExtra(EXTRA_PRAYER_NAME) ?: return
-        val prayerTime = intent.getStringExtra(EXTRA_PRAYER_TIME) ?: ""
+        // ── 1. Acquire WakeLock immediately to keep CPU alive ──────────────────
+        val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+        val wakeLock = powerManager.newWakeLock(
+            PowerManager.PARTIAL_WAKE_LOCK,
+            "DeenPulse::ReminderNotificationWakeLock"
+        )
+        wakeLock.acquire(WAKELOCK_TIMEOUT_MS)
 
-        createNotificationChannel(context)
-        showReminderNotification(context, prayerName, prayerTime)
+        try {
+            val prayerName = intent.getStringExtra(EXTRA_PRAYER_NAME) ?: run {
+                Log.e(TAG, "onReceive: missing prayer name — discarding")
+                return
+            }
+            val prayerTime = intent.getStringExtra(EXTRA_PRAYER_TIME) ?: ""
+            val scheduledTime = intent.getLongExtra(EXTRA_SCHEDULED_TIME, 0L)
+
+            // ── 2. Stale-notification guard (Bug 1 — Funtouch OS / Vivo fix) ──
+            if (scheduledTime > 0L) {
+                val delayMs = System.currentTimeMillis() - scheduledTime
+                if (delayMs > STALE_THRESHOLD_MS) {
+                    Log.w(
+                        TAG,
+                        "Alarm for $prayerName delivered ${delayMs / 1000}s late " +
+                            "(threshold=${STALE_THRESHOLD_MS / 1000}s). " +
+                            "Discarding stale notification."
+                    )
+                    return
+                }
+            }
+
+            // ── 3. Create channel and post notification ────────────────────────
+            createNotificationChannel(context)
+            showReminderNotification(context, prayerName, prayerTime)
+
+        } finally {
+            // Always release the WakeLock, even if we returned early
+            if (wakeLock.isHeld) wakeLock.release()
+        }
     }
 
     private fun createNotificationChannel(context: Context) {

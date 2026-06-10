@@ -35,6 +35,12 @@ interface NotificationsScreenProps {
   deviceCategory?: number;
   cat3NotificationMode?: 'ongoing' | 'reminder';
   onCat3ModeChange?: (mode: 'ongoing' | 'reminder') => void;
+  /** Cat 1 (OPPO/Realme/OnePlus) notification mode */
+  cat1NotificationMode?: 'alltime' | 'prior';
+  /** Lead time in minutes before prayer to show the prior live notification */
+  cat1PriorLeadTime?: 5 | 10 | 15;
+  onCat1ModeChange?: (mode: 'alltime' | 'prior') => void;
+  onCat1LeadTimeChange?: (minutes: 5 | 10 | 15) => void;
 }
 
 export function NotificationsScreen({
@@ -48,6 +54,10 @@ export function NotificationsScreen({
   deviceCategory,
   cat3NotificationMode = 'reminder',
   onCat3ModeChange,
+  cat1NotificationMode = 'alltime',
+  cat1PriorLeadTime = 15,
+  onCat1ModeChange,
+  onCat1LeadTimeChange,
 }: NotificationsScreenProps) {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   return (
@@ -109,6 +119,116 @@ export function NotificationsScreen({
               }}
             />
           </View>
+
+          {/* ── Cat 1 (OPPO/Realme/OnePlus) Notification Mode ─────────────────────── */}
+          {deviceCategory === 1 && (
+            <View style={styles.menuDetailCard}>
+              <Text style={styles.menuDetailLabel}>Notification Mode</Text>
+              <Text style={styles.menuDetailDesc}>
+                Choose how DeenPulse notifies you about upcoming prayers.
+              </Text>
+              <View style={localStyles.radioGroup}>
+
+                {/* Option A — All-Time Live Notification */}
+                <Pressable
+                  onPress={() => {
+                    triggerHaptic();
+                    onCat1ModeChange?.('alltime');
+                  }}
+                  style={({ pressed }) => [
+                    localStyles.radioButton,
+                    cat1NotificationMode === 'alltime'
+                      ? localStyles.radioButtonSelected
+                      : localStyles.radioButtonUnselected,
+                    { opacity: pressed ? 0.7 : 1 },
+                  ]}
+                >
+                  <View style={[
+                    localStyles.radioDot,
+                    cat1NotificationMode === 'alltime'
+                      ? localStyles.radioDotSelected
+                      : localStyles.radioDotUnselected,
+                  ]}>
+                    {cat1NotificationMode === 'alltime' && (
+                      <View style={localStyles.radioDotFill} />
+                    )}
+                  </View>
+                  <View style={localStyles.radioLabelWrap}>
+                    <Text style={localStyles.radioTitle}>All-Time Live Notification</Text>
+                    <Text style={localStyles.radioSubtitle}>
+                      Persistent live countdown runs all day in the notification bar.
+                    </Text>
+                  </View>
+                </Pressable>
+
+                {/* Option B — Prior Live Notification */}
+                <Pressable
+                  onPress={() => {
+                    triggerHaptic();
+                    onCat1ModeChange?.('prior');
+                  }}
+                  style={({ pressed }) => [
+                    localStyles.radioButton,
+                    cat1NotificationMode === 'prior'
+                      ? localStyles.radioButtonSelected
+                      : localStyles.radioButtonUnselected,
+                    { opacity: pressed ? 0.7 : 1 },
+                  ]}
+                >
+                  <View style={[
+                    localStyles.radioDot,
+                    cat1NotificationMode === 'prior'
+                      ? localStyles.radioDotSelected
+                      : localStyles.radioDotUnselected,
+                  ]}>
+                    {cat1NotificationMode === 'prior' && (
+                      <View style={localStyles.radioDotFill} />
+                    )}
+                  </View>
+                  <View style={localStyles.radioLabelWrap}>
+                    <Text style={localStyles.radioTitle}>Prior Live Notification</Text>
+                    <Text style={localStyles.radioSubtitle}>
+                      Live countdown starts before each prayer and auto-dismisses after.
+                    </Text>
+                  </View>
+                </Pressable>
+
+              </View>
+
+              {/* Lead-time chip selector — only visible in 'prior' mode */}
+              {cat1NotificationMode === 'prior' && (
+                <View style={localStyles.leadTimeSection}>
+                  <Text style={localStyles.leadTimeLabel}>Notify me before prayer:</Text>
+                  <View style={localStyles.chipRow}>
+                    {([5, 10, 15] as const).map((mins) => (
+                      <Pressable
+                        key={mins}
+                        onPress={() => {
+                          triggerHaptic();
+                          onCat1LeadTimeChange?.(mins);
+                        }}
+                        style={({ pressed }) => [
+                          localStyles.chip,
+                          cat1PriorLeadTime === mins
+                            ? localStyles.chipSelected
+                            : localStyles.chipUnselected,
+                          { opacity: pressed ? 0.7 : 1 },
+                        ]}
+                      >
+                        <Text style={[
+                          localStyles.chipText,
+                          cat1PriorLeadTime === mins && localStyles.chipTextSelected,
+                        ]}>
+                          {mins} min
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
+              )}
+            </View>
+          )}
+
 
           {/* Cat3 Notification Mode Toggle */}
           {deviceCategory === 3 && (
@@ -280,4 +400,46 @@ const localStyles = StyleSheet.create({
     fontSize: 11,
     marginTop: 2,
   },
+  // ── Prior Lead-Time Chip Selector ─────────────────────────────────────────
+  leadTimeSection: {
+    marginTop: 14,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.06)',
+  },
+  leadTimeLabel: {
+    color: 'rgba(255,255,255,0.55)',
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+    marginBottom: 10,
+  },
+  chipRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  chip: {
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  chipSelected: {
+    borderColor: '#00F29D',
+    backgroundColor: 'rgba(0, 242, 157, 0.12)',
+  },
+  chipUnselected: {
+    borderColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+  },
+  chipText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.45)',
+  },
+  chipTextSelected: {
+    color: '#00F29D',
+  },
 });
+

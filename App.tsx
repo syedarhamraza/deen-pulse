@@ -136,6 +136,8 @@ function DeenPulseApp(): React.JSX.Element {
   const [notificationStyle, setNotificationStyle] = useState<'standard' | 'with_time' | 'with_countdown'>('standard');
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [cat3NotificationMode, setCat3NotificationMode] = useState<'ongoing' | 'reminder'>('reminder');
+  const [cat1NotificationMode, setCat1NotificationMode] = useState<'alltime' | 'prior'>('alltime');
+  const [cat1PriorLeadTime, setCat1PriorLeadTime] = useState<5 | 10 | 15>(15);
   const [mockPrayerTimes, setMockPrayerTimes] = useState<PrayerTime[] | null>(null);
 
   const [showCapsuleFormatPicker, setShowCapsuleFormatPicker] = useState(false);
@@ -160,7 +162,17 @@ function DeenPulseApp(): React.JSX.Element {
   );
 
   const activePrayerTimes = mockPrayerTimes || prayerTimes;
-  const nextPrayer = usePrayerCountdown(activePrayerTimes, true, capsuleFormat, notificationStyle, location, profile?.category ?? 3, cat3NotificationMode);
+  const nextPrayer = usePrayerCountdown(
+    activePrayerTimes,
+    true,
+    capsuleFormat,
+    notificationStyle,
+    location,
+    profile?.category ?? 3,
+    cat3NotificationMode,
+    cat1NotificationMode,
+    cat1PriorLeadTime
+  );
 
   // Load preferences and setup guide state on startup
   useEffect(() => {
@@ -173,6 +185,8 @@ function DeenPulseApp(): React.JSX.Element {
         const style = await AsyncStorage.getItem('@deenpulse_notification_style');
         const sound = await AsyncStorage.getItem('@deenpulse_adhan_sound_enabled');
         const cat3Mode = await AsyncStorage.getItem('@deenpulse_cat3_notification_mode');
+        const cat1Mode = await AsyncStorage.getItem('@deenpulse_cat1_notification_mode');
+        const cat1Lead = await AsyncStorage.getItem('@deenpulse_prior_lead_time');
 
         if (mode !== null) setLocationMode(mode as 'gps' | 'cached');
         if (juristic !== null) setJuristicMethod(juristic as 'standard' | 'hanafi');
@@ -181,6 +195,8 @@ function DeenPulseApp(): React.JSX.Element {
         if (style !== null) setNotificationStyle(style as 'standard' | 'with_time' | 'with_countdown');
         if (sound !== null) setSoundEnabled(sound === 'true');
         if (cat3Mode !== null) setCat3NotificationMode(cat3Mode as 'ongoing' | 'reminder');
+        if (cat1Mode !== null) setCat1NotificationMode(cat1Mode as 'alltime' | 'prior');
+        if (cat1Lead !== null) setCat1PriorLeadTime(parseInt(cat1Lead, 10) as 5 | 10 | 15);
       } catch (e) {
         console.warn('Failed to load settings:', e);
       }
@@ -367,6 +383,37 @@ function DeenPulseApp(): React.JSX.Element {
     return () => sub.remove();
   }, [refresh]);
 
+  /**
+   * Bug 2 Fix — ColorOS Stuck-Active Self-Healing.
+   *
+   * Every time the app comes to the foreground (MainActivity.onResume fires),
+   * verify that AlarmManager PendingIntents still exist in the OS.
+   * ColorOS and Funtouch OS can wipe them when they kill background processes.
+   * If any are missing, verifyAndReconcileAlarms() re-schedules them automatically.
+   */
+  useEffect(() => {
+    const sub = DeviceEventEmitter.addListener('onAppForegrounded', async () => {
+      if (!PrayerCapsuleModule || !activePrayerTimes || activePrayerTimes.length === 0) return;
+      try {
+        // Build the same prayer JSON format that scheduleReminders() expects
+        const prayersForReconcile = activePrayerTimes
+          .filter(p => p.date.getTime() > Date.now())
+          .map(p => ({ name: p.name, timestamp: p.date.getTime() }));
+        if (prayersForReconcile.length === 0) return;
+
+        const reconciled: boolean = await PrayerCapsuleModule.verifyAndReconcileAlarms(
+          JSON.stringify(prayersForReconcile)
+        );
+        if (reconciled) {
+          console.log('[DeenPulse] Alarm reconciliation: PendingIntents were missing and have been re-scheduled.');
+        }
+      } catch (e) {
+        console.warn('[DeenPulse] verifyAndReconcileAlarms failed:', e);
+      }
+    });
+    return () => sub.remove();
+  }, [activePrayerTimes]);
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
@@ -430,6 +477,29 @@ function DeenPulseApp(): React.JSX.Element {
                   onCat3ModeChange={async (mode: 'ongoing' | 'reminder') => {
                     setCat3NotificationMode(mode);
                     await AsyncStorage.setItem('@deenpulse_cat3_notification_mode', mode);
+                  }}
+                  cat1NotificationMode={cat1NotificationMode}
+                  cat1PriorLeadTime={cat1PriorLeadTime}
+                  onCat1ModeChange={async (mode: 'alltime' | 'prior') => {
+                    setCat1NotificationMode(mode);
+                    await AsyncStorage.setItem('@deenpulse_cat1_notification_mode', mode);
+                    PrayerCapsuleModule?.setCat1NotificationMode(mode);
+                    // If switching to alltime, stop any pending prior-window alarms
+                    if (mode === 'alltime') {
+                      PrayerCapsuleModule?.cancelReminders();
+                    }
+                  }}
+                  onCat1LeadTimeChange={async (minutes: 5 | 10 | 15) => {
+                    setCat1PriorLeadTime(minutes);
+                    await AsyncStorage.setItem('@deenpulse_prior_lead_time', String(minutes));
+                    PrayerCapsuleModule?.setPriorNotificationLeadTime(minutes);
+                    // Re-schedule with new lead time if in prior mode
+                    if (cat1NotificationMode === 'prior' && activePrayerTimes.length > 0) {
+                      const prayersJson = JSON.stringify(
+                        activePrayerTimes.map(p => ({ name: p.name, timestamp: p.date.getTime() }))
+                      );
+                      PrayerCapsuleModule?.scheduleReminders(prayersJson);
+                    }
                   }}
                 />
               )}

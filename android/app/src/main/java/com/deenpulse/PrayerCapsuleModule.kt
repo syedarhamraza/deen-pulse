@@ -20,10 +20,13 @@ package com.deenpulse
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.provider.AlarmClock
+import android.provider.Settings
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.facebook.react.bridge.Arguments
@@ -39,6 +42,7 @@ class PrayerCapsuleModule(reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext) {
 
     companion object {
+        private const val TAG = "PrayerCapsuleModule"
         private var instanceContext: ReactContext? = null
 
         fun sendEvent(eventName: String, params: String?) {
@@ -52,6 +56,8 @@ class PrayerCapsuleModule(reactContext: ReactApplicationContext) :
     }
 
     override fun getName(): String = "PrayerCapsuleModule"
+
+    // ── Foreground Service (Cat 1 Mode A — all-time live notification) ─────────
 
     @ReactMethod
     fun updateLiveCapsule(prayersJson: String, capsuleFormat: String, notificationStyle: String) {
@@ -68,6 +74,8 @@ class PrayerCapsuleModule(reactContext: ReactApplicationContext) :
         val intent = Intent(reactApplicationContext, PrayerCapsuleForegroundService::class.java)
         reactApplicationContext.stopService(intent)
     }
+
+    // ── Native OS Alarm / Timer ────────────────────────────────────────────────
 
     @ReactMethod
     fun setNativeOSAlarm(hour: Int, minute: Int, label: String) {
@@ -100,6 +108,21 @@ class PrayerCapsuleModule(reactContext: ReactApplicationContext) :
         }
     }
 
+    // ── Device Category & Notification Preferences ────────────────────────────
+
+    @ReactMethod
+    fun setDeviceCategory(category: Int) {
+        val prefs = reactApplicationContext.getSharedPreferences("DeenPulsePrefs", Context.MODE_PRIVATE)
+        prefs.edit().putInt("device_category", category).apply()
+        Log.d(TAG, "setDeviceCategory: $category")
+    }
+
+    @ReactMethod
+    fun setForcePromotedNotification(enabled: Boolean) {
+        val prefs = reactApplicationContext.getSharedPreferences("DeenPulsePrefs", Context.MODE_PRIVATE)
+        prefs.edit().putBoolean("isLiveNotificationForced", enabled).apply()
+    }
+
     @ReactMethod
     fun setBackgroundInterval(intervalMs: Double) {
         val prefs = reactApplicationContext.getSharedPreferences("DeenPulsePrefs", android.content.Context.MODE_PRIVATE)
@@ -107,24 +130,182 @@ class PrayerCapsuleModule(reactContext: ReactApplicationContext) :
     }
 
     /**
-     * Push prayer timetable + coordinates to connected Wear OS watch.
-     * Called from React Native after prayer times are loaded/refreshed.
+     * Persist the Cat 1 notification mode selection.
+     * @param mode "alltime" or "prior"
      */
+    @ReactMethod
+    fun setCat1NotificationMode(mode: String) {
+        val prefs = reactApplicationContext.getSharedPreferences("DeenPulsePrefs", Context.MODE_PRIVATE)
+        prefs.edit().putString("cat1_notification_mode", mode).apply()
+        Log.d(TAG, "setCat1NotificationMode: $mode")
+    }
+
+    /**
+     * Persist the prior-window lead time for Cat 1 Mode B.
+     * @param minutes 5, 10, or 15
+     */
+    @ReactMethod
+    fun setPriorNotificationLeadTime(minutes: Int) {
+        val prefs = reactApplicationContext.getSharedPreferences("DeenPulsePrefs", Context.MODE_PRIVATE)
+        prefs.edit().putInt("prior_lead_time_minutes", minutes).apply()
+        Log.d(TAG, "setPriorNotificationLeadTime: $minutes min")
+    }
+
+    // ── Alarm Scheduling (Bug 1 Fix + Cat 1 Mode B) ───────────────────────────
+
+    /**
+     * Schedule all prayer alarms from the provided JSON array.
+     * Routing by device category is handled in [AlarmSchedulerHelper].
+     *
+     * JSON format: [{ "name": "Fajr", "timestamp": 1234567890000 }, ...]
+     */
+    @ReactMethod
+    fun scheduleReminders(prayersJson: String) {
+        val context = reactApplicationContext
+        val prefs = context.getSharedPreferences("DeenPulsePrefs", Context.MODE_PRIVATE)
+
+        // Guard: exact alarm permission required on API 31+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as android.app.AlarmManager
+            if (!alarmManager.canScheduleExactAlarms()) {
+                Log.e(TAG, "scheduleReminders: exact alarm permission not granted — aborting")
+                return
+            }
+        }
+
+        val category = prefs.getInt("device_category", 3)
+        val cat1Mode = prefs.getString("cat1_notification_mode", "alltime") ?: "alltime"
+        val leadMinutes = prefs.getInt("prior_lead_time_minutes", 15)
+
+        AlarmSchedulerHelper.scheduleAll(context, prayersJson, category, cat1Mode, leadMinutes)
+    }
+
+    /**
+     * Cancel all active prayer reminder alarms.
+     */
+    @ReactMethod
+    fun cancelReminders() {
+        val context = reactApplicationContext
+        val prefs = context.getSharedPreferences("DeenPulsePrefs", Context.MODE_PRIVATE)
+        val count = prefs.getInt("scheduled_reminder_count", 10)
+        AlarmSchedulerHelper.cancelAll(context, count)
+    }
+
+    // ── Bug 2 Fix — Self-Healing Alarm Reconciliation ─────────────────────────
+
+    /**
+     * Verify that all expected AlarmManager PendingIntents still exist in the OS.
+     * If any are missing (e.g. wiped by ColorOS process reaper), re-schedules all.
+     *
+     * Called from the JS layer every time [MainActivity.onResume] fires via the
+     * "onAppForegrounded" event. This is the core fix for Bug 2.
+     *
+     * Resolves with `true` if alarms were missing and re-scheduled, `false` if all intact.
+     */
+    @ReactMethod
+    fun verifyAndReconcileAlarms(prayersJson: String, promise: Promise) {
+        try {
+            val context = reactApplicationContext
+            val prefs = context.getSharedPreferences("DeenPulsePrefs", Context.MODE_PRIVATE)
+            val category = prefs.getInt("device_category", 3)
+            val cat1Mode = prefs.getString("cat1_notification_mode", "alltime") ?: "alltime"
+            val leadMinutes = prefs.getInt("prior_lead_time_minutes", 15)
+
+            // Cat 1 Mode A uses a persistent foreground service — no AlarmManager to verify
+            if (category == 1 && cat1Mode == "alltime") {
+                promise.resolve(false)
+                return
+            }
+
+            val reconciled = AlarmSchedulerHelper.verifyAndReconcile(
+                context, prayersJson, category, cat1Mode, leadMinutes
+            )
+            Log.d(TAG, "verifyAndReconcileAlarms: reconciled=$reconciled")
+            promise.resolve(reconciled)
+        } catch (e: Exception) {
+            Log.e(TAG, "verifyAndReconcileAlarms failed", e)
+            promise.reject("RECONCILE_ERROR", e.message, e)
+        }
+    }
+
+    // ── OEM Settings Navigation ────────────────────────────────────────────────
+
+    /**
+     * Navigate directly to the OEM-specific autostart / background permission settings screen.
+     * Falls back to battery optimization settings if the OEM-specific intent fails.
+     */
+    @ReactMethod
+    fun navigateToOEMSettings() {
+        val context = reactApplicationContext
+        val manufacturer = Build.MANUFACTURER.lowercase()
+        val brand = Build.BRAND.lowercase()
+
+        val intent = Intent().apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
+
+        val launched = when {
+            manufacturer.contains("vivo") || brand.contains("vivo") ||
+            manufacturer.contains("iqoo") || brand.contains("iqoo") -> {
+                // Vivo (Funtouch OS / OriginOS) — Autostart Manager
+                tryLaunchComponent(
+                    context, intent,
+                    "com.vivo.permissionmanager",
+                    "com.vivo.permissionmanager.activity.BgStartUpManagerActivity"
+                ) || tryLaunchComponent(
+                    context, intent,
+                    "com.iqoo.secure",
+                    "com.iqoo.secure.ui.phoneoptimize.AddWhiteListActivity"
+                )
+            }
+            manufacturer.contains("oppo") || brand.contains("oppo") ||
+            manufacturer.contains("realme") || brand.contains("realme") ||
+            manufacturer.contains("oneplus") || brand.contains("oneplus") -> {
+                // ColorOS — Auto Launch settings
+                tryLaunchComponent(
+                    context, intent,
+                    "com.coloros.safecenter",
+                    "com.coloros.safecenter.permission.startup.StartupAppListActivity"
+                ) || tryLaunchComponent(
+                    context, intent,
+                    "com.oplus.safecenter",
+                    "com.oplus.safecenter.permission.startup.StartupAppListActivity"
+                )
+            }
+            else -> false
+        }
+
+        if (!launched) {
+            // Universal fallback — battery optimization list
+            try {
+                val fallback = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                fallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(fallback)
+            } catch (e: Exception) {
+                Log.e(TAG, "All OEM settings navigation attempts failed", e)
+            }
+        }
+    }
+
+    private fun tryLaunchComponent(
+        context: Context,
+        intent: Intent,
+        pkg: String,
+        cls: String
+    ): Boolean {
+        return try {
+            intent.component = ComponentName(pkg, cls)
+            context.startActivity(intent)
+            true
+        } catch (e: Exception) {
+            Log.w(TAG, "Could not launch $pkg/$cls: ${e.message}")
+            false
+        }
+    }
+
+    // ── Wear OS ───────────────────────────────────────────────────────────────
+
     @ReactMethod
     fun syncToWear(prayersJson: String, lat: Double, lng: Double) {
         WearDataSyncService.pushTimetableToWear(reactApplicationContext, prayersJson, lat, lng)
-    }
-
-    @ReactMethod
-    fun setDeviceCategory(category: Int) {
-        val prefs = reactApplicationContext.getSharedPreferences("DeenPulsePrefs", Context.MODE_PRIVATE)
-        prefs.edit().putInt("device_category", category).apply()
-    }
-
-    @ReactMethod
-    fun setForcePromotedNotification(enabled: Boolean) {
-        val prefs = reactApplicationContext.getSharedPreferences("DeenPulsePrefs", Context.MODE_PRIVATE)
-        prefs.edit().putBoolean("isLiveNotificationForced", enabled).apply()
     }
 
     @ReactMethod
@@ -151,10 +332,19 @@ class PrayerCapsuleModule(reactContext: ReactApplicationContext) :
     }
 
     @ReactMethod
+    fun syncSettingsToWear(juristicMethod: String, calculationRule: String) {
+        val prefs = reactApplicationContext.getSharedPreferences("DeenPulsePrefs", Context.MODE_PRIVATE)
+        val category = prefs.getInt("device_category", 3)
+        WearDataSyncService.pushSettingsToWear(reactApplicationContext, juristicMethod, calculationRule, category)
+    }
+
+    // ── Prayer Alert ──────────────────────────────────────────────────────────
+
+    @ReactMethod
     fun playPrayerAlert(prayerName: String) {
         val context = reactApplicationContext
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        
+
         val channelId = "deenpulse_prayer_alert"
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
@@ -194,6 +384,8 @@ class PrayerCapsuleModule(reactContext: ReactApplicationContext) :
         notificationManager.notify(7002, notification)
     }
 
+    // ── App Settings ──────────────────────────────────────────────────────────
+
     @ReactMethod
     fun openAppSettings() {
         val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
@@ -207,96 +399,8 @@ class PrayerCapsuleModule(reactContext: ReactApplicationContext) :
         }
     }
 
-    @ReactMethod
-    fun syncSettingsToWear(juristicMethod: String, calculationRule: String) {
-        val prefs = reactApplicationContext.getSharedPreferences("DeenPulsePrefs", Context.MODE_PRIVATE)
-        val category = prefs.getInt("device_category", 3)
-        WearDataSyncService.pushSettingsToWear(reactApplicationContext, juristicMethod, calculationRule, category)
-    }
+    // ── Utilities ─────────────────────────────────────────────────────────────
 
-    /**
-     * Schedule AlarmManager reminders for Cat3 devices.
-     * Each prayer gets a reminder 15 minutes before its scheduled time.
-     * Called from React Native when device is Category 3 and user prefers reminders over ongoing notification.
-     */
-    @ReactMethod
-    fun scheduleReminders(prayersJson: String) {
-        try {
-            val context = reactApplicationContext
-            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as android.app.AlarmManager
-            val jsonArray = org.json.JSONArray(prayersJson)
-            val now = System.currentTimeMillis()
-            val fifteenMinMs = 15L * 60L * 1000L
-            val sdf = java.text.SimpleDateFormat("h:mm a", java.util.Locale.getDefault())
-
-            // Cancel existing alarms first
-            cancelAllReminders(context, jsonArray.length())
-
-            var scheduledCount = 0
-            for (i in 0 until jsonArray.length()) {
-                val obj = jsonArray.getJSONObject(i)
-                val name = obj.getString("name")
-                val timestamp = obj.getLong("timestamp")
-                val reminderTime = timestamp - fifteenMinMs
-
-                // Only schedule future reminders
-                if (reminderTime > now) {
-                    val formattedTime = sdf.format(java.util.Date(timestamp))
-                    val intent = Intent(context, PrayerReminderReceiver::class.java).apply {
-                        putExtra(PrayerReminderReceiver.EXTRA_PRAYER_NAME, name)
-                        putExtra(PrayerReminderReceiver.EXTRA_PRAYER_TIME, formattedTime)
-                    }
-                    val pendingIntent = PendingIntent.getBroadcast(
-                        context, 9000 + i, intent,
-                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                    )
-
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        alarmManager.setExactAndAllowWhileIdle(
-                            android.app.AlarmManager.RTC_WAKEUP, reminderTime, pendingIntent
-                        )
-                    } else {
-                        alarmManager.setExact(
-                            android.app.AlarmManager.RTC_WAKEUP, reminderTime, pendingIntent
-                        )
-                    }
-                    scheduledCount++
-                }
-            }
-
-            // Store the scheduled count for cleanup
-            val prefs = context.getSharedPreferences("DeenPulsePrefs", Context.MODE_PRIVATE)
-            prefs.edit().putInt("scheduled_reminder_count", jsonArray.length()).apply()
-
-            android.util.Log.d("PrayerCapsuleModule", "Scheduled $scheduledCount prayer reminders for Cat3 device")
-        } catch (e: Exception) {
-            android.util.Log.e("PrayerCapsuleModule", "Failed to schedule reminders", e)
-        }
-    }
-
-    @ReactMethod
-    fun cancelReminders() {
-        val context = reactApplicationContext
-        val prefs = context.getSharedPreferences("DeenPulsePrefs", Context.MODE_PRIVATE)
-        val count = prefs.getInt("scheduled_reminder_count", 10)
-        cancelAllReminders(context, count)
-    }
-
-    private fun cancelAllReminders(context: Context, count: Int) {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as android.app.AlarmManager
-        for (i in 0 until count) {
-            val intent = Intent(context, PrayerReminderReceiver::class.java)
-            val pendingIntent = PendingIntent.getBroadcast(
-                context, 9000 + i, intent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-            alarmManager.cancel(pendingIntent)
-        }
-    }
-
-    /**
-     * Returns the app version string from BuildConfig.
-     */
     @ReactMethod
     fun getAppVersion(promise: Promise) {
         try {

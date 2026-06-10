@@ -11,6 +11,10 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <!-- Required by PrayerReminderReceiver and PriorServiceStartReceiver to keep CPU awake -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- Required by BootReceiver to reschedule alarms after device reboot (Cat 2 / Cat 3) -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
       android:name=".MainApplication"
@@ -34,10 +38,20 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
       </activity>
+
+      <!--
+        PrayerCapsuleForegroundService — ongoing live prayer countdown (Cat 1 Mode A)
+        and timed prior-window countdown (Cat 1 Mode B).
+        Uses specialUse foreground service type as it is a prayer-utility companion app.
+      -->
       <service
           android:name=".PrayerCapsuleForegroundService"
           android:foregroundServiceType="specialUse"
-          android:exported="false" />
+          android:exported="false">
+          <property
+              android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+              android:value="Prayer countdown and reminder notifications timed precisely to dynamic astronomical calculations." />
+      </service>
 
       <service
           android:name=".WearDataSyncService"
@@ -53,9 +67,38 @@
           android:name="com.google.android.gms.version"
           android:value="@integer/google_play_services_version" />
 
+      <!--
+        PrayerReminderReceiver — static one-shot reminder notification.
+        Used by Cat 2 (Vivo, via setAlarmClock) and Cat 3 (setExactAndAllowWhileIdle).
+      -->
       <receiver
           android:name=".PrayerReminderReceiver"
           android:exported="false" />
+
+      <!--
+        PriorServiceStartReceiver — triggered by setAlarmClock at lead time before prayer.
+        Cat 1 (OPPO/Realme/OnePlus) Mode B only. Starts the live foreground countdown.
+      -->
+      <receiver
+          android:name=".PriorServiceStartReceiver"
+          android:exported="false" />
+
+      <!--
+        BootReceiver — reschedules prayer alarms after device reboot, time change,
+        or timezone change. Kept DISABLED by default; activated programmatically by
+        AlarmSchedulerHelper.setBootReceiverEnabled() only when active alarms exist.
+        Applies to Cat 2, Cat 3, and Cat 1 Mode B. NOT used for Cat 1 Mode A.
+      -->
+      <receiver
+          android:name=".BootReceiver"
+          android:enabled="false"
+          android:exported="false">
+          <intent-filter>
+              <action android:name="android.intent.action.BOOT_COMPLETED" />
+              <action android:name="android.intent.action.TIME_SET" />
+              <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+          </intent-filter>
+      </receiver>
 
     </application>
 </manifest>

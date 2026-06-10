@@ -17,6 +17,7 @@
 
 package com.deenpulse
 
+import android.os.Bundle
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
@@ -36,4 +37,22 @@ class MainActivity : ReactActivity() {
    */
   override fun createReactActivityDelegate(): ReactActivityDelegate =
       DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled)
+
+  /**
+   * Bug 2 Fix — ColorOS Stuck-Active Self-Healing.
+   *
+   * Every time the user opens or returns to the app, emit "onAppForegrounded" to the
+   * React Native JS layer. The JS side listens for this event and calls
+   * [PrayerCapsuleModule.verifyAndReconcileAlarms] to check whether AlarmManager
+   * PendingIntents were wiped by the OEM process reaper (ColorOS, Funtouch OS, etc.)
+   * and re-schedules them if so.
+   *
+   * This is also the self-healing trigger for the "Active" freeze: after reconciliation
+   * the JS layer can refresh the countdown display without requiring the user to
+   * manually tap the Refresh button.
+   */
+  override fun onResume() {
+    super.onResume()
+    PrayerCapsuleModule.sendEvent("onAppForegrounded", null)
+  }
 }

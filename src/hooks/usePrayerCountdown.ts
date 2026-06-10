@@ -31,7 +31,9 @@ export function usePrayerCountdown(
   notificationStyle: string = 'standard',
   location: { latitude: number; longitude: number } | null = null,
   deviceCategory: number = 3,
-  cat3NotificationMode: 'ongoing' | 'reminder' = 'reminder'
+  cat3NotificationMode: 'ongoing' | 'reminder' = 'reminder',
+  cat1NotificationMode: 'alltime' | 'prior' = 'alltime',
+  cat1PriorLeadTime: number = 15
 ) {
   const [nextPrayer, setNextPrayer] = useState<NextPrayerInfo | null>(null);
 
@@ -68,6 +70,10 @@ export function usePrayerCountdown(
         // Cat3 reminder mode: schedule AlarmManager reminders, no foreground service
         PrayerCapsuleModule?.stopCapsule();
         PrayerCapsuleModule?.scheduleReminders(prayersJson);
+      } else if (deviceCategory === 1 && cat1NotificationMode === 'prior') {
+        // Cat1 Prior mode (Mode B): schedule AlarmManager reminders, no persistent foreground service
+        PrayerCapsuleModule?.stopCapsule();
+        PrayerCapsuleModule?.scheduleReminders(prayersJson);
       } else {
         // Cat1/Cat2 or Cat3 ongoing mode: use foreground service
         PrayerCapsuleModule?.cancelReminders();
@@ -86,7 +92,7 @@ export function usePrayerCountdown(
     } catch (e) {
       console.warn('Failed to update live capsule or sync to wear:', e);
     }
-  }, [prayerTimes, liveActivityEnabled, capsuleFormat, notificationStyle, location, deviceCategory, cat3NotificationMode]);
+  }, [prayerTimes, liveActivityEnabled, capsuleFormat, notificationStyle, location, deviceCategory, cat3NotificationMode, cat1NotificationMode, cat1PriorLeadTime]);
 
   // Main UI countdown tick
   useEffect(() => {

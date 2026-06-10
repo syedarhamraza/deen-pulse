@@ -56,6 +56,22 @@ class PrayerCapsuleForegroundService : Service() {
     private var notificationStyle: String = "standard"
     private var isCountdownRunning = false
 
+    /**
+     * True when this service was started by [PriorServiceStartReceiver] (Cat 1 Mode B).
+     * In prior-window mode the service auto-stops once the prayer time passes plus a
+     * short grace window, instead of running all day.
+     */
+    private var isPriorWindowMode: Boolean = false
+
+    /**
+     * The epoch-ms timestamp of the prayer that triggered this prior window.
+     * Used to decide when to auto-stop in prior-window mode.
+     */
+    private var priorWindowPrayerTimestamp: Long = 0L
+
+    /** Grace period after prayer time before the prior-window service shuts down (5 min). */
+    private val PRIOR_WINDOW_GRACE_MS = 5 * 60 * 1000L
+
     private var lastPostedTitle: String? = null
     private var lastPostedContentText: String? = null
     private var lastPostedShortText: String? = null
@@ -115,7 +131,18 @@ class PrayerCapsuleForegroundService : Service() {
     private val checkRunnable = object : Runnable {
         override fun run() {
             val now = System.currentTimeMillis()
-            
+
+            // ── Prior-window auto-stop (Cat 1 Mode B) ────────────────────────
+            // Stop the service automatically once the prayer time has passed plus grace.
+            if (isPriorWindowMode && priorWindowPrayerTimestamp > 0L) {
+                val windowEnd = priorWindowPrayerTimestamp + PRIOR_WINDOW_GRACE_MS
+                if (now >= windowEnd) {
+                    Log.d("PrayerCapsuleService", "Prior-window mode: grace period expired for prayer at $priorWindowPrayerTimestamp. Stopping service.")
+                    stopSelf()
+                    return
+                }
+            }
+
             // Immediate transition at prayer arrival
             if (currentTargetTimestamp > 0L && currentTargetTimestamp <= now) {
                 Log.d("PrayerCapsuleService", "Prayer $currentPrayerName time reached ($currentTargetTimestamp <= $now). Advancing.")
@@ -199,8 +226,22 @@ class PrayerCapsuleForegroundService : Service() {
                     stopSelf()
                     System.exit(0)
                 }
+                PriorServiceStartReceiver.ACTION_START_PRIOR_WINDOW -> {
+                    // Cat 1 Mode B: started by PriorServiceStartReceiver at lead time.
+                    // Mark this as a prior-window session so the service auto-stops
+                    // once the prayer time passes.
+                    isPriorWindowMode = true
+                    priorWindowPrayerTimestamp = intent.getLongExtra(
+                        PriorServiceStartReceiver.EXTRA_PRAYER_TIMESTAMP, 0L
+                    )
+                    Log.d("PrayerCapsuleService", "Prior-window mode activated for prayer at $priorWindowPrayerTimestamp")
+                    // Fall through — the prayersJson / startForeground logic below will handle the rest
+                }
             }
-            return START_NOT_STICKY
+            // Only return early for non-data actions; let prior-window fall through to load data
+            if (action == "ACTION_REFRESH" || action == "ACTION_CLOSE") {
+                return START_NOT_STICKY
+            }
         }
 
         val newPrayersJson = intent?.getStringExtra("prayersJson")

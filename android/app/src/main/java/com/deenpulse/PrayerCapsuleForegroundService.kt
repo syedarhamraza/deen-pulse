@@ -77,6 +77,7 @@ class PrayerCapsuleForegroundService : Service() {
     private var lastPostedShortText: String? = null
     private var lastPostedStyle: String? = null
     private var lastPostedUseChronometer: Boolean? = null
+    private var lastNotificationMode: String? = null
 
     private fun formatCountdown(remainingMs: Long): String {
         if (remainingMs <= 0L) return "00s"
@@ -201,6 +202,7 @@ class PrayerCapsuleForegroundService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val format = intent?.getStringExtra("capsuleFormat")
         val style = intent?.getStringExtra("notificationStyle")
+        val activeMode = intent?.getStringExtra("activeMode")
         
         val prefs = getSharedPreferences("DeenPulsePrefs", MODE_PRIVATE)
         if (format != null) {
@@ -215,6 +217,35 @@ class PrayerCapsuleForegroundService : Service() {
         } else {
             notificationStyle = prefs.getString("notificationStyle", "standard") ?: "standard"
         }
+        if (activeMode != null) {
+            val category = getDeviceCategory()
+            val prefKey = when (category) {
+                1 -> "cat1_notification_mode"
+                2 -> "cat2_notification_mode"
+                else -> ""
+            }
+            if (prefKey.isNotEmpty()) {
+                prefs.edit().putString(prefKey, activeMode).apply()
+            }
+        }
+
+        val category = getDeviceCategory()
+        val currentMode = when (category) {
+            1 -> prefs.getString("cat1_notification_mode", "alltime") ?: "alltime"
+            2 -> prefs.getString("cat2_notification_mode", "alltime") ?: "alltime"
+            else -> "alltime"
+        }
+
+        if (lastNotificationMode != null && lastNotificationMode != currentMode) {
+            Log.d("PrayerCapsuleService", "Notification mode changed from $lastNotificationMode to $currentMode. Re-creating foreground notification.")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                stopForeground(STOP_FOREGROUND_REMOVE)
+            } else {
+                @Suppress("DEPRECATION")
+                stopForeground(true)
+            }
+        }
+        lastNotificationMode = currentMode
 
         val action = intent?.action
         if (action != null) {
@@ -510,7 +541,14 @@ class PrayerCapsuleForegroundService : Service() {
             builder.setWhen(currentTargetTimestamp)
         }
 
-        if (category == 1 || category == 2) {
+        val prefs = getSharedPreferences("DeenPulsePrefs", MODE_PRIVATE)
+        val mode = when (category) {
+            1 -> prefs.getString("cat1_notification_mode", "alltime") ?: "alltime"
+            2 -> prefs.getString("cat2_notification_mode", "alltime") ?: "alltime"
+            else -> "alltime"
+        }
+
+        if ((category == 1 || category == 2) && mode != "nocapsule") {
             // Category 1 & 2: OPPO/OnePlus/Realme and Vivo/iQOO - Promoted Ongoing Status Bar Capsule Enabled
             try {
                 builder.setRequestPromotedOngoing(true)
@@ -523,8 +561,7 @@ class PrayerCapsuleForegroundService : Service() {
             notification.flags = notification.flags or 0x40000000 or 0x02000000
             return notification
         } else {
-            // Category 3: Samsung, Xiaomi, Pixel, etc. (High Priority Standard Ongoing)
-            val prefs = getSharedPreferences("DeenPulsePrefs", MODE_PRIVATE)
+            // Category 3 or Mode D: Samsung, Xiaomi, Pixel, or No-Capsule (High Priority Standard Ongoing)
             val forceEnabled = prefs.getBoolean("isLiveNotificationForced", false)
             if (forceEnabled) {
                 try {

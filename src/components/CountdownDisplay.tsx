@@ -22,9 +22,10 @@ import { NextPrayerInfo, formatCountdown, getTimezoneAbbreviation } from '../uti
 interface CountdownDisplayProps {
   nextPrayer: NextPrayerInfo | null;
   isWindowActive?: boolean;
+  activePrayerName?: string | null;
 }
 
-export const CountdownDisplay: React.FC<CountdownDisplayProps> = ({ nextPrayer, isWindowActive = false }) => {
+export const CountdownDisplay: React.FC<CountdownDisplayProps> = ({ nextPrayer, isWindowActive = false, activePrayerName }) => {
   if (!nextPrayer) {
     return (
       <View style={styles.loadingContainer}>
@@ -39,11 +40,12 @@ export const CountdownDisplay: React.FC<CountdownDisplayProps> = ({ nextPrayer, 
   const outerBorderColor = isWindowActive ? 'rgba(0, 242, 157, 0.25)' : 'rgba(0, 242, 157, 0.12)';
   const countdownText = isWindowActive ? 'ACTIVE' : formatCountdown(nextPrayer.remainingMinutes, nextPrayer.remainingSeconds);
   const tz = getTimezoneAbbreviation();
+  const displayName = (isWindowActive && activePrayerName) ? activePrayerName : nextPrayer.name;
   const subtitleText = isWindowActive 
-    ? `${nextPrayer.name} Adhan Window (${tz})` 
+    ? `${displayName} Adhan Window (${tz})` 
     : nextPrayer.time.includes('(')
-      ? `${nextPrayer.name} at ${nextPrayer.time}`
-      : `${nextPrayer.name} at ${nextPrayer.time} (${tz})`;
+      ? `${displayName} at ${nextPrayer.time}`
+      : `${displayName} at ${nextPrayer.time} (${tz})`;
 
   return (
     <View style={styles.outerContainer}>

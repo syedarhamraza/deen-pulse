@@ -59,16 +59,24 @@ class BootReceiver : BroadcastReceiver() {
             return
         }
         val category = prefs.getInt("device_category", 3)
-        val cat1Mode = prefs.getString("cat1_notification_mode", "alltime") ?: "alltime"
-        val leadMinutes = prefs.getInt("prior_lead_time_minutes", 15)
+        val mode = when (category) {
+            1 -> prefs.getString("cat1_notification_mode", "alltime") ?: "alltime"
+            2 -> prefs.getString("cat2_notification_mode", "alltime") ?: "alltime"
+            else -> "alltime"
+        }
+        val leadMinutes = when (category) {
+            1 -> prefs.getInt("prior_lead_time_minutes", 15)
+            2 -> prefs.getInt("cat2_prior_lead_time_minutes", 15)
+            else -> 15
+        }
 
-        // Cat 1 Mode A uses the always-on foreground service — React Native handles it.
-        if (category == 1 && cat1Mode == "alltime") {
-            Log.d(TAG, "Cat1 Mode A detected — foreground service managed by JS layer, skipping")
+        // Cat 1 and Cat 2 Mode A/D use the always-on foreground service — React Native handles it.
+        if ((category == 1 || category == 2) && (mode == "alltime" || mode == "nocapsule")) {
+            Log.d(TAG, "Cat$category Mode $mode detected — foreground service managed by JS layer, skipping")
             return
         }
 
-        Log.d(TAG, "Rescheduling alarms: cat=$category, mode=$cat1Mode, lead=${leadMinutes}min")
-        AlarmSchedulerHelper.scheduleAll(context, prayersJson, category, cat1Mode, leadMinutes)
+        Log.d(TAG, "Rescheduling alarms: cat=$category, mode=$mode, lead=${leadMinutes}min")
+        AlarmSchedulerHelper.scheduleAll(context, prayersJson, category, mode, leadMinutes)
     }
 }

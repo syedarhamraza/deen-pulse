@@ -60,11 +60,12 @@ class PrayerCapsuleModule(reactContext: ReactApplicationContext) :
     // ── Foreground Service (Cat 1 Mode A — all-time live notification) ─────────
 
     @ReactMethod
-    fun updateLiveCapsule(prayersJson: String, capsuleFormat: String, notificationStyle: String) {
+    fun updateLiveCapsule(prayersJson: String, capsuleFormat: String, notificationStyle: String, activeMode: String) {
         val intent = Intent(reactApplicationContext, PrayerCapsuleForegroundService::class.java).apply {
             putExtra("prayersJson", prayersJson)
             putExtra("capsuleFormat", capsuleFormat)
             putExtra("notificationStyle", notificationStyle)
+            putExtra("activeMode", activeMode)
         }
         ContextCompat.startForegroundService(reactApplicationContext, intent)
     }
@@ -151,6 +152,28 @@ class PrayerCapsuleModule(reactContext: ReactApplicationContext) :
         Log.d(TAG, "setPriorNotificationLeadTime: $minutes min")
     }
 
+    /**
+     * Persist the Cat 2 notification mode selection.
+     * @param mode "alltime", "prior", "simple", or "nocapsule"
+     */
+    @ReactMethod
+    fun setCat2NotificationMode(mode: String) {
+        val prefs = reactApplicationContext.getSharedPreferences("DeenPulsePrefs", Context.MODE_PRIVATE)
+        prefs.edit().putString("cat2_notification_mode", mode).apply()
+        Log.d(TAG, "setCat2NotificationMode: $mode")
+    }
+
+    /**
+     * Persist the prior-window lead time for Cat 2 Mode B.
+     * @param minutes 5, 10, or 15
+     */
+    @ReactMethod
+    fun setCat2PriorLeadTime(minutes: Int) {
+        val prefs = reactApplicationContext.getSharedPreferences("DeenPulsePrefs", Context.MODE_PRIVATE)
+        prefs.edit().putInt("cat2_prior_lead_time_minutes", minutes).apply()
+        Log.d(TAG, "setCat2PriorLeadTime: $minutes min")
+    }
+
     // ── Alarm Scheduling (Bug 1 Fix + Cat 1 Mode B) ───────────────────────────
 
     /**
@@ -174,10 +197,18 @@ class PrayerCapsuleModule(reactContext: ReactApplicationContext) :
         }
 
         val category = prefs.getInt("device_category", 3)
-        val cat1Mode = prefs.getString("cat1_notification_mode", "alltime") ?: "alltime"
-        val leadMinutes = prefs.getInt("prior_lead_time_minutes", 15)
+        val mode = when (category) {
+            1 -> prefs.getString("cat1_notification_mode", "alltime") ?: "alltime"
+            2 -> prefs.getString("cat2_notification_mode", "alltime") ?: "alltime"
+            else -> "alltime"
+        }
+        val leadMinutes = when (category) {
+            1 -> prefs.getInt("prior_lead_time_minutes", 15)
+            2 -> prefs.getInt("cat2_prior_lead_time_minutes", 15)
+            else -> 15
+        }
 
-        AlarmSchedulerHelper.scheduleAll(context, prayersJson, category, cat1Mode, leadMinutes)
+        AlarmSchedulerHelper.scheduleAll(context, prayersJson, category, mode, leadMinutes)
     }
 
     /**
@@ -208,17 +239,25 @@ class PrayerCapsuleModule(reactContext: ReactApplicationContext) :
             val context = reactApplicationContext
             val prefs = context.getSharedPreferences("DeenPulsePrefs", Context.MODE_PRIVATE)
             val category = prefs.getInt("device_category", 3)
-            val cat1Mode = prefs.getString("cat1_notification_mode", "alltime") ?: "alltime"
-            val leadMinutes = prefs.getInt("prior_lead_time_minutes", 15)
+            val mode = when (category) {
+                1 -> prefs.getString("cat1_notification_mode", "alltime") ?: "alltime"
+                2 -> prefs.getString("cat2_notification_mode", "alltime") ?: "alltime"
+                else -> "alltime"
+            }
+            val leadMinutes = when (category) {
+                1 -> prefs.getInt("prior_lead_time_minutes", 15)
+                2 -> prefs.getInt("cat2_prior_lead_time_minutes", 15)
+                else -> 15
+            }
 
-            // Cat 1 Mode A uses a persistent foreground service — no AlarmManager to verify
-            if (category == 1 && cat1Mode == "alltime") {
+            // Cat 1 & Cat 2 Mode A/D use a persistent foreground service — no AlarmManager to verify
+            if ((category == 1 || category == 2) && (mode == "alltime" || mode == "nocapsule")) {
                 promise.resolve(false)
                 return
             }
 
             val reconciled = AlarmSchedulerHelper.verifyAndReconcile(
-                context, prayersJson, category, cat1Mode, leadMinutes
+                context, prayersJson, category, mode, leadMinutes
             )
             Log.d(TAG, "verifyAndReconcileAlarms: reconciled=$reconciled")
             promise.resolve(reconciled)

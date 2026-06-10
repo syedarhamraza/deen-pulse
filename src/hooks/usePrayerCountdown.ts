@@ -33,7 +33,9 @@ export function usePrayerCountdown(
   deviceCategory: number = 3,
   cat3NotificationMode: 'ongoing' | 'reminder' = 'reminder',
   cat1NotificationMode: 'alltime' | 'prior' = 'alltime',
-  cat1PriorLeadTime: number = 15
+  cat1PriorLeadTime: number = 15,
+  cat2NotificationMode: 'alltime' | 'prior' | 'simple' | 'nocapsule' = 'alltime',
+  cat2PriorLeadTime: number = 15
 ) {
   const [nextPrayer, setNextPrayer] = useState<NextPrayerInfo | null>(null);
 
@@ -66,18 +68,20 @@ export function usePrayerCountdown(
       const prayersJson = JSON.stringify(scheduleList);
       AsyncStorage.setItem('@deenpulse_last_prayers_json', prayersJson).catch(() => {});
 
-      if (deviceCategory === 3 && cat3NotificationMode === 'reminder') {
-        // Cat3 reminder mode: schedule AlarmManager reminders, no foreground service
-        PrayerCapsuleModule?.stopCapsule();
-        PrayerCapsuleModule?.scheduleReminders(prayersJson);
-      } else if (deviceCategory === 1 && cat1NotificationMode === 'prior') {
-        // Cat1 Prior mode (Mode B): schedule AlarmManager reminders, no persistent foreground service
+      const isReminderOrPrior = 
+        (deviceCategory === 3 && cat3NotificationMode === 'reminder') ||
+        (deviceCategory === 1 && cat1NotificationMode === 'prior') ||
+        (deviceCategory === 2 && (cat2NotificationMode === 'prior' || cat2NotificationMode === 'simple'));
+
+      if (isReminderOrPrior) {
+        // Schedule AlarmManager reminders/prior triggers, stop persistent foreground service
         PrayerCapsuleModule?.stopCapsule();
         PrayerCapsuleModule?.scheduleReminders(prayersJson);
       } else {
-        // Cat1/Cat2 or Cat3 ongoing mode: use foreground service
+        // Cat1/Cat2 Mode A/D or Cat 3 ongoing mode: use persistent foreground service
+        const activeMode = deviceCategory === 1 ? cat1NotificationMode : (deviceCategory === 2 ? cat2NotificationMode : 'alltime');
         PrayerCapsuleModule?.cancelReminders();
-        PrayerCapsuleModule?.updateLiveCapsule(prayersJson, capsuleFormat, notificationStyle);
+        PrayerCapsuleModule?.updateLiveCapsule(prayersJson, capsuleFormat, notificationStyle, activeMode);
       }
 
       // Sync to Wear OS watch if location coordinates are available
@@ -92,7 +96,7 @@ export function usePrayerCountdown(
     } catch (e) {
       console.warn('Failed to update live capsule or sync to wear:', e);
     }
-  }, [prayerTimes, liveActivityEnabled, capsuleFormat, notificationStyle, location, deviceCategory, cat3NotificationMode, cat1NotificationMode, cat1PriorLeadTime]);
+  }, [prayerTimes, liveActivityEnabled, capsuleFormat, notificationStyle, location, deviceCategory, cat3NotificationMode, cat1NotificationMode, cat1PriorLeadTime, cat2NotificationMode, cat2PriorLeadTime]);
 
   // Main UI countdown tick
   useEffect(() => {

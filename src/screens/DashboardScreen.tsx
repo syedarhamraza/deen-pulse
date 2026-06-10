@@ -144,7 +144,7 @@ export function DashboardScreen({
   nextPrayer,
 }: DashboardScreenProps) {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { isWindowActive } = useActiveWindowDetector(nextPrayer);
+  const { isWindowActive, activePrayerName } = useActiveWindowDetector(nextPrayer, prayerTimes);
   const scrollRef = useRef<ScrollView>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
@@ -215,7 +215,11 @@ export function DashboardScreen({
         {/* Calendar Data Display */}
         {!loading && !error && (
           <View>
-            <CountdownDisplay nextPrayer={nextPrayer} isWindowActive={isWindowActive} />
+            <CountdownDisplay
+              nextPrayer={nextPrayer}
+              isWindowActive={isWindowActive}
+              activePrayerName={activePrayerName}
+            />
 
             <View style={styles.divider}>
               <View style={styles.dividerLine} />

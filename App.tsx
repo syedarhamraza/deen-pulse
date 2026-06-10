@@ -138,6 +138,8 @@ function DeenPulseApp(): React.JSX.Element {
   const [cat3NotificationMode, setCat3NotificationMode] = useState<'ongoing' | 'reminder'>('reminder');
   const [cat1NotificationMode, setCat1NotificationMode] = useState<'alltime' | 'prior'>('alltime');
   const [cat1PriorLeadTime, setCat1PriorLeadTime] = useState<5 | 10 | 15>(15);
+  const [cat2NotificationMode, setCat2NotificationMode] = useState<'alltime' | 'prior' | 'simple' | 'nocapsule'>('alltime');
+  const [cat2PriorLeadTime, setCat2PriorLeadTime] = useState<5 | 10 | 15>(15);
   const [mockPrayerTimes, setMockPrayerTimes] = useState<PrayerTime[] | null>(null);
 
   const [showCapsuleFormatPicker, setShowCapsuleFormatPicker] = useState(false);
@@ -171,7 +173,9 @@ function DeenPulseApp(): React.JSX.Element {
     profile?.category ?? 3,
     cat3NotificationMode,
     cat1NotificationMode,
-    cat1PriorLeadTime
+    cat1PriorLeadTime,
+    cat2NotificationMode,
+    cat2PriorLeadTime
   );
 
   // Load preferences and setup guide state on startup
@@ -187,6 +191,8 @@ function DeenPulseApp(): React.JSX.Element {
         const cat3Mode = await AsyncStorage.getItem('@deenpulse_cat3_notification_mode');
         const cat1Mode = await AsyncStorage.getItem('@deenpulse_cat1_notification_mode');
         const cat1Lead = await AsyncStorage.getItem('@deenpulse_prior_lead_time');
+        const cat2Mode = await AsyncStorage.getItem('@deenpulse_cat2_notification_mode');
+        const cat2Lead = await AsyncStorage.getItem('@deenpulse_cat2_prior_lead_time');
 
         if (mode !== null) setLocationMode(mode as 'gps' | 'cached');
         if (juristic !== null) setJuristicMethod(juristic as 'standard' | 'hanafi');
@@ -197,6 +203,8 @@ function DeenPulseApp(): React.JSX.Element {
         if (cat3Mode !== null) setCat3NotificationMode(cat3Mode as 'ongoing' | 'reminder');
         if (cat1Mode !== null) setCat1NotificationMode(cat1Mode as 'alltime' | 'prior');
         if (cat1Lead !== null) setCat1PriorLeadTime(parseInt(cat1Lead, 10) as 5 | 10 | 15);
+        if (cat2Mode !== null) setCat2NotificationMode(cat2Mode as 'alltime' | 'prior' | 'simple' | 'nocapsule');
+        if (cat2Lead !== null) setCat2PriorLeadTime(parseInt(cat2Lead, 10) as 5 | 10 | 15);
       } catch (e) {
         console.warn('Failed to load settings:', e);
       }
@@ -495,6 +503,29 @@ function DeenPulseApp(): React.JSX.Element {
                     PrayerCapsuleModule?.setPriorNotificationLeadTime(minutes);
                     // Re-schedule with new lead time if in prior mode
                     if (cat1NotificationMode === 'prior' && activePrayerTimes.length > 0) {
+                      const prayersJson = JSON.stringify(
+                        activePrayerTimes.map(p => ({ name: p.name, timestamp: p.date.getTime() }))
+                      );
+                      PrayerCapsuleModule?.scheduleReminders(prayersJson);
+                    }
+                  }}
+                  cat2NotificationMode={cat2NotificationMode}
+                  cat2PriorLeadTime={cat2PriorLeadTime}
+                  onCat2ModeChange={async (mode: 'alltime' | 'prior' | 'simple' | 'nocapsule') => {
+                    setCat2NotificationMode(mode);
+                    await AsyncStorage.setItem('@deenpulse_cat2_notification_mode', mode);
+                    PrayerCapsuleModule?.setCat2NotificationMode(mode);
+                    // If switching to alltime or nocapsule, cancel pending alarms
+                    if (mode === 'alltime' || mode === 'nocapsule') {
+                      PrayerCapsuleModule?.cancelReminders();
+                    }
+                  }}
+                  onCat2LeadTimeChange={async (minutes: 5 | 10 | 15) => {
+                    setCat2PriorLeadTime(minutes);
+                    await AsyncStorage.setItem('@deenpulse_cat2_prior_lead_time', String(minutes));
+                    PrayerCapsuleModule?.setCat2PriorLeadTime(minutes);
+                    // Re-schedule with new lead time if in prior mode
+                    if (cat2NotificationMode === 'prior' && activePrayerTimes.length > 0) {
                       const prayersJson = JSON.stringify(
                         activePrayerTimes.map(p => ({ name: p.name, timestamp: p.date.getTime() }))
                       );

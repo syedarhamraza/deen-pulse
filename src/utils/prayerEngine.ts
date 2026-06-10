@@ -129,6 +129,10 @@ export function getNextPrayer(prayers: PrayerTime[], now: Date = new Date()): Ne
   const fajr = prayers[0];
   const tomorrowFajr = new Date(fajr.date);
   tomorrowFajr.setDate(tomorrowFajr.getDate() + 1);
+  // Guard: if tomorrowFajr is still in the past (e.g. stale timings list), keep adding days
+  while (tomorrowFajr <= now) {
+    tomorrowFajr.setDate(tomorrowFajr.getDate() + 1);
+  }
   const diffMs = tomorrowFajr.getTime() - now.getTime();
   const remainingMinutes = Math.floor(diffMs / 60000);
   const remainingSeconds = Math.floor((diffMs % 60000) / 1000);
@@ -142,7 +146,11 @@ export function getNextPrayer(prayers: PrayerTime[], now: Date = new Date()): Ne
 
 export function formatCountdown(minutes: number, seconds: number): string {
   if (minutes < 0 || seconds < 0) {
-    return 'Active';
+    // Only return 'Active' if we are within the 15-minute adhan window
+    if (minutes > -15) {
+      return 'Active';
+    }
+    return '--';
   }
   if (minutes >= 60) {
     const hours = Math.floor(minutes / 60);
@@ -166,11 +174,18 @@ export function formatCapsuleText(name: string, minutes: number): string {
 }
 
 export function getPrayerStatus(prayer: PrayerTime, nextPrayer: NextPrayerInfo, now: Date): 'passed' | 'active' | 'upcoming' | 'next' {
-  if (prayer.name === nextPrayer.name) return 'next';
+  // Check if this prayer is currently active (within 15-minute window)
+  const diff = now.getTime() - prayer.date.getTime();
+  if (diff >= 0 && diff <= 15 * 60000) {
+    return 'active';
+  }
+
+  // Only mark as next if it matches nextPrayer and has not passed yet
+  if (prayer.name === nextPrayer.name && nextPrayer.remainingMinutes >= 0) {
+    return 'next';
+  }
+
   if (prayer.date <= now) {
-    // Check if this prayer became active within the last 15 minutes
-    const diff = now.getTime() - prayer.date.getTime();
-    if (diff <= 15 * 60000) return 'active';
     return 'passed';
   }
   return 'upcoming';

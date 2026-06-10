@@ -15,83 +15,60 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { NativeModules } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { NextPrayerInfo } from '../utils/prayerEngine';
+import { NextPrayerInfo, PrayerTime } from '../utils/prayerEngine';
 
 const { PrayerCapsuleModule } = NativeModules;
 
 export const ADHAN_SOUND_ENABLED_KEY = '@deenpulse_adhan_sound_enabled';
 
-interface ActiveState {
-  active: boolean;
-  prayerName: string | null;
-  startTime: number | null;
-}
-
-export function useActiveWindowDetector(nextPrayer: NextPrayerInfo | null) {
-  const [activeState, setActiveState] = useState<ActiveState>({
-    active: false,
-    prayerName: null,
-    startTime: null,
-  });
-
+export function useActiveWindowDetector(nextPrayer: NextPrayerInfo | null, prayerTimes: PrayerTime[]) {
   const lastTriggeredPrayer = useRef<string | null>(null);
 
+  // Compute active state dynamically on every tick based on current time
+  const now = new Date();
+  const activePrayer = prayerTimes.find(prayer => {
+    const diffMs = now.getTime() - prayer.date.getTime();
+    // Active if current time is within 15 minutes after the prayer start
+    return diffMs >= 0 && diffMs < 15 * 60 * 1000;
+  });
+
+  const isWindowActive = !!activePrayer;
+  const activePrayerName = activePrayer ? activePrayer.name : null;
+
+  // Initialize lastTriggeredPrayer on mount to prevent triggering when opening the app while already active
   useEffect(() => {
-    if (!nextPrayer) return;
+    if (activePrayerName) {
+      lastTriggeredPrayer.current = activePrayerName;
+    }
+  }, []);
 
-    const { name, remainingMinutes, remainingSeconds } = nextPrayer;
+  // Trigger alert if the active prayer started very recently (e.g., within the last 15 seconds)
+  useEffect(() => {
+    if (activePrayer) {
+      const elapsedMs = Date.now() - activePrayer.date.getTime();
+      if (elapsedMs >= 0 && elapsedMs < 15000) {
+        if (lastTriggeredPrayer.current !== activePrayer.name) {
+          lastTriggeredPrayer.current = activePrayer.name;
 
-    // Detect the exact transition to 00:00:00 (or if it went slightly past but hasn't triggered yet)
-    if (remainingMinutes <= 0 && remainingSeconds <= 0) {
-      if (lastTriggeredPrayer.current !== name) {
-        lastTriggeredPrayer.current = name;
-        
-        // Trigger state
-        const now = Date.now();
-        setActiveState({
-          active: true,
-          prayerName: name,
-          startTime: now,
-        });
-
-        // Trigger native sound alert if enabled
-        AsyncStorage.getItem(ADHAN_SOUND_ENABLED_KEY).then(val => {
-          if (val === 'true' || val === null) { // Default to true if not set
-            PrayerCapsuleModule?.playPrayerAlert(name);
-          }
-        }).catch(err => {
-          console.warn('Failed to retrieve adhan sound enabled key', err);
-          PrayerCapsuleModule?.playPrayerAlert(name);
-        });
+          // Trigger native sound alert if enabled
+          AsyncStorage.getItem(ADHAN_SOUND_ENABLED_KEY).then(val => {
+            if (val === 'true' || val === null) { // Default to true if not set
+              PrayerCapsuleModule?.playPrayerAlert(activePrayer.name);
+            }
+          }).catch(err => {
+            console.warn('Failed to retrieve adhan sound enabled key', err);
+            PrayerCapsuleModule?.playPrayerAlert(activePrayer.name);
+          });
+        }
       }
     }
-  }, [nextPrayer]);
-
-  // Handle active window timeout auto-reset after 15 minutes
-  useEffect(() => {
-    if (activeState.active && activeState.startTime) {
-      const elapsed = Date.now() - activeState.startTime;
-      const fifteenMinutes = 15 * 60 * 1000;
-      
-      if (elapsed >= fifteenMinutes) {
-        setActiveState({ active: false, prayerName: null, startTime: null });
-        return;
-      }
-
-      const timeLeft = fifteenMinutes - elapsed;
-      const timer = setTimeout(() => {
-        setActiveState({ active: false, prayerName: null, startTime: null });
-      }, timeLeft);
-
-      return () => clearTimeout(timer);
-    }
-  }, [activeState]);
+  }, [activePrayerName, activePrayer]);
 
   return {
-    isWindowActive: activeState.active,
-    activePrayerName: activeState.prayerName,
+    isWindowActive,
+    activePrayerName,
   };
 }

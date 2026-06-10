@@ -41,6 +41,12 @@ interface NotificationsScreenProps {
   cat1PriorLeadTime?: 5 | 10 | 15;
   onCat1ModeChange?: (mode: 'alltime' | 'prior') => void;
   onCat1LeadTimeChange?: (minutes: 5 | 10 | 15) => void;
+  /** Cat 2 (Vivo/iQOO) notification mode */
+  cat2NotificationMode?: 'alltime' | 'prior' | 'simple' | 'nocapsule';
+  /** Lead time in minutes before prayer to show the prior live notification on Cat 2 */
+  cat2PriorLeadTime?: 5 | 10 | 15;
+  onCat2ModeChange?: (mode: 'alltime' | 'prior' | 'simple' | 'nocapsule') => void;
+  onCat2LeadTimeChange?: (minutes: 5 | 10 | 15) => void;
 }
 
 export function NotificationsScreen({
@@ -58,6 +64,10 @@ export function NotificationsScreen({
   cat1PriorLeadTime = 15,
   onCat1ModeChange,
   onCat1LeadTimeChange,
+  cat2NotificationMode = 'alltime',
+  cat2PriorLeadTime = 15,
+  onCat2ModeChange,
+  onCat2LeadTimeChange,
 }: NotificationsScreenProps) {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   return (
@@ -229,6 +239,178 @@ export function NotificationsScreen({
             </View>
           )}
 
+          {/* ── Cat 2 (Vivo/iQOO) Notification Mode ─────────────────────────────── */}
+          {deviceCategory === 2 && (
+            <View style={styles.menuDetailCard}>
+              <Text style={styles.menuDetailLabel}>Notification Mode</Text>
+              <Text style={styles.menuDetailDesc}>
+                Choose how DeenPulse notifies you about upcoming prayers on your Vivo device.
+              </Text>
+              <View style={localStyles.radioGroup}>
+
+                {/* Option A — All-Time Live Notification */}
+                <Pressable
+                  onPress={() => {
+                    triggerHaptic();
+                    onCat2ModeChange?.('alltime');
+                  }}
+                  style={({ pressed }) => [
+                    localStyles.radioButton,
+                    cat2NotificationMode === 'alltime'
+                      ? localStyles.radioButtonSelected
+                      : localStyles.radioButtonUnselected,
+                    { opacity: pressed ? 0.7 : 1 },
+                  ]}
+                >
+                  <View style={[
+                    localStyles.radioDot,
+                    cat2NotificationMode === 'alltime'
+                      ? localStyles.radioDotSelected
+                      : localStyles.radioDotUnselected,
+                  ]}>
+                    {cat2NotificationMode === 'alltime' && (
+                      <View style={localStyles.radioDotFill} />
+                    )}
+                  </View>
+                  <View style={localStyles.radioLabelWrap}>
+                    <Text style={localStyles.radioTitle}>All-Time Live Notification</Text>
+                    <Text style={localStyles.radioSubtitle}>
+                      Persistent live countdown in the status bar capsule and drawer.
+                    </Text>
+                  </View>
+                </Pressable>
+
+                {/* Option B — Prior Live Notification */}
+                <Pressable
+                  onPress={() => {
+                    triggerHaptic();
+                    onCat2ModeChange?.('prior');
+                  }}
+                  style={({ pressed }) => [
+                    localStyles.radioButton,
+                    cat2NotificationMode === 'prior'
+                      ? localStyles.radioButtonSelected
+                      : localStyles.radioButtonUnselected,
+                    { opacity: pressed ? 0.7 : 1 },
+                  ]}
+                >
+                  <View style={[
+                    localStyles.radioDot,
+                    cat2NotificationMode === 'prior'
+                      ? localStyles.radioDotSelected
+                      : localStyles.radioDotUnselected,
+                  ]}>
+                    {cat2NotificationMode === 'prior' && (
+                      <View style={localStyles.radioDotFill} />
+                    )}
+                  </View>
+                  <View style={localStyles.radioLabelWrap}>
+                    <Text style={localStyles.radioTitle}>Prior Live Notification</Text>
+                    <Text style={localStyles.radioSubtitle}>
+                      Countdown starts before each prayer and auto-dismisses after.
+                    </Text>
+                  </View>
+                </Pressable>
+
+                {/* Option C — Simple Reminder */}
+                <Pressable
+                  onPress={() => {
+                    triggerHaptic();
+                    onCat2ModeChange?.('simple');
+                  }}
+                  style={({ pressed }) => [
+                    localStyles.radioButton,
+                    cat2NotificationMode === 'simple'
+                      ? localStyles.radioButtonSelected
+                      : localStyles.radioButtonUnselected,
+                    { opacity: pressed ? 0.7 : 1 },
+                  ]}
+                >
+                  <View style={[
+                    localStyles.radioDot,
+                    cat2NotificationMode === 'simple'
+                      ? localStyles.radioDotSelected
+                      : localStyles.radioDotUnselected,
+                  ]}>
+                    {cat2NotificationMode === 'simple' && (
+                      <View style={localStyles.radioDotFill} />
+                    )}
+                  </View>
+                  <View style={localStyles.radioLabelWrap}>
+                    <Text style={localStyles.radioTitle}>15-Minute Simple Reminder</Text>
+                    <Text style={localStyles.radioSubtitle}>
+                      One-time static notification 15 minutes prior. No background countdown.
+                    </Text>
+                  </View>
+                </Pressable>
+
+                {/* Option D — Live Notification (No Capsule) */}
+                <Pressable
+                  onPress={() => {
+                    triggerHaptic();
+                    onCat2ModeChange?.('nocapsule');
+                  }}
+                  style={({ pressed }) => [
+                    localStyles.radioButton,
+                    cat2NotificationMode === 'nocapsule'
+                      ? localStyles.radioButtonSelected
+                      : localStyles.radioButtonUnselected,
+                    { opacity: pressed ? 0.7 : 1 },
+                  ]}
+                >
+                  <View style={[
+                    localStyles.radioDot,
+                    cat2NotificationMode === 'nocapsule'
+                      ? localStyles.radioDotSelected
+                      : localStyles.radioDotUnselected,
+                  ]}>
+                    {cat2NotificationMode === 'nocapsule' && (
+                      <View style={localStyles.radioDotFill} />
+                    )}
+                  </View>
+                  <View style={localStyles.radioLabelWrap}>
+                    <Text style={localStyles.radioTitle}>Live Notification (No Capsule)</Text>
+                    <Text style={localStyles.radioSubtitle}>
+                      Countdown in drawer only; disabled in the status bar capsule.
+                    </Text>
+                  </View>
+                </Pressable>
+
+              </View>
+
+              {/* Lead-time chip selector — only visible in 'prior' mode */}
+              {cat2NotificationMode === 'prior' && (
+                <View style={localStyles.leadTimeSection}>
+                  <Text style={localStyles.leadTimeLabel}>Notify me before prayer:</Text>
+                  <View style={localStyles.chipRow}>
+                    {([5, 10, 15] as const).map((mins) => (
+                      <Pressable
+                        key={mins}
+                        onPress={() => {
+                          triggerHaptic();
+                          onCat2LeadTimeChange?.(mins);
+                        }}
+                        style={({ pressed }) => [
+                          localStyles.chip,
+                          cat2PriorLeadTime === mins
+                            ? localStyles.chipSelected
+                            : localStyles.chipUnselected,
+                          { opacity: pressed ? 0.7 : 1 },
+                        ]}
+                      >
+                        <Text style={[
+                          localStyles.chipText,
+                          cat2PriorLeadTime === mins && localStyles.chipTextSelected,
+                        ]}>
+                          {mins} min
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
+              )}
+            </View>
+          )}
 
           {/* Cat3 Notification Mode Toggle */}
           {deviceCategory === 3 && (

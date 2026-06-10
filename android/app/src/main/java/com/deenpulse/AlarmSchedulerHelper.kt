@@ -67,7 +67,7 @@ object AlarmSchedulerHelper {
         context: Context,
         prayersJson: String,
         category: Int,
-        cat1Mode: String,
+        mode: String,
         leadMinutes: Int
     ) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -88,8 +88,8 @@ object AlarmSchedulerHelper {
                 val formattedTime = sdf.format(Date(prayerTimestamp))
 
                 when {
-                    // ── Cat 1, Mode B: prior window via PriorServiceStartReceiver ──────────
-                    category == 1 && cat1Mode == "prior" -> {
+                    // ── Cat 1 & Cat 2 Mode B (Prior Live): prior window via PriorServiceStartReceiver ──────────
+                    (category == 1 || category == 2) && mode == "prior" -> {
                         val triggerTime = prayerTimestamp - (leadMinutes * 60_000L)
                         if (triggerTime > now) {
                             val intent = Intent(context, PriorServiceStartReceiver::class.java).apply {
@@ -106,12 +106,12 @@ object AlarmSchedulerHelper {
                             val clockInfo = AlarmManager.AlarmClockInfo(triggerTime, pi)
                             alarmManager.setAlarmClock(clockInfo, pi)
                             scheduled++
-                            Log.d(TAG, "Cat1-Prior: Scheduled $name at $formattedTime (trigger in ${(triggerTime - now) / 60000} min)")
+                            Log.d(TAG, "Cat$category-Prior: Scheduled $name at $formattedTime (trigger in ${(triggerTime - now) / 60000} min)")
                         }
                     }
 
-                    // ── Cat 2 (Vivo/iQOO): setAlarmClock to beat Funtouch deep sleep ──────
-                    category == 2 -> {
+                    // ── Cat 2 Mode C (Simple Reminder): setAlarmClock to beat Funtouch deep sleep ──────
+                    category == 2 && mode == "simple" -> {
                         val reminderTime = prayerTimestamp - (15 * 60_000L)
                         if (reminderTime > now) {
                             val intent = buildReminderIntent(context, name, formattedTime, reminderTime)
@@ -124,12 +124,12 @@ object AlarmSchedulerHelper {
                             val clockInfo = AlarmManager.AlarmClockInfo(reminderTime, pi)
                             alarmManager.setAlarmClock(clockInfo, pi)
                             scheduled++
-                            Log.d(TAG, "Cat2-Vivo: setAlarmClock for $name reminder at ${Date(reminderTime)}")
+                            Log.d(TAG, "Cat2-Vivo (Simple): setAlarmClock for $name reminder at ${Date(reminderTime)}")
                         }
                     }
 
                     // ── Cat 3 (Samsung/Pixel/Xiaomi): setExactAndAllowWhileIdle ────────────
-                    else -> {
+                    category == 3 -> {
                         val reminderTime = prayerTimestamp - (15 * 60_000L)
                         if (reminderTime > now) {
                             val intent = buildReminderIntent(context, name, formattedTime, reminderTime)
@@ -159,13 +159,16 @@ object AlarmSchedulerHelper {
                 .putInt("scheduled_reminder_count", jsonArray.length())
                 .apply()
 
-            // Enable BootReceiver for Cat 2 / Cat 3 so alarms survive reboots.
-            // Cat 1 Mode A (foreground service) handles its own persistence separately.
-            if (category == 2 || (category == 1 && cat1Mode == "prior") || category == 3) {
+            // Enable BootReceiver if device brand and mode require reboot alarm scheduling.
+            // Cat 1 and Cat 2 Modes A/D (persistent foreground service) handle boot separately.
+            val needsBootReceiver = category == 3 ||
+                (category == 1 && mode == "prior") ||
+                (category == 2 && (mode == "prior" || mode == "simple"))
+            if (needsBootReceiver) {
                 setBootReceiverEnabled(context, scheduled > 0)
             }
 
-            Log.d(TAG, "scheduleAll: $scheduled alarms scheduled (cat=$category, mode=$cat1Mode)")
+            Log.d(TAG, "scheduleAll: $scheduled alarms scheduled (cat=$category, mode=$mode)")
         } catch (e: Exception) {
             Log.e(TAG, "scheduleAll failed", e)
         }
@@ -179,7 +182,7 @@ object AlarmSchedulerHelper {
         context: Context,
         prayersJson: String,
         category: Int,
-        cat1Mode: String,
+        mode: String,
         leadMinutes: Int
     ): Boolean {
         return try {
@@ -194,18 +197,20 @@ object AlarmSchedulerHelper {
 
                 // Only check alarms that haven't fired yet
                 val triggerTime = when {
-                    category == 1 && cat1Mode == "prior" -> prayerTimestamp - (leadMinutes * 60_000L)
+                    (category == 1 || category == 2) && mode == "prior" -> prayerTimestamp - (leadMinutes * 60_000L)
+                    category == 2 && mode == "simple" -> prayerTimestamp - (15 * 60_000L)
                     else -> prayerTimestamp - (15 * 60_000L)
                 }
                 if (triggerTime <= now) continue
 
-                val requestCode = if (category == 1 && cat1Mode == "prior") {
+                val isPriorMode = (category == 1 || category == 2) && mode == "prior"
+                val requestCode = if (isPriorMode) {
                     PRIOR_REQUEST_BASE + i
                 } else {
                     REMINDER_REQUEST_BASE + i
                 }
 
-                val receiverClass = if (category == 1 && cat1Mode == "prior") {
+                val receiverClass = if (isPriorMode) {
                     PriorServiceStartReceiver::class.java
                 } else {
                     PrayerReminderReceiver::class.java
@@ -227,7 +232,7 @@ object AlarmSchedulerHelper {
             }
 
             if (anyMissing) {
-                scheduleAll(context, prayersJson, category, cat1Mode, leadMinutes)
+                scheduleAll(context, prayersJson, category, mode, leadMinutes)
             }
             anyMissing
         } catch (e: Exception) {

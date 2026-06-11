@@ -85,6 +85,7 @@ export function DataManagementScreen({
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.cardContainer}>
+          <Text style={[styles.sectionHeader, styles.sectionHeaderFirst]}>Location Configuration</Text>
           {/* Location Mode */}
           <View style={styles.card}>
             <View style={styles.switchRow}>
@@ -144,6 +145,7 @@ export function DataManagementScreen({
             </View>
           </Pressable>
 
+          <Text style={styles.sectionHeader}>App Maintenance</Text>
           {/* Reset Cache / Reset History */}
           <Pressable
             style={({ pressed }) => [
@@ -170,6 +172,19 @@ export function DataManagementScreen({
 }
 
 const styles = StyleSheet.create({
+  sectionHeader: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: 'rgba(255, 255, 255, 0.4)',
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
+    marginTop: 22,
+    marginBottom: 10,
+    paddingLeft: 4,
+  },
+  sectionHeaderFirst: {
+    marginTop: 4,
+  },
   container: {
     flex: 1,
     backgroundColor: '#0B0F12',

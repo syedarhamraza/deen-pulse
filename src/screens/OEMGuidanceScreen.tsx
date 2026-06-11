@@ -163,6 +163,7 @@ export function OEMGuidanceScreen({ profile, onUpdateProfile }: OEMGuidanceScree
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <Text style={[localStyles.sectionHeader, localStyles.sectionHeaderFirst]}>Device Profile</Text>
         <View style={styles.profileSection}>
           <View style={localStyles.profileHeader}>
             <View style={localStyles.profileInfoCol}>
@@ -184,8 +185,10 @@ export function OEMGuidanceScreen({ profile, onUpdateProfile }: OEMGuidanceScree
           </View>
         </View>
 
+        <Text style={localStyles.sectionHeader}>Integration Status</Text>
         {renderCategoryGuidance()}
 
+        <Text style={localStyles.sectionHeader}>System Optimization</Text>
         <View style={styles.generalCard}>
           <Text style={styles.generalTitle}>Recommended Settings</Text>
           <Text style={styles.generalDesc}>
@@ -279,6 +282,19 @@ export function OEMGuidanceScreen({ profile, onUpdateProfile }: OEMGuidanceScree
 }
 
 const localStyles = StyleSheet.create({
+  sectionHeader: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: 'rgba(255, 255, 255, 0.4)',
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
+    marginTop: 22,
+    marginBottom: 10,
+    paddingLeft: 4,
+  },
+  sectionHeaderFirst: {
+    marginTop: 4,
+  },
   profileHeader: {
     flexDirection: 'row',
     alignItems: 'center',

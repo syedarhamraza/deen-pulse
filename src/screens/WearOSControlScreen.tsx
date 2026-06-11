@@ -139,6 +139,7 @@ export function WearOSControlScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <Text style={[styles.sectionHeader, styles.sectionHeaderFirst]}>Connection Status</Text>
         {/* Centered Circular Connection Status Badge */}
         <View style={styles.badgeSection}>
           <View style={[styles.badgeCircle, isConnected ? styles.badgeConnected : styles.badgeDisconnected]}>
@@ -155,6 +156,7 @@ export function WearOSControlScreen() {
           </View>
         </View>
 
+        <Text style={styles.sectionHeader}>Timetable Synchronization</Text>
         {/* Dynamic Last Synced Time Card */}
         <View style={styles.syncStatusCard}>
           <Text style={styles.syncStatusTitle}>Last Synchronized</Text>
@@ -196,9 +198,8 @@ export function WearOSControlScreen() {
           </View>
         )}
 
-        {/* Settings List */}
+        <Text style={styles.sectionHeader}>Sync Preferences</Text>
         <View style={styles.settingsSection}>
-          <Text style={styles.sectionLabel}>Sync Preferences</Text>
 
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
@@ -227,6 +228,7 @@ export function WearOSControlScreen() {
           </View>
         </View>
 
+        <Text style={styles.sectionHeader}>Troubleshooting</Text>
         {/* Troubleshooting Section */}
         <View style={styles.troubleCard}>
           <Pressable
@@ -282,6 +284,21 @@ export function WearOSControlScreen() {
 }
 
 const styles = StyleSheet.create({
+  sectionHeader: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: 'rgba(255, 255, 255, 0.4)',
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
+    marginTop: 22,
+    marginBottom: 10,
+    paddingLeft: 4,
+    alignSelf: 'flex-start',
+    width: '100%',
+  },
+  sectionHeaderFirst: {
+    marginTop: 4,
+  },
   container: {
     flex: 1,
     backgroundColor: '#0B0F12',

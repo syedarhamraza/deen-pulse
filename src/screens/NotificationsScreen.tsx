@@ -88,6 +88,7 @@ export function NotificationsScreen({
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.cardContainer}>
+          <Text style={[localStyles.sectionHeader, localStyles.sectionHeaderFirst]}>Permissions & Sounds</Text>
           <Pressable
             style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
             onPress={() => {
@@ -117,6 +118,8 @@ export function NotificationsScreen({
               }}
             />
           </View>
+
+          <Text style={localStyles.sectionHeader}>Background Lifecycle</Text>
 
           {/* ── Cat 1 (OPPO/Realme/OnePlus) Notification Mode ─────────────────────── */}
           {deviceCategory === 1 && (
@@ -465,6 +468,11 @@ export function NotificationsScreen({
             </View>
           )}
 
+          {/* Section: Visual Styles */}
+          {(deviceCategory === 1 || deviceCategory === 2 || (deviceCategory === 3 && cat3NotificationMode === 'ongoing')) && (
+            <Text style={localStyles.sectionHeader}>Visual Styles</Text>
+          )}
+
           {/* Status Bar Capsule Format Choice */}
           {(deviceCategory === 1 || deviceCategory === 2) && (
             <Pressable
@@ -507,6 +515,19 @@ export function NotificationsScreen({
 }
 
 const localStyles = StyleSheet.create({
+  sectionHeader: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: 'rgba(255, 255, 255, 0.4)',
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
+    marginTop: 22,
+    marginBottom: 10,
+    paddingLeft: 4,
+  },
+  sectionHeaderFirst: {
+    marginTop: 4,
+  },
   switchCard: {
     flexDirection: 'row',
     alignItems: 'center',

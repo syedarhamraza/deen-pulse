@@ -103,18 +103,6 @@ export function NotificationsScreen({
             <Text style={styles.menuDetailDesc}>For the Live island, enable live alerts in notification settings</Text>
           </Pressable>
 
-          {/* Device Optimization Navigation */}
-          <Pressable
-            style={({ pressed }) => [styles.menuDetailCard, { opacity: pressed ? 0.75 : 1 }]}
-            onPress={() => {
-              triggerHaptic();
-              navigation.navigate('oem_guidance');
-            }}
-          >
-            <Text style={styles.menuDetailLabel}>Optimize for Your Device</Text>
-            <Text style={styles.menuDetailDesc}>Configure brand-specific notification capsule settings and power profiles</Text>
-          </Pressable>
-
           {/* Audible Prayer Alert Switch */}
           <View style={[styles.menuDetailCard, localStyles.switchCard]}>
             <View style={localStyles.switchInfo}>

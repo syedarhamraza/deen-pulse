@@ -16,7 +16,7 @@
  */
 
 import React from 'react';
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Icon from 'react-native-vector-icons/Feather';
@@ -43,6 +43,10 @@ export function SettingsScreen() {
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.cardContainer}>
+          
+          {/* Group 1: Prayer & Calculation */}
+          <Text style={[localStyles.sectionHeader, localStyles.sectionHeaderFirst]}>Prayer & Calculation</Text>
+
           {/* Row 1: Prayer Rules */}
           <Pressable
             style={({ pressed }) => [styles.settingsRowCard, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
@@ -61,43 +65,7 @@ export function SettingsScreen() {
             <Icon name="chevron-right" size={18} color="rgba(0, 242, 157, 0.5)" />
           </Pressable>
 
-          {/* Row 2: Notifications */}
-          <Pressable
-            style={({ pressed }) => [styles.settingsRowCard, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
-            onPress={() => {
-              triggerHaptic();
-              navigation.navigate('notifications');
-            }}
-          >
-            <View style={styles.rowIconContainer}>
-              <Icon name="bell" size={18} color="#00F29D" />
-            </View>
-            <View style={styles.rowInfo}>
-              <Text style={styles.rowTitle}>Notifications</Text>
-              <Text style={styles.rowDesc}>Configure system alert permissions</Text>
-            </View>
-            <Icon name="chevron-right" size={18} color="rgba(0, 242, 157, 0.5)" />
-          </Pressable>
-
-          {/* Row: Watch Companion */}
-          <Pressable
-            style={({ pressed }) => [styles.settingsRowCard, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
-            onPress={() => {
-              triggerHaptic();
-              navigation.navigate('wearos_control');
-            }}
-          >
-            <View style={styles.rowIconContainer}>
-              <Icon name="watch" size={18} color="#00F29D" />
-            </View>
-            <View style={styles.rowInfo}>
-              <Text style={styles.rowTitle}>Watch Companion</Text>
-              <Text style={styles.rowDesc}>Manage Wear OS sync and connection status</Text>
-            </View>
-            <Icon name="chevron-right" size={18} color="rgba(0, 242, 157, 0.5)" />
-          </Pressable>
-
-          {/* Row 3: Data Management */}
+          {/* Row 2: Data Management */}
           <Pressable
             style={({ pressed }) => [styles.settingsRowCard, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
             onPress={() => {
@@ -115,7 +83,69 @@ export function SettingsScreen() {
             <Icon name="chevron-right" size={18} color="rgba(0, 242, 157, 0.5)" />
           </Pressable>
 
-          {/* Row 4: About DeenPulse */}
+
+          {/* Group 2: Notifications & Integration */}
+          <Text style={localStyles.sectionHeader}>Notifications & Integration</Text>
+
+          {/* Row 3: Notifications */}
+          <Pressable
+            style={({ pressed }) => [styles.settingsRowCard, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
+            onPress={() => {
+              triggerHaptic();
+              navigation.navigate('notifications');
+            }}
+          >
+            <View style={styles.rowIconContainer}>
+              <Icon name="bell" size={18} color="#00F29D" />
+            </View>
+            <View style={styles.rowInfo}>
+              <Text style={styles.rowTitle}>Notifications</Text>
+              <Text style={styles.rowDesc}>Configure system alert permissions</Text>
+            </View>
+            <Icon name="chevron-right" size={18} color="rgba(0, 242, 157, 0.5)" />
+          </Pressable>
+
+          {/* Row 4: Device Optimization */}
+          <Pressable
+            style={({ pressed }) => [styles.settingsRowCard, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
+            onPress={() => {
+              triggerHaptic();
+              navigation.navigate('oem_guidance');
+            }}
+          >
+            <View style={styles.rowIconContainer}>
+              <Icon name="cpu" size={18} color="#00F29D" />
+            </View>
+            <View style={styles.rowInfo}>
+              <Text style={styles.rowTitle}>Device Optimization</Text>
+              <Text style={styles.rowDesc}>Battery profiles and OEM-specific settings</Text>
+            </View>
+            <Icon name="chevron-right" size={18} color="rgba(0, 242, 157, 0.5)" />
+          </Pressable>
+
+          {/* Row 5: Watch Companion */}
+          <Pressable
+            style={({ pressed }) => [styles.settingsRowCard, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
+            onPress={() => {
+              triggerHaptic();
+              navigation.navigate('wearos_control');
+            }}
+          >
+            <View style={styles.rowIconContainer}>
+              <Icon name="watch" size={18} color="#00F29D" />
+            </View>
+            <View style={styles.rowInfo}>
+              <Text style={styles.rowTitle}>Watch Companion</Text>
+              <Text style={styles.rowDesc}>Manage Wear OS sync and connection status</Text>
+            </View>
+            <Icon name="chevron-right" size={18} color="rgba(0, 242, 157, 0.5)" />
+          </Pressable>
+
+
+          {/* Group 3: About & Diagnostics */}
+          <Text style={localStyles.sectionHeader}>About & Diagnostics</Text>
+
+          {/* Row 6: About */}
           <Pressable
             style={({ pressed }) => [styles.settingsRowCard, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
             onPress={() => {
@@ -133,7 +163,7 @@ export function SettingsScreen() {
             <Icon name="chevron-right" size={18} color="rgba(0, 242, 157, 0.5)" />
           </Pressable>
 
-          {/* Row: Developer Options */}
+          {/* Row 7: Developer Options */}
           <Pressable
             style={({ pressed }) => [styles.settingsRowCard, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
             onPress={() => {
@@ -155,3 +185,19 @@ export function SettingsScreen() {
     </View>
   );
 }
+
+const localStyles = StyleSheet.create({
+  sectionHeader: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: 'rgba(255, 255, 255, 0.4)',
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
+    marginTop: 22,
+    marginBottom: 10,
+    paddingLeft: 4,
+  },
+  sectionHeaderFirst: {
+    marginTop: 4,
+  },
+});

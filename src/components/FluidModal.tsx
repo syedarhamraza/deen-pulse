@@ -16,7 +16,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, Pressable, Animated, Modal, StyleSheet } from 'react-native';
+import { View, Text, Pressable, Animated, Modal } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { styles } from '../../App';
 
@@ -27,14 +27,7 @@ interface FluidModalProps {
   children: React.ReactNode;
 }
 
-const localStyles = StyleSheet.create({
-  overlayLine: {
-    height: 1,
-    width: '100%',
-  },
-});
-
-export function ModalFadeOverlay({ position }: { position: 'top' | 'bottom' }) {
+export function ModalFadeOverlay({ position: _position }: { position: 'top' | 'bottom' }) {
   return null;
 }
 

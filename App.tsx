@@ -127,7 +127,7 @@ export default function App(): React.JSX.Element {
 
 function DeenPulseApp(): React.JSX.Element {
   const insets = useSafeAreaInsets();
-  const { profile, isOnboardingComplete, isLoading: isProfileLoading, completeOnboarding } = useDeviceProfile();
+  const { profile, isOnboardingComplete, isLoading: isProfileLoading, completeOnboarding, updateDeviceProfile } = useDeviceProfile();
   const [locationMode, setLocationMode] = useState<'gps' | 'cached'>('gps');
   const [juristicMethod, setJuristicMethod] = useState<'standard' | 'hanafi'>('standard');
   const [calculationRule, setCalculationRule] = useState<CalculationMethod>('auto');
@@ -535,7 +535,14 @@ function DeenPulseApp(): React.JSX.Element {
                 />
               )}
             </Stack.Screen>
-            <Stack.Screen name="oem_guidance" component={OEMGuidanceScreen} />
+            <Stack.Screen name="oem_guidance">
+              {() => (
+                <OEMGuidanceScreen
+                  profile={profile}
+                  onUpdateProfile={updateDeviceProfile}
+                />
+              )}
+            </Stack.Screen>
             <Stack.Screen name="wearos_control" component={WearOSControlScreen} />
             <Stack.Screen name="cat1_notification_guide">
               {() => (

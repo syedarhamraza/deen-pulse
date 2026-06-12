@@ -166,7 +166,7 @@ export function SettingsScreen() {
               <View style={styles.rowInfo}>
                 <Text style={styles.rowTitle}>App Icon</Text>
                 <Text style={styles.rowDesc}>
-                  {appIcon === 'emerald' ? 'Glass' : appIcon === 'blue' ? 'Oasis Gradient' : 'Default Mint'}
+                  {appIcon === 'emerald' ? 'Glass Dome' : appIcon === 'blue' ? 'Oasis Glow' : 'Obsidian Mint'}
                 </Text>
               </View>
               <Icon name="chevron-right" size={18} color="rgba(0, 242, 157, 0.5)" />
@@ -238,14 +238,14 @@ export function SettingsScreen() {
             }}
           >
             <Image
-              source={require('../assets/icons/icon.png')}
+              source={require('../assets/icons/app_icon_default.png')}
               style={localStyles.modalItemImage}
             />
             <Text style={[
               styles.modalItemText,
               appIcon === 'default' && styles.modalItemTextSelected,
               localStyles.modalItemTextFlex
-            ]}>Default Mint</Text>
+            ]}>Obsidian Mint</Text>
             {appIcon === 'default' && <Icon name="check" size={16} color="#00F29D" />}
           </Pressable>
 
@@ -272,7 +272,7 @@ export function SettingsScreen() {
               styles.modalItemText,
               appIcon === 'emerald' && styles.modalItemTextSelected,
               localStyles.modalItemTextFlex
-            ]}>Glass</Text>
+            ]}>Glass Dome</Text>
             {appIcon === 'emerald' && <Icon name="check" size={16} color="#00F29D" />}
           </Pressable>
 
@@ -299,7 +299,7 @@ export function SettingsScreen() {
               styles.modalItemText,
               appIcon === 'blue' && styles.modalItemTextSelected,
               localStyles.modalItemTextFlex
-            ]}>Oasis Gradient</Text>
+            ]}>Oasis Glow</Text>
             {appIcon === 'blue' && <Icon name="check" size={16} color="#00F29D" />}
           </Pressable>
         </View>

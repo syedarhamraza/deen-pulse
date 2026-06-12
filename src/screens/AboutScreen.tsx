@@ -139,7 +139,7 @@ export function AboutScreen() {
         >
           <Icon name="arrow-left" size={20} color="#00F29D" />
         </Pressable>
-        <Text style={s.headerTitle}>About</Text>
+        <Text style={s.headerTitle}>About DeenPulse</Text>
         <HeaderFadeOverlay />
       </View>
 

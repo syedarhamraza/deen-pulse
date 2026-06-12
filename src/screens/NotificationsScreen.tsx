@@ -82,7 +82,7 @@ export function NotificationsScreen({
         >
           <Icon name="arrow-left" size={20} color="#00F29D" />
         </Pressable>
-        <Text style={styles.subTitle}>Notifications</Text>
+        <Text style={styles.subTitle}>Alerts & Sound</Text>
         <HeaderFadeOverlay />
       </View>
 
@@ -100,15 +100,13 @@ export function NotificationsScreen({
               }
             }}
           >
-            <Text style={styles.menuDetailLabel}>Allow Notifications</Text>
-            <Text style={styles.menuDetailDesc}>For the Live island, enable live alerts in notification settings</Text>
+            <Text style={[styles.menuDetailLabel, localStyles.menuDetailLabelNoMargin]}>Allow Notifications</Text>
           </Pressable>
 
           {/* Audible Prayer Alert Switch */}
           <View style={[styles.menuDetailCard, localStyles.switchCard]}>
             <View style={localStyles.switchInfo}>
               <Text style={styles.menuDetailLabel}>Audible Prayer Alert</Text>
-              <Text style={styles.menuDetailDesc}>Play the system default notification sound when a prayer time begins.</Text>
             </View>
             <ColorOSSwitch
               value={soundEnabled}
@@ -126,7 +124,7 @@ export function NotificationsScreen({
             <View style={styles.menuDetailCard}>
               <Text style={styles.menuDetailLabel}>Notification Mode</Text>
               <Text style={styles.menuDetailDesc}>
-                Choose how DeenPulse notifies you about upcoming prayers.
+                How should we remind you?
               </Text>
               <View style={localStyles.radioGroup}>
 
@@ -157,7 +155,7 @@ export function NotificationsScreen({
                   <View style={localStyles.radioLabelWrap}>
                     <Text style={localStyles.radioTitle}>All-Time Live Notification</Text>
                     <Text style={localStyles.radioSubtitle}>
-                      Persistent live countdown runs all day in the notification bar.
+                      Countdown stays visible all day.
                     </Text>
                   </View>
                 </Pressable>
@@ -189,7 +187,7 @@ export function NotificationsScreen({
                   <View style={localStyles.radioLabelWrap}>
                     <Text style={localStyles.radioTitle}>Prior Live Notification</Text>
                     <Text style={localStyles.radioSubtitle}>
-                      Live countdown starts before each prayer and auto-dismisses after.
+                      Countdown appears before each prayer, then hides.
                     </Text>
                   </View>
                 </Pressable>
@@ -235,7 +233,7 @@ export function NotificationsScreen({
             <View style={styles.menuDetailCard}>
               <Text style={styles.menuDetailLabel}>Notification Mode</Text>
               <Text style={styles.menuDetailDesc}>
-                Choose how DeenPulse notifies you about upcoming prayers on your Vivo device.
+                How should we remind you?
               </Text>
               <View style={localStyles.radioGroup}>
 
@@ -266,7 +264,7 @@ export function NotificationsScreen({
                   <View style={localStyles.radioLabelWrap}>
                     <Text style={localStyles.radioTitle}>All-Time Live Notification</Text>
                     <Text style={localStyles.radioSubtitle}>
-                      Persistent live countdown in the status bar capsule and drawer.
+                      Countdown stays visible all day.
                     </Text>
                   </View>
                 </Pressable>
@@ -298,7 +296,7 @@ export function NotificationsScreen({
                   <View style={localStyles.radioLabelWrap}>
                     <Text style={localStyles.radioTitle}>Prior Live Notification</Text>
                     <Text style={localStyles.radioSubtitle}>
-                      Countdown starts before each prayer and auto-dismisses after.
+                      Countdown appears before each prayer, then hides.
                     </Text>
                   </View>
                 </Pressable>
@@ -330,7 +328,7 @@ export function NotificationsScreen({
                   <View style={localStyles.radioLabelWrap}>
                     <Text style={localStyles.radioTitle}>15-Minute Simple Reminder</Text>
                     <Text style={localStyles.radioSubtitle}>
-                      One-time static notification 15 minutes prior. No background countdown.
+                      One reminder 15 min before prayer. No live countdown.
                     </Text>
                   </View>
                 </Pressable>
@@ -362,7 +360,7 @@ export function NotificationsScreen({
                   <View style={localStyles.radioLabelWrap}>
                     <Text style={localStyles.radioTitle}>Live Notification (No Capsule)</Text>
                     <Text style={localStyles.radioSubtitle}>
-                      Countdown in drawer only; disabled in the status bar capsule.
+                      Countdown in notification drawer only.
                     </Text>
                   </View>
                 </Pressable>
@@ -408,7 +406,7 @@ export function NotificationsScreen({
             <View style={styles.menuDetailCard}>
               <Text style={styles.menuDetailLabel}>Background Notification Mode</Text>
               <Text style={styles.menuDetailDesc}>
-                Choose how DeenPulse notifies you about upcoming prayers on your device.
+                How should we remind you?
               </Text>
               <View style={localStyles.radioGroup}>
                 <Pressable
@@ -433,7 +431,7 @@ export function NotificationsScreen({
                   <View style={localStyles.radioLabelWrap}>
                     <Text style={localStyles.radioTitle}>15-Minute Reminder</Text>
                     <Text style={localStyles.radioSubtitle}>
-                      Sends a one-time notification 15 minutes before each prayer. Battery efficient.
+                      A single reminder 15 min before each prayer. Saves battery.
                     </Text>
                   </View>
                 </Pressable>
@@ -460,7 +458,7 @@ export function NotificationsScreen({
                   <View style={localStyles.radioLabelWrap}>
                     <Text style={localStyles.radioTitle}>Ongoing Notification</Text>
                     <Text style={localStyles.radioSubtitle}>
-                      Persistent countdown in the notification drawer. Uses more battery but always visible.
+                      Always-on countdown in notifications. Uses more battery.
                     </Text>
                   </View>
                 </Pressable>
@@ -484,7 +482,6 @@ export function NotificationsScreen({
             >
               <Text style={styles.menuDetailLabel}>Status Bar Capsule Style</Text>
               <Text style={styles.menuDetailValue}>{capsuleFormatLabel}</Text>
-              <Text style={styles.menuDetailDesc}>Choose what information is displayed directly inside your device's status bar capsule.</Text>
             </Pressable>
           )}
 
@@ -501,11 +498,6 @@ export function NotificationsScreen({
                 {deviceCategory === 2 ? 'Notification Style' : 'Notification Title Style'}
               </Text>
               <Text style={styles.menuDetailValue}>{notificationStyleLabel}</Text>
-              <Text style={styles.menuDetailDesc}>
-                {deviceCategory === 2
-                  ? 'Customize the layout of the notification content text shown in the lock screen and drawer banner.'
-                  : 'Customize the title layout shown in the lock screen and drawer notification banner.'}
-              </Text>
             </Pressable>
           )}
         </View>
@@ -515,6 +507,9 @@ export function NotificationsScreen({
 }
 
 const localStyles = StyleSheet.create({
+  menuDetailLabelNoMargin: {
+    marginBottom: 0,
+  },
   sectionHeader: {
     fontSize: 11,
     fontWeight: '800',

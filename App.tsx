@@ -256,7 +256,7 @@ function DeenPulseApp(): React.JSX.Element {
     if (offlineFallback && !offlineAlertShown.current) {
       showAlert(
         'Offline Fallback',
-        'Unable to connect to the network. The system is relying on cached fallback datasets for your prayer times.'
+        'You\'re offline. Showing cached prayer times.'
       );
       offlineAlertShown.current = true;
     } else if (!offlineFallback) {
@@ -290,7 +290,7 @@ function DeenPulseApp(): React.JSX.Element {
   const handleAppReset = () => {
     showAlert(
       'Reset App Cache',
-      'Wipes out local database and forces a fresh GPS positioning and API network fetch loop.',
+      'This will clear all data and refresh your prayer times.',
       async () => {
         try {
           await AsyncStorage.clear();
@@ -322,7 +322,7 @@ function DeenPulseApp(): React.JSX.Element {
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
           {
             title: 'Location Permission Required',
-            message: 'DeenPulse requires device location to calculate correct prayer times.',
+            message: 'DeenPulse needs your location to calculate prayer times.',
             buttonPositive: 'Allow',
             buttonNegative: 'Deny',
           }
@@ -1112,7 +1112,7 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     color: '#00F29D',
     fontWeight: '600',
-    marginBottom: 6,
+    marginBottom: 0,
   },
   menuDetailDesc: {
     fontSize: 12,

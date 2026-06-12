@@ -56,7 +56,7 @@ export function SettingsScreen() {
         <View style={styles.cardContainer}>
           
           {/* Group 1: Prayer & Calculation */}
-          <Text style={[localStyles.sectionHeader, localStyles.sectionHeaderFirst]}>Prayer & Calculation</Text>
+          <Text style={[localStyles.sectionHeader, localStyles.sectionHeaderFirst]}>Prayer Settings</Text>
 
           {/* Row 1: Prayer Rules */}
           <Pressable
@@ -70,8 +70,7 @@ export function SettingsScreen() {
               <Icon name="book-open" size={18} color="#00F29D" />
             </View>
             <View style={styles.rowInfo}>
-              <Text style={styles.rowTitle}>Prayer Rules</Text>
-              <Text style={styles.rowDesc}>Juristic settings and calculation methods</Text>
+              <Text style={styles.rowTitle}>Calculation Methods</Text>
             </View>
             <Icon name="chevron-right" size={18} color="rgba(0, 242, 157, 0.5)" />
           </Pressable>
@@ -88,14 +87,13 @@ export function SettingsScreen() {
               <Icon name="database" size={18} color="#00F29D" />
             </View>
             <View style={styles.rowInfo}>
-              <Text style={styles.rowTitle}>Data Management</Text>
-              <Text style={styles.rowDesc}>Storage, cache, and GPS positioning</Text>
+              <Text style={styles.rowTitle}>Location & Storage</Text>
             </View>
             <Icon name="chevron-right" size={18} color="rgba(0, 242, 157, 0.5)" />
           </Pressable>
 
           {/* Group 2: Notifications & Integration */}
-          <Text style={localStyles.sectionHeader}>Notifications & Integration</Text>
+          <Text style={localStyles.sectionHeader}>Alerts & Device</Text>
 
           {/* Row 3: Notifications */}
           <Pressable
@@ -109,8 +107,7 @@ export function SettingsScreen() {
               <Icon name="bell" size={18} color="#00F29D" />
             </View>
             <View style={styles.rowInfo}>
-              <Text style={styles.rowTitle}>Notifications</Text>
-              <Text style={styles.rowDesc}>Configure system alert permissions</Text>
+              <Text style={styles.rowTitle}>Alerts & Sound</Text>
             </View>
             <Icon name="chevron-right" size={18} color="rgba(0, 242, 157, 0.5)" />
           </Pressable>
@@ -127,8 +124,7 @@ export function SettingsScreen() {
               <Icon name="cpu" size={18} color="#00F29D" />
             </View>
             <View style={styles.rowInfo}>
-              <Text style={styles.rowTitle}>Device Optimization</Text>
-              <Text style={styles.rowDesc}>Battery profiles and OEM-specific settings</Text>
+              <Text style={styles.rowTitle}>Battery & OEM</Text>
             </View>
             <Icon name="chevron-right" size={18} color="rgba(0, 242, 157, 0.5)" />
           </Pressable>
@@ -145,8 +141,7 @@ export function SettingsScreen() {
               <Icon name="watch" size={18} color="#00F29D" />
             </View>
             <View style={styles.rowInfo}>
-              <Text style={styles.rowTitle}>Watch Companion</Text>
-              <Text style={styles.rowDesc}>Manage Wear OS sync and connection status</Text>
+              <Text style={styles.rowTitle}>Smartwatch Sync</Text>
             </View>
             <Icon name="chevron-right" size={18} color="rgba(0, 242, 157, 0.5)" />
           </Pressable>
@@ -165,16 +160,13 @@ export function SettingsScreen() {
               </View>
               <View style={styles.rowInfo}>
                 <Text style={styles.rowTitle}>App Icon</Text>
-                <Text style={styles.rowDesc}>
-                  {appIcon === 'emerald' ? 'Glass Dome' : appIcon === 'blue' ? 'Oasis Glow' : 'Obsidian Mint'}
-                </Text>
               </View>
               <Icon name="chevron-right" size={18} color="rgba(0, 242, 157, 0.5)" />
             </Pressable>
           )}
 
           {/* Group 3: About & Diagnostics */}
-          <Text style={localStyles.sectionHeader}>About & Diagnostics</Text>
+          <Text style={localStyles.sectionHeader}>More</Text>
           <Pressable
             style={({ pressed }) => [styles.settingsRowCard, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
             onPress={() => {
@@ -186,8 +178,7 @@ export function SettingsScreen() {
               <Icon name="info" size={18} color="#00F29D" />
             </View>
             <View style={styles.rowInfo}>
-              <Text style={styles.rowTitle}>About</Text>
-              <Text style={styles.rowDesc}>App information and credits</Text>
+              <Text style={styles.rowTitle}>About DeenPulse</Text>
             </View>
             <Icon name="chevron-right" size={18} color="rgba(0, 242, 157, 0.5)" />
           </Pressable>
@@ -204,8 +195,7 @@ export function SettingsScreen() {
               <Icon name="tool" size={18} color="#00F29D" />
             </View>
             <View style={styles.rowInfo}>
-              <Text style={styles.rowTitle}>Developer Options</Text>
-              <Text style={styles.rowDesc}>Trigger test notifications and simulations</Text>
+              <Text style={styles.rowTitle}>Developer Tools</Text>
             </View>
             <Icon name="chevron-right" size={18} color="rgba(0, 242, 157, 0.5)" />
           </Pressable>

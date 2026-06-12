@@ -90,12 +90,12 @@ export function OEMGuidanceScreen({ profile, onUpdateProfile }: OEMGuidanceScree
               <Text style={styles.cardTitle}>Category 1 Integration (Active)</Text>
             </View>
             <Text style={styles.cardDescription}>
-              Your {profile.brand.toUpperCase()} device supports the advanced Status Bar Capsule. We have locked the countdown tracking element into your status bar pill cleanly.
+              Your {profile.brand.toUpperCase()} device supports the status bar capsule. Prayer countdown is active in your status bar.
             </Text>
             <View style={styles.tipBox}>
               <Icon name="info" size={16} color="#00F29D" style={styles.tipIcon} />
               <Text style={styles.tipText}>
-                OPPO / ColorOS / Realme devices sometimes freeze background services. Ensure 'Auto-Launch' is enabled for DeenPulse.
+                Enable 'Auto-Launch' for DeenPulse to prevent background freezes.
               </Text>
             </View>
           </View>
@@ -108,12 +108,12 @@ export function OEMGuidanceScreen({ profile, onUpdateProfile }: OEMGuidanceScree
               <Text style={styles.cardTitle}>Category 2 Integration (Active)</Text>
             </View>
             <Text style={styles.cardDescription}>
-              Your {profile.brand.toUpperCase()} device utilizes Vivo's Origin Island / Lockscreen display. We bypass custom text wrappers to prevent layout displacement and use a pure native chronometer for clean alignment.
+              Your {profile.brand.toUpperCase()} device supports Origin Island. Countdown uses native rendering for a clean display.
             </Text>
             <View style={styles.tipBox}>
               <Icon name="info" size={16} color="#00F29D" style={styles.tipIcon} />
               <Text style={styles.tipText}>
-                To prevent countdown stalling, make sure DeenPulse is allowed to start in the background under 'High Background Power Consumption' settings.
+                Allow DeenPulse to run in the background to keep the countdown active.
               </Text>
             </View>
           </View>
@@ -127,14 +127,14 @@ export function OEMGuidanceScreen({ profile, onUpdateProfile }: OEMGuidanceScree
               <Text style={styles.cardTitle}>Category 3 Integration (Standard)</Text>
             </View>
             <Text style={styles.cardDescription}>
-              Your device uses standard high-priority ongoing notifications for background tracking. This is the most stable path for Samsung OneUI, Xiaomi HyperOS, and Google Pixel.
+              Your device uses standard notifications — the most stable option for Samsung, Xiaomi, and Pixel.
             </Text>
 
             <View style={styles.toggleRow}>
               <View style={styles.toggleInfo}>
                 <Text style={styles.toggleLabel}>Experimental Live Capsule</Text>
                 <Text style={styles.toggleDesc}>
-                  Attempt to force status bar capsule pill. May cause layout glitches on unsupported devices.
+                  Force status bar capsule. May glitch on unsupported devices.
                 </Text>
               </View>
               <ColorOSSwitch
@@ -192,7 +192,7 @@ export function OEMGuidanceScreen({ profile, onUpdateProfile }: OEMGuidanceScree
         <View style={styles.generalCard}>
           <Text style={styles.generalTitle}>Recommended Settings</Text>
           <Text style={styles.generalDesc}>
-            To ensure the live countdown pill functions smoothly on your lock screen and in the background, verify these settings in your phone's system menus:
+            For the best experience, check these settings:
           </Text>
 
           <View style={styles.bulletRow}>
@@ -202,7 +202,7 @@ export function OEMGuidanceScreen({ profile, onUpdateProfile }: OEMGuidanceScree
             <View style={styles.bulletContent}>
               <Text style={styles.bulletTitle}>Remove Battery Limits</Text>
               <Text style={styles.bulletDesc}>
-                Set Battery Optimization to 'Unrestricted' or 'No Restrictions'.
+                Set to 'Unrestricted' or 'No Restrictions'.
               </Text>
             </View>
           </View>
@@ -214,7 +214,7 @@ export function OEMGuidanceScreen({ profile, onUpdateProfile }: OEMGuidanceScree
             <View style={styles.bulletContent}>
               <Text style={styles.bulletTitle}>Enable Auto-Start / Background Start</Text>
               <Text style={styles.bulletDesc}>
-                Allow DeenPulse to launch automatically and run in the background.
+                Allow DeenPulse to run in the background.
               </Text>
             </View>
           </View>
@@ -226,7 +226,7 @@ export function OEMGuidanceScreen({ profile, onUpdateProfile }: OEMGuidanceScree
             <View style={styles.bulletContent}>
               <Text style={styles.bulletTitle}>Lock Screen Permissions</Text>
               <Text style={styles.bulletDesc}>
-                Ensure 'Show on Lock Screen' is enabled for notifications.
+                Turn on 'Show on Lock Screen'.
               </Text>
             </View>
           </View>

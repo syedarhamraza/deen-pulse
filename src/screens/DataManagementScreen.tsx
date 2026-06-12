@@ -79,7 +79,7 @@ export function DataManagementScreen({
         >
           <Icon name="arrow-left" size={20} color="#00F29D" />
         </Pressable>
-        <Text style={styles.title}>Data Management</Text>
+        <Text style={styles.title}>Location & Storage</Text>
         <HeaderFadeOverlay />
       </View>
 
@@ -114,10 +114,7 @@ export function DataManagementScreen({
           >
             <View style={styles.rowLayout}>
               <View style={styles.infoLayout}>
-                <Text style={styles.cardLabel}>GPS Location Permission</Text>
-                <Text style={styles.cardDesc}>
-                  Manually trigger system location authorization settings for accurate local calculations.
-                </Text>
+                <Text style={[styles.cardLabel, styles.cardLabelNoMargin]}>GPS Location Permission</Text>
               </View>
               {gpsGranted !== null && (
                 <View
@@ -158,11 +155,8 @@ export function DataManagementScreen({
               onClearCacheReset();
             }}
           >
-            <Text style={[styles.cardLabel, styles.destructiveText]}>
+            <Text style={[styles.cardLabel, styles.destructiveText, styles.cardLabelNoMargin]}>
               Clear Cache & App Reset
-            </Text>
-            <Text style={styles.cardDesc}>
-              Wipes out all stored calculation rules, cached locations, and restarts the initial setup wizard.
             </Text>
           </Pressable>
         </View>
@@ -172,6 +166,9 @@ export function DataManagementScreen({
 }
 
 const styles = StyleSheet.create({
+  cardLabelNoMargin: {
+    marginBottom: 0,
+  },
   sectionHeader: {
     fontSize: 11,
     fontWeight: '800',

@@ -136,13 +136,13 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
           </View>
         </Animated.View>
         <Text style={styles.welcomeTitle}>DeenPulse</Text>
-        <Text style={styles.welcomeSubtitle}>Live Prayer Tracking on your Device</Text>
+        <Text style={styles.welcomeSubtitle}>Prayer times, always in sight.</Text>
       </View>
 
       <View style={styles.introCard}>
         <Icon name="check-circle" size={20} color="#00F29D" style={styles.introCardIcon} />
         <Text style={styles.introCardText}>
-          Track remaining prayer times directly in your status bar pill, notification shade, and Wear OS smartwatch.
+          See your next prayer in the status bar, notifications, and on your smartwatch.
         </Text>
       </View>
 
@@ -160,7 +160,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
     <View style={styles.stepContainer}>
       <Text style={styles.sectionTitle}>Select Your Device Brand</Text>
       <Text style={styles.sectionSubtitle}>
-        Different Android systems manage background tasks uniquely. We optimize notifications based on your manufacturer.
+        We'll optimize DeenPulse for your phone brand.
       </Text>
 
       <ScrollView
@@ -259,17 +259,17 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
             <Icon name="zap" size={16} color="#00F29D" style={styles.infoPointIcon} />
             <Text style={styles.infoPointText}>
               {brandInfo.category === 1
-                ? 'Optimized to lock tracking elements inside the status bar pill using Android 14+ promoted system flags.'
+                ? 'Your countdown appears directly in the status bar pill.'
                 : brandInfo.category === 2
-                ? 'Strips custom text wrappers and utilizes a pure native chronometer. Lets Vivo’s Origin Island UI handle rendering cleanly without displacement.'
-                : 'Provides a standard ongoing status indicator, with a toggle option for experimental promoted system tracking.'}
+                ? 'Countdown integrates with Vivo\'s Origin Island natively.'
+                : 'Prayer countdown shows as a persistent notification.'}
             </Text>
           </View>
 
           <View style={styles.infoPoint}>
             <Icon name="battery" size={16} color="#00F29D" style={styles.infoPointIcon} />
             <Text style={styles.infoPointText}>
-              Includes specialized battery optimizations. We recommend disabling battery restrictions in system settings for best performance.
+              For best results, disable battery restrictions for DeenPulse.
             </Text>
           </View>
         </View>

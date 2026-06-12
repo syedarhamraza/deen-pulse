@@ -47,9 +47,7 @@ export function Cat1NotificationGuideScreen({
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.introSection}>
-          <Text style={styles.introText}>
-            Because you are using an <Text style={styles.brandHighlight}>OPPO, OnePlus, or Realme</Text> device, ColorOS rules apply. Please verify that notifications are fully active to enable the live status bar capsule tracking pill.
-          </Text>
+          <Text style={styles.introText}>Your device needs a few notification settings enabled for the status bar capsule to work.</Text>
         </View>
 
         <View style={styles.cardContainer}>
@@ -62,7 +60,7 @@ export function Cat1NotificationGuideScreen({
               <Text style={styles.stepTitle}>Enable Live Alerts</Text>
             </View>
             <Text style={styles.stepDesc}>
-              Tap the button below to open system settings. Go to <Text style={styles.semibold}>Manage Notifications</Text> and ensure the <Text style={styles.semibold}>Live Alerts</Text> (or Active Updates) channel is fully toggled ON.
+              Open <Text style={styles.semibold}>Manage Notifications</Text> and turn on <Text style={styles.semibold}>Live Alerts</Text> (or Active Updates).
             </Text>
           </View>
 
@@ -75,7 +73,7 @@ export function Cat1NotificationGuideScreen({
               <Text style={styles.stepTitle}>Show on Lock Screen</Text>
             </View>
             <Text style={styles.stepDesc}>
-              Ensure that <Text style={styles.semibold}>Lock Screen</Text> permissions are completely checked so the countdown widget updates when the phone is locked.
+              Enable <Text style={styles.semibold}>Lock Screen</Text> permission so the countdown updates while locked.
             </Text>
           </View>
 
@@ -88,7 +86,7 @@ export function Cat1NotificationGuideScreen({
               <Text style={styles.stepTitle}>Allow Ring & Vibrate</Text>
             </View>
             <Text style={styles.stepDesc}>
-              Ensure notifications are set to ring and vibrate rather than silent. This guarantees the background thread is allocated CPU priority to update the timer.
+              Set notifications to ring or vibrate — silent mode can pause the countdown.
             </Text>
           </View>
         </View>

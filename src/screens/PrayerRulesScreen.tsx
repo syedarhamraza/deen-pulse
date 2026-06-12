@@ -47,7 +47,7 @@ export function PrayerRulesScreen({
         >
           <Icon name="arrow-left" size={20} color="#00F29D" />
         </Pressable>
-        <Text style={styles.subTitle}>Prayer Rules</Text>
+        <Text style={styles.subTitle}>Calculation Methods</Text>
         <HeaderFadeOverlay />
       </View>
 
@@ -63,7 +63,6 @@ export function PrayerRulesScreen({
           >
             <Text style={styles.menuDetailLabel}>Juristic Method (Asr)</Text>
             <Text style={styles.menuDetailValue}>{juristicMethodLabel}</Text>
-            <Text style={styles.menuDetailDesc}>Select Standard (Shafi'i, Maliki, Hanbali) or Hanafi school rules.</Text>
           </Pressable>
 
           {/* Card 2: Calculation Rule */}
@@ -76,7 +75,6 @@ export function PrayerRulesScreen({
           >
             <Text style={styles.menuDetailLabel}>Calculation Rule</Text>
             <Text style={styles.menuDetailValue}>{calculationRuleLabel}</Text>
-            <Text style={styles.menuDetailDesc}>Choose calculation method rules for regional timing math offsets.</Text>
           </Pressable>
         </View>
       </ScrollView>

@@ -47,7 +47,7 @@ export function DeveloperOptionsScreen({
         >
           <Icon name="arrow-left" size={20} color="#00F29D" />
         </Pressable>
-        <Text style={styles.title}>Developer Options</Text>
+        <Text style={styles.title}>Developer Tools</Text>
         <HeaderFadeOverlay />
       </View>
 
@@ -59,9 +59,6 @@ export function DeveloperOptionsScreen({
           {/* Test Sound */}
           <View style={styles.card}>
             <Text style={styles.cardLabel}>Audible Alert Sound Test</Text>
-            <Text style={styles.cardDesc}>
-              Directly triggers a high-importance system channel notification for a simulated prayer time. Use this to verify ringtone and vibration profiles.
-            </Text>
             <Pressable
               style={({ pressed }) => [
                 styles.actionButton,
@@ -91,9 +88,6 @@ export function DeveloperOptionsScreen({
                 </Text>
               </View>
             </View>
-            <Text style={styles.cardDesc}>
-              Schedules a mock prayer starting in exactly 1 second. Once reached, it immediately triggers the Active State transition, Adhan sound alert, golden dashboard UI theme, and active notification capsule.
-            </Text>
 
             {isSimulating ? (
               <Pressable
@@ -220,6 +214,7 @@ const styles = StyleSheet.create({
     gap: 8,
     borderWidth: 1,
     borderColor: 'rgba(0, 242, 157, 0.2)',
+    marginTop: 12,
   },
   actionButtonText: {
     color: '#00F29D',

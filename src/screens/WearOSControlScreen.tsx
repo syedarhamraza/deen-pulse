@@ -86,7 +86,7 @@ export function WearOSControlScreen() {
       const lngStr = await AsyncStorage.getItem('@deenpulse_cached_lng');
 
       if (!prayersJson || !latStr || !lngStr) {
-        throw new Error('No prayer timings or location coordinates cached on this phone. Refresh phone timings first.');
+        throw new Error('No prayer data found. Refresh timings on your phone first.');
       }
 
       const lat = parseFloat(latStr);
@@ -135,7 +135,7 @@ export function WearOSControlScreen() {
         >
           <Icon name="arrow-left" size={20} color="#00F29D" />
         </Pressable>
-        <Text style={styles.title}>Watch Companion</Text>
+        <Text style={styles.title}>Smartwatch Sync</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -162,7 +162,7 @@ export function WearOSControlScreen() {
           <Text style={styles.syncStatusTitle}>Last Synchronized</Text>
           <Text style={styles.syncStatusTime}>{formatTimestamp(lastSyncTime)}</Text>
           <Text style={styles.syncStatusSubtitle}>
-            {isConnected ? 'Ready to sync live timings and preferences' : 'Connect via Bluetooth to sync timings'}
+            {isConnected ? 'Ready to sync' : 'Connect your watch to sync'}
           </Text>
         </View>
 
@@ -204,9 +204,6 @@ export function WearOSControlScreen() {
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
               <Text style={styles.settingLabel}>Auto-Sync on Refresh</Text>
-              <Text style={styles.settingDesc}>
-                Pushes new timings to the watch automatically when phone coordinates refresh.
-              </Text>
             </View>
             <ColorOSSwitch
               value={autoSync}
@@ -217,9 +214,6 @@ export function WearOSControlScreen() {
           <View style={styles.settingRowNoBorder}>
             <View style={styles.settingInfo}>
               <Text style={styles.settingLabel}>Sync Calculation Settings</Text>
-              <Text style={styles.settingDesc}>
-                Keeps Juristic Method and Asr calculation rules synchronized between phone and watch.
-              </Text>
             </View>
             <ColorOSSwitch
               value={syncSettings}
@@ -254,7 +248,7 @@ export function WearOSControlScreen() {
                   <Text style={styles.stepNumberText}>1</Text>
                 </View>
                 <Text style={styles.troubleParagraph}>
-                  Make sure your watch is powered on and connected to this phone via Bluetooth (check Galaxy Wearable or Pixel Watch app).
+                  Check that your watch is on and connected via Bluetooth.
                 </Text>
               </View>
 
@@ -263,7 +257,7 @@ export function WearOSControlScreen() {
                   <Text style={styles.stepNumberText}>2</Text>
                 </View>
                 <Text style={styles.troubleParagraph}>
-                  Install the DeenPulse companion watch app on your Wear OS watch from the Google Play Store.
+                  Install DeenPulse on your watch from the Play Store.
                 </Text>
               </View>
 
@@ -272,7 +266,7 @@ export function WearOSControlScreen() {
                   <Text style={styles.stepNumberText}>3</Text>
                 </View>
                 <Text style={styles.troubleParagraph}>
-                  Open the watch app. It will show "Waiting for Sync". Press "Sync Now" on this page to force timing updates.
+                  Open the watch app, then tap Sync Now above.
                 </Text>
               </View>
             </View>

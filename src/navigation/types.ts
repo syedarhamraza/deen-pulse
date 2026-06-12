@@ -28,6 +28,7 @@ export type RootStackParamList = {
   cat1_notification_guide: undefined;
   developer_options: undefined;
   update_check: undefined;
+  app_icon: undefined;
 };
 
 export type Screen = keyof RootStackParamList;

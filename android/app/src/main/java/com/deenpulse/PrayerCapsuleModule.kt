@@ -488,4 +488,46 @@ class PrayerCapsuleModule(reactContext: ReactApplicationContext) :
             promise.resolve("1.0.0")
         }
     }
+
+    @ReactMethod
+    fun getDeviceInfo(promise: Promise) {
+        try {
+            val context = reactApplicationContext
+            val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+            val memoryInfo = android.app.ActivityManager.MemoryInfo()
+            activityManager.getMemoryInfo(memoryInfo)
+
+            val totalRamGb = memoryInfo.totalMem / (1024.0 * 1024.0 * 1024.0)
+            val ramTiers = intArrayOf(2, 3, 4, 6, 8, 12, 16, 24, 32, 64)
+            var displayRam = Math.round(totalRamGb).toInt()
+            
+            var minDiff = Double.MAX_VALUE
+            var closestTier = displayRam
+            for (tier in ramTiers) {
+                val diff = Math.abs(totalRamGb - tier)
+                if (diff < minDiff) {
+                    minDiff = diff
+                    closestTier = tier
+                }
+            }
+            
+            if (minDiff < closestTier * 0.15) {
+                displayRam = closestTier
+            }
+            val formattedRam = "${displayRam} GB"
+
+            val map = Arguments.createMap()
+            map.putString("deviceModel", Build.MODEL)
+            map.putString("deviceBrand", Build.MANUFACTURER)
+            map.putString("androidVersion", Build.VERSION.RELEASE)
+            map.putInt("sdkVersion", Build.VERSION.SDK_INT)
+            map.putString("cpuAbi", Build.SUPPORTED_ABIS.firstOrNull() ?: "unknown")
+            map.putString("hardware", Build.HARDWARE)
+            map.putString("ram", formattedRam)
+
+            promise.resolve(map)
+        } catch (e: Exception) {
+            promise.reject("DEVICE_INFO_ERROR", e.message, e)
+        }
+    }
 }

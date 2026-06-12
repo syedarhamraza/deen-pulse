@@ -15,26 +15,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, Pressable, Platform, Image, StyleSheet } from 'react-native';
+import React from 'react';
+import { View, Text, ScrollView, Pressable, Platform, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Icon from 'react-native-vector-icons/Feather';
 import { styles, triggerHaptic, HeaderFadeOverlay } from '../../App';
 import { RootStackParamList } from '../navigation/types';
-import { FluidModal } from '../components/FluidModal';
-import { changeAppIcon, getCurrentAppIcon, AppIconType } from '../utils/appIconHelper';
 
 export function SettingsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const [appIcon, setAppIcon] = useState<AppIconType>('default');
-  const [showIconPicker, setShowIconPicker] = useState(false);
-
-  useEffect(() => {
-    if (Platform.OS === 'android') {
-      getCurrentAppIcon().then(setAppIcon);
-    }
-  }, []);
 
   return (
     <View style={styles.screenContainer}>
@@ -152,7 +142,7 @@ export function SettingsScreen() {
               style={({ pressed }) => [styles.settingsRowCard, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
               onPress={() => {
                 triggerHaptic();
-                setShowIconPicker(true);
+                navigation.navigate('app_icon');
               }}
             >
               <View style={styles.rowIconContainer}>
@@ -220,120 +210,11 @@ export function SettingsScreen() {
           </Pressable>
         </View>
       </ScrollView>
-
-      {/* App Icon Picker Modal */}
-      <FluidModal
-        visible={showIconPicker}
-        onClose={() => {
-          triggerHaptic();
-          setShowIconPicker(false);
-        }}
-        title="Choose App Icon"
-      >
-        <View style={localStyles.modalContainer}>
-          {/* Default Option */}
-          <Pressable
-            style={({ pressed }) => [
-              styles.modalItem,
-              appIcon === 'default' && styles.modalItemSelected,
-              localStyles.modalItemRow,
-              { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
-            ]}
-            onPress={async () => {
-              triggerHaptic();
-              const success = await changeAppIcon('default');
-              if (success) setAppIcon('default');
-              setShowIconPicker(false);
-            }}
-          >
-            <Image
-              source={require('../assets/icons/app_icon_default.png')}
-              style={localStyles.modalItemImage}
-            />
-            <Text style={[
-              styles.modalItemText,
-              appIcon === 'default' && styles.modalItemTextSelected,
-              localStyles.modalItemTextFlex
-            ]}>Obsidian Mint</Text>
-            {appIcon === 'default' && <Icon name="check" size={16} color="#00F29D" />}
-          </Pressable>
-
-          {/* Emerald Option */}
-          <Pressable
-            style={({ pressed }) => [
-              styles.modalItem,
-              appIcon === 'emerald' && styles.modalItemSelected,
-              localStyles.modalItemRow,
-              { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
-            ]}
-            onPress={async () => {
-              triggerHaptic();
-              const success = await changeAppIcon('emerald');
-              if (success) setAppIcon('emerald');
-              setShowIconPicker(false);
-            }}
-          >
-            <Image
-              source={require('../assets/icons/app_icon_emerald.png')}
-              style={localStyles.modalItemImage}
-            />
-            <Text style={[
-              styles.modalItemText,
-              appIcon === 'emerald' && styles.modalItemTextSelected,
-              localStyles.modalItemTextFlex
-            ]}>Glass Dome</Text>
-            {appIcon === 'emerald' && <Icon name="check" size={16} color="#00F29D" />}
-          </Pressable>
-
-          {/* Blue Option */}
-          <Pressable
-            style={({ pressed }) => [
-              styles.modalItem,
-              appIcon === 'blue' && styles.modalItemSelected,
-              localStyles.modalItemRow,
-              { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
-            ]}
-            onPress={async () => {
-              triggerHaptic();
-              const success = await changeAppIcon('blue');
-              if (success) setAppIcon('blue');
-              setShowIconPicker(false);
-            }}
-          >
-            <Image
-              source={require('../assets/icons/app_icon_blue.png')}
-              style={localStyles.modalItemImage}
-            />
-            <Text style={[
-              styles.modalItemText,
-              appIcon === 'blue' && styles.modalItemTextSelected,
-              localStyles.modalItemTextFlex
-            ]}>Oasis Glow</Text>
-            {appIcon === 'blue' && <Icon name="check" size={16} color="#00F29D" />}
-          </Pressable>
-        </View>
-      </FluidModal>
     </View>
   );
 }
 
 const localStyles = StyleSheet.create({
-  modalContainer: {
-    gap: 12,
-  },
-  modalItemImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    marginRight: 16,
-  },
-  modalItemTextFlex: {
-    flex: 1,
-  },
-  modalItemRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
   sectionHeader: {
     fontSize: 11,
     fontWeight: '800',

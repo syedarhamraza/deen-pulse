@@ -30,14 +30,13 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Feather';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { triggerHaptic, HeaderFadeOverlay } from '../../App';
+import { getCurrentAppIcon, AppIconType } from '../utils/appIconHelper';
 import {
   checkForUpdate,
   markUpdateChecked,
   openDownloadUrl,
   UpdateInfo,
-  UPDATE_CHECK_FREQUENCY_KEY,
 } from '../utils/UpdateChecker';
 
 const { PrayerCapsuleModule } = NativeModules;
@@ -49,12 +48,6 @@ const FEATURES = [
   { icon: 'shield', title: 'Privacy First', desc: 'Fully offline, no data leaves your device' },
 ];
 
-const FREQUENCY_OPTIONS = [
-  { value: '1', label: 'Every Day' },
-  { value: '3', label: 'Every 3 Days' },
-  { value: '7', label: 'Every Week' },
-];
-
 export function AboutScreen() {
   const navigation = useNavigation();
   const [appVersion, setAppVersion] = useState<string>('...');
@@ -62,7 +55,7 @@ export function AboutScreen() {
   const [updateResult, setUpdateResult] = useState<UpdateInfo | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [isUpToDate, setIsUpToDate] = useState(false);
-  const [frequency, setFrequency] = useState<string>('3');
+  const [activeIcon, setActiveIcon] = useState<AppIconType>('default');
 
   useEffect(() => {
     // Load app version from native module
@@ -75,14 +68,27 @@ export function AboutScreen() {
       }
     })();
 
-    // Load saved frequency preference
+    // Load active icon preference
     (async () => {
       try {
-        const saved = await AsyncStorage.getItem(UPDATE_CHECK_FREQUENCY_KEY);
-        if (saved) setFrequency(saved);
-      } catch { }
+        const icon = await getCurrentAppIcon();
+        setActiveIcon(icon);
+      } catch {
+        setActiveIcon('default');
+      }
     })();
   }, []);
+
+  const getIconSource = () => {
+    switch (activeIcon) {
+      case 'emerald':
+        return require('../assets/icons/app_icon_emerald_round.webp');
+      case 'blue':
+        return require('../assets/icons/app_icon_blue_round.webp');
+      default:
+        return require('../assets/icons/app_icon_default_round.webp');
+    }
+  };
 
   const handleCheckUpdates = async () => {
     triggerHaptic();
@@ -108,14 +114,6 @@ export function AboutScreen() {
     } finally {
       setChecking(false);
     }
-  };
-
-  const handleFrequencyChange = async (value: string) => {
-    triggerHaptic();
-    setFrequency(value);
-    try {
-      await AsyncStorage.setItem(UPDATE_CHECK_FREQUENCY_KEY, value);
-    } catch { }
   };
 
   const handleOpenGitHub = () => {
@@ -148,21 +146,17 @@ export function AboutScreen() {
       <ScrollView contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}>
         {/* ── Hero Section ─────────────────────────────── */}
         <ImageBackground
-          source={require('../assets/icons/backgound.png')}
+          source={require('../assets/icons/about_hero_gradient.png')}
           style={s.heroBg}
           imageStyle={s.heroBgImage}
           resizeMode="cover"
         >
           <View style={s.heroOverlay}>
-            <View style={s.glowRingOuter}>
-              <View style={s.glowRingInner}>
-                <Image
-                  source={require('../assets/icons/icon.png')}
-                  style={s.heroIcon}
-                  resizeMode="contain"
-                />
-              </View>
-            </View>
+            <Image
+              source={getIconSource()}
+              style={s.heroIconCard}
+              resizeMode="cover"
+            />
             <Text style={s.appName}>DeenPulse</Text>
             <Text style={s.appTagline}>Live tracking on your status bar</Text>
             <View style={s.versionBadge}>
@@ -251,44 +245,6 @@ export function AboutScreen() {
           </View>
         )}
 
-        {/* ── Update Check Frequency ──────────────────── */}
-        <Text style={s.sectionLabel}>Check Frequency</Text>
-        <View style={s.frequencyCard}>
-          <Text style={s.frequencyDesc}>
-            How often should DeenPulse check for new releases automatically?
-          </Text>
-          <View style={s.frequencyOptions}>
-            {FREQUENCY_OPTIONS.map((opt) => {
-              const selected = frequency === opt.value;
-              return (
-                <Pressable
-                  key={opt.value}
-                  onPress={() => handleFrequencyChange(opt.value)}
-                  style={({ pressed }) => [
-                    s.radioRow,
-                    {
-                      borderColor: selected ? '#00F29D' : 'rgba(255,255,255,0.08)',
-                      backgroundColor: selected
-                        ? 'rgba(0, 242, 157, 0.08)'
-                        : 'rgba(255,255,255,0.02)',
-                      opacity: pressed ? 0.7 : 1,
-                    },
-                  ]}
-                >
-                  <View
-                    style={[
-                      s.radioDot,
-                      selected ? s.radioDotSelected : s.radioDotUnselected,
-                    ]}
-                  >
-                    {selected && <View style={s.radioDotFill} />}
-                  </View>
-                  <Text style={s.radioLabel}>{opt.label}</Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
 
         {/* ── Credits & Links ─────────────────────────── */}
         <Text style={s.sectionLabel}>Credits</Text>
@@ -396,60 +352,48 @@ const s = StyleSheet.create({
     overflow: 'hidden',
     marginBottom: 8,
     marginTop: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 242, 157, 0.12)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(0, 242, 157, 0.25)',
   },
   heroBgImage: {
     borderRadius: 24,
-    opacity: 0.35,
+    opacity: 0.95,
   },
   heroOverlay: {
     alignItems: 'center',
     paddingVertical: 32,
     paddingHorizontal: 16,
-    backgroundColor: 'rgba(11, 15, 18, 0.55)',
+    backgroundColor: 'rgba(11, 15, 18, 0.2)',
   },
-  glowRingOuter: {
-    width: 110,
-    height: 110,
-    borderRadius: 55,
-    backgroundColor: 'rgba(0, 242, 157, 0.04)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(0, 242, 157, 0.12)',
+  heroIconCard: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
     marginBottom: 16,
   },
-  glowRingInner: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  heroIcon: {
-    width: 64,
-    height: 64,
-  },
-
   appName: {
     fontSize: 28,
     fontWeight: '800',
     color: '#FFFFFF',
     marginBottom: 4,
     letterSpacing: 0.5,
+    textShadowColor: 'rgba(0, 0, 0, 0.4)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
   appTagline: {
     fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.5)',
+    color: 'rgba(255, 255, 255, 0.8)',
     marginBottom: 14,
+    textShadowColor: 'rgba(0, 0, 0, 0.4)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
   versionBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: 'rgba(0, 242, 157, 0.12)',
+    backgroundColor: 'rgba(11, 15, 18, 0.65)',
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: 10,
@@ -589,58 +533,7 @@ const s = StyleSheet.create({
     color: '#0B0F12',
   },
 
-  /* ── Frequency Picker ────────────────────────────── */
-  frequencyCard: {
-    backgroundColor: '#111417',
-    borderRadius: 20,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 242, 157, 0.15)',
-    marginBottom: 4,
-  },
-  frequencyDesc: {
-    fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.5)',
-    marginBottom: 14,
-    lineHeight: 17,
-  },
-  frequencyOptions: {
-    gap: 8,
-  },
-  radioRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 11,
-    paddingHorizontal: 14,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  radioDot: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  radioDotSelected: {
-    borderColor: '#00F29D',
-  },
-  radioDotUnselected: {
-    borderColor: 'rgba(255,255,255,0.3)',
-  },
-  radioDotFill: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#00F29D',
-  },
-  radioLabel: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '700',
-  },
+
 
   /* ── Credits ─────────────────────────────────────── */
   creditsCard: {

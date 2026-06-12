@@ -23,14 +23,12 @@ import {
   Pressable,
   Linking,
   StyleSheet,
-  Image,
   ImageBackground,
   NativeModules,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Feather';
 import { triggerHaptic, HeaderFadeOverlay } from '../../App';
-import { getCurrentAppIcon, AppIconType } from '../utils/appIconHelper';
 
 const { PrayerCapsuleModule } = NativeModules;
 
@@ -44,7 +42,6 @@ const FEATURES = [
 export function AboutScreen() {
   const navigation = useNavigation();
   const [appVersion, setAppVersion] = useState<string>('...');
-  const [activeIcon, setActiveIcon] = useState<AppIconType>('default');
 
   useEffect(() => {
     // Load app version from native module
@@ -57,27 +54,7 @@ export function AboutScreen() {
       }
     })();
 
-    // Load active icon preference
-    (async () => {
-      try {
-        const icon = await getCurrentAppIcon();
-        setActiveIcon(icon);
-      } catch {
-        setActiveIcon('default');
-      }
-    })();
   }, []);
-
-  const getIconSource = () => {
-    switch (activeIcon) {
-      case 'emerald':
-        return require('../assets/icons/app_icon_emerald_round.webp');
-      case 'blue':
-        return require('../assets/icons/app_icon_blue_round.webp');
-      default:
-        return require('../assets/icons/app_icon_default_round.webp');
-    }
-  };
 
   const handleOpenGitHub = () => {
     triggerHaptic();
@@ -102,7 +79,7 @@ export function AboutScreen() {
         >
           <Icon name="arrow-left" size={20} color="#00F29D" />
         </Pressable>
-        <Text style={s.headerTitle}>About DeenPulse</Text>
+        <Text style={s.headerTitle}>About</Text>
         <HeaderFadeOverlay />
       </View>
 
@@ -115,11 +92,6 @@ export function AboutScreen() {
           resizeMode="cover"
         >
           <View style={s.heroOverlay}>
-            <Image
-              source={getIconSource()}
-              style={s.heroIconCard}
-              resizeMode="cover"
-            />
             <Text style={s.appName}>DeenPulse</Text>
             <Text style={s.appTagline}>Live tracking on your status bar</Text>
             <View style={s.versionBadge}>
@@ -264,12 +236,6 @@ const s = StyleSheet.create({
     paddingVertical: 32,
     paddingHorizontal: 16,
     backgroundColor: 'rgba(11, 15, 18, 0.2)',
-  },
-  heroIconCard: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
-    marginBottom: 16,
   },
   appName: {
     fontSize: 28,

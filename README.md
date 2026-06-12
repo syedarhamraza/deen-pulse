@@ -12,7 +12,9 @@ DeenPulse turns your static notifications into glanceable Live Prayer Alerts for
 
 You can access the official release distributions and build artifacts directly via the portal below:
 
-* **[Download DeenPulse](https://deenpulse-web.vercel.app/#downloads)** — Get the latest stable Android APKs, Wear OS bundle packages, and release logs.
+[![Download DeenPulse](https://img.shields.io/badge/Download-DeenPulse-00F29D?style=for-the-badge&logo=android&logoColor=black)](https://deenpulse-web.vercel.app/#downloads)
+
+*Get the latest stable Android APKs, Wear OS bundle packages, and release logs.*
 
 ---
 

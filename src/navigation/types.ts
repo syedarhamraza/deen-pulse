@@ -27,6 +27,7 @@ export type RootStackParamList = {
   wearos_control: undefined;
   cat1_notification_guide: undefined;
   developer_options: undefined;
+  update_check: undefined;
 };
 
 export type Screen = keyof RootStackParamList;

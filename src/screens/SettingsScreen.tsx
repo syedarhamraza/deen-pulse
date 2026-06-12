@@ -167,6 +167,25 @@ export function SettingsScreen() {
 
           {/* Group 3: About & Diagnostics */}
           <Text style={localStyles.sectionHeader}>More</Text>
+
+          {/* Row: Software Update */}
+          <Pressable
+            style={({ pressed }) => [styles.settingsRowCard, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
+            onPress={() => {
+              triggerHaptic();
+              navigation.navigate('update_check');
+            }}
+          >
+            <View style={styles.rowIconContainer}>
+              <Icon name="refresh-cw" size={18} color="#00F29D" />
+            </View>
+            <View style={styles.rowInfo}>
+              <Text style={styles.rowTitle}>Software Update</Text>
+            </View>
+            <Icon name="chevron-right" size={18} color="rgba(0, 242, 157, 0.5)" />
+          </Pressable>
+
+          {/* Row: About */}
           <Pressable
             style={({ pressed }) => [styles.settingsRowCard, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
             onPress={() => {

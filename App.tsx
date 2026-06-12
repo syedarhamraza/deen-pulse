@@ -48,6 +48,7 @@ import { PrayerRulesScreen } from './src/screens/PrayerRulesScreen';
 import { NotificationsScreen } from './src/screens/NotificationsScreen';
 import { DataManagementScreen } from './src/screens/DataManagementScreen';
 import { AboutScreen } from './src/screens/AboutScreen';
+import { UpdateCheckScreen } from './src/screens/UpdateCheckScreen';
 import { OEMGuidanceScreen } from './src/screens/OEMGuidanceScreen';
 import { WearOSControlScreen } from './src/screens/WearOSControlScreen';
 import { Cat1NotificationGuideScreen } from './src/screens/Cat1NotificationGuideScreen';
@@ -562,6 +563,7 @@ function DeenPulseApp(): React.JSX.Element {
               )}
             </Stack.Screen>
             <Stack.Screen name="about" component={AboutScreen} />
+            <Stack.Screen name="update_check" component={UpdateCheckScreen} />
             <Stack.Screen name="developer_options">
               {() => (
                 <DeveloperOptionsScreen

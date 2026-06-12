@@ -23,7 +23,6 @@ import {
   Pressable,
   Linking,
   StyleSheet,
-  ActivityIndicator,
   Image,
   ImageBackground,
   NativeModules,
@@ -32,12 +31,6 @@ import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Feather';
 import { triggerHaptic, HeaderFadeOverlay } from '../../App';
 import { getCurrentAppIcon, AppIconType } from '../utils/appIconHelper';
-import {
-  checkForUpdate,
-  markUpdateChecked,
-  openDownloadUrl,
-  UpdateInfo,
-} from '../utils/UpdateChecker';
 
 const { PrayerCapsuleModule } = NativeModules;
 
@@ -51,10 +44,6 @@ const FEATURES = [
 export function AboutScreen() {
   const navigation = useNavigation();
   const [appVersion, setAppVersion] = useState<string>('...');
-  const [checking, setChecking] = useState(false);
-  const [updateResult, setUpdateResult] = useState<UpdateInfo | null>(null);
-  const [showResult, setShowResult] = useState(false);
-  const [isUpToDate, setIsUpToDate] = useState(false);
   const [activeIcon, setActiveIcon] = useState<AppIconType>('default');
 
   useEffect(() => {
@@ -87,32 +76,6 @@ export function AboutScreen() {
         return require('../assets/icons/app_icon_blue_round.webp');
       default:
         return require('../assets/icons/app_icon_default_round.webp');
-    }
-  };
-
-  const handleCheckUpdates = async () => {
-    triggerHaptic();
-    setChecking(true);
-    setShowResult(false);
-    setIsUpToDate(false);
-    setUpdateResult(null);
-
-    try {
-      const result = await checkForUpdate(appVersion);
-      await markUpdateChecked();
-
-      if (result) {
-        setUpdateResult(result);
-        setShowResult(true);
-      } else {
-        setIsUpToDate(true);
-        setShowResult(true);
-      }
-    } catch {
-      setIsUpToDate(true);
-      setShowResult(true);
-    } finally {
-      setChecking(false);
     }
   };
 
@@ -180,70 +143,7 @@ export function AboutScreen() {
           ))}
         </View>
 
-        {/* ── Check for Updates ────────────────────────── */}
-        <Text style={s.sectionLabel}>Updates</Text>
-        <Pressable
-          style={({ pressed }) => [s.updateButton, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
-          onPress={handleCheckUpdates}
-          disabled={checking}
-        >
-          {checking ? (
-            <ActivityIndicator size="small" color="#00F29D" />
-          ) : (
-            <Icon name="refresh-cw" size={16} color="#00F29D" />
-          )}
-          <Text style={s.updateButtonText}>
-            {checking ? 'Checking…' : 'Check for Updates'}
-          </Text>
-        </Pressable>
 
-        {/* Update Result Card */}
-        {showResult && (
-          <View style={s.resultCard}>
-            {isUpToDate ? (
-              <>
-                <View style={s.resultIconRow}>
-                  <View style={s.resultIconCircle}>
-                    <Icon name="check-circle" size={22} color="#00F29D" />
-                  </View>
-                </View>
-                <Text style={s.resultTitle}>You're up to date!</Text>
-                <Text style={s.resultDesc}>
-                  DeenPulse v{appVersion} is the latest version.
-                </Text>
-              </>
-            ) : updateResult ? (
-              <>
-                <View style={s.resultIconRow}>
-                  <View style={[s.resultIconCircle, s.resultIconCircleAvailable]}>
-                    <Icon name="download" size={22} color="#00F29D" />
-                  </View>
-                </View>
-                <Text style={s.resultTitle}>v{updateResult.version} Available</Text>
-                <Text style={s.resultDesc} numberOfLines={4}>
-                  {updateResult.releaseNotes}
-                </Text>
-                {updateResult.publishedAt ? (
-                  <Text style={s.resultDate}>
-                    Released {new Date(updateResult.publishedAt).toLocaleDateString()}
-                  </Text>
-                ) : null}
-                {updateResult.downloadUrl && (
-                  <Pressable
-                    style={({ pressed }) => [s.downloadButton, { transform: [{ scale: pressed ? 0.97 : 1 }] }]}
-                    onPress={() => {
-                      triggerHaptic();
-                      openDownloadUrl(updateResult.downloadUrl!);
-                    }}
-                  >
-                    <Icon name="external-link" size={14} color="#0B0F12" />
-                    <Text style={s.downloadButtonText}>Download Update</Text>
-                  </Pressable>
-                )}
-              </>
-            ) : null}
-          </View>
-        )}
 
 
         {/* ── Credits & Links ─────────────────────────── */}
@@ -454,84 +354,7 @@ const s = StyleSheet.create({
     lineHeight: 15,
   },
 
-  /* ── Update Button ───────────────────────────────── */
-  updateButton: {
-    backgroundColor: '#111417',
-    borderRadius: 14,
-    height: 50,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 242, 157, 0.15)',
-  },
-  updateButtonText: {
-    color: '#00F29D',
-    fontSize: 14,
-    fontWeight: '700',
-  },
 
-  /* ── Result Card ─────────────────────────────────── */
-  resultCard: {
-    backgroundColor: '#111417',
-    borderRadius: 20,
-    padding: 22,
-    marginTop: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 242, 157, 0.15)',
-    alignItems: 'center',
-  },
-  resultIconRow: {
-    marginBottom: 12,
-  },
-  resultIconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(0, 242, 157, 0.08)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(0, 242, 157, 0.2)',
-  },
-  resultIconCircleAvailable: {
-    borderColor: '#00F29D',
-  },
-  resultTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    marginBottom: 6,
-  },
-  resultDesc: {
-    fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.5)',
-    textAlign: 'center',
-    lineHeight: 18,
-    paddingHorizontal: 8,
-  },
-  resultDate: {
-    fontSize: 11,
-    color: 'rgba(255, 255, 255, 0.3)',
-    marginTop: 8,
-  },
-  downloadButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: '#00F29D',
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    marginTop: 16,
-  },
-  downloadButtonText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#0B0F12',
-  },
 
 
 

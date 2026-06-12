@@ -104,7 +104,7 @@ export function FluidModal({ visible, onClose, title, children }: FluidModalProp
               onPress={onClose}
               style={({ pressed }) => [styles.modalCloseBtn, { opacity: pressed ? 0.7 : 1 }]}
             >
-              <Icon name="x" size={16} color="rgba(255, 255, 255, 0.6)" />
+              <Icon name="x" size={18} color="#00F29D" />
             </Pressable>
           </View>
           {children}

@@ -133,16 +133,17 @@ export function WearOSControlScreen() {
           }}
           style={({ pressed }) => [styles.backButton, { transform: [{ scale: pressed ? 0.92 : 1 }] }]}
         >
-          <Icon name="arrow-left" size={20} color="#00E8A2" />
+          <Icon name="arrow-left" size={20} color="#00F29D" />
         </Pressable>
         <Text style={styles.title}>Watch Companion</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <Text style={[styles.sectionHeader, styles.sectionHeaderFirst]}>Connection Status</Text>
         {/* Centered Circular Connection Status Badge */}
         <View style={styles.badgeSection}>
           <View style={[styles.badgeCircle, isConnected ? styles.badgeConnected : styles.badgeDisconnected]}>
-            <Icon name="watch" size={38} color={isConnected ? '#00E8A2' : 'rgba(255,255,255,0.4)'} />
+            <Icon name="watch" size={38} color={isConnected ? '#00F29D' : 'rgba(255,255,255,0.4)'} />
             <View style={[styles.badgeIndicator, isConnected ? styles.badgeIndicatorConnected : styles.badgeIndicatorDisconnected]} />
           </View>
           <Text style={styles.watchLabel}>
@@ -155,6 +156,7 @@ export function WearOSControlScreen() {
           </View>
         </View>
 
+        <Text style={styles.sectionHeader}>Timetable Synchronization</Text>
         {/* Dynamic Last Synced Time Card */}
         <View style={styles.syncStatusCard}>
           <Text style={styles.syncStatusTitle}>Last Synchronized</Text>
@@ -196,9 +198,8 @@ export function WearOSControlScreen() {
           </View>
         )}
 
-        {/* Settings List */}
+        <Text style={styles.sectionHeader}>Sync Preferences</Text>
         <View style={styles.settingsSection}>
-          <Text style={styles.sectionLabel}>Sync Preferences</Text>
 
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
@@ -227,6 +228,7 @@ export function WearOSControlScreen() {
           </View>
         </View>
 
+        <Text style={styles.sectionHeader}>Troubleshooting</Text>
         {/* Troubleshooting Section */}
         <View style={styles.troubleCard}>
           <Pressable
@@ -237,7 +239,7 @@ export function WearOSControlScreen() {
             }}
           >
             <View style={styles.troubleTitleCol}>
-              <Icon name="help-circle" size={18} color="#00E8A2" />
+              <Icon name="help-circle" size={18} color="#00F29D" />
               <Text style={styles.troubleTitle}>Troubleshooting Sync Issues</Text>
             </View>
             <Icon name={troubleOpen ? 'chevron-up' : 'chevron-down'} size={18} color="rgba(255,255,255,0.4)" />
@@ -282,6 +284,21 @@ export function WearOSControlScreen() {
 }
 
 const styles = StyleSheet.create({
+  sectionHeader: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: 'rgba(255, 255, 255, 0.4)',
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
+    marginTop: 22,
+    marginBottom: 10,
+    paddingLeft: 4,
+    alignSelf: 'flex-start',
+    width: '100%',
+  },
+  sectionHeaderFirst: {
+    marginTop: 4,
+  },
   container: {
     flex: 1,
     backgroundColor: '#0B0F12',
@@ -303,8 +320,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 16,
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.15)',
-    shadowColor: '#00E8A2',
+    borderColor: 'rgba(0, 242, 157, 0.15)',
+    shadowColor: '#00F29D',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -337,8 +354,8 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   badgeConnected: {
-    borderColor: 'rgba(0, 232, 162, 0.25)',
-    shadowColor: '#00E8A2',
+    borderColor: 'rgba(0, 242, 157, 0.25)',
+    shadowColor: '#00F29D',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.25,
     shadowRadius: 12,
@@ -358,7 +375,7 @@ const styles = StyleSheet.create({
     borderColor: '#0B0F12',
   },
   badgeIndicatorConnected: {
-    backgroundColor: '#00E8A2',
+    backgroundColor: '#00F29D',
   },
   badgeIndicatorDisconnected: {
     backgroundColor: '#FF6B6B',
@@ -378,8 +395,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   statusBadgeConnected: {
-    backgroundColor: 'rgba(0, 232, 162, 0.08)',
-    borderColor: 'rgba(0, 232, 162, 0.25)',
+    backgroundColor: 'rgba(0, 242, 157, 0.08)',
+    borderColor: 'rgba(0, 242, 157, 0.25)',
   },
   statusBadgeDisconnected: {
     backgroundColor: 'rgba(255, 107, 107, 0.08)',
@@ -392,7 +409,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   statusBadgeTextConnected: {
-    color: '#00E8A2',
+    color: '#00F29D',
   },
   statusBadgeTextDisconnected: {
     color: '#FF6B6B',
@@ -403,7 +420,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.15)',
+    borderColor: 'rgba(0, 242, 157, 0.15)',
     marginBottom: 20,
     alignItems: 'center',
   },
@@ -428,7 +445,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   syncBtn: {
-    backgroundColor: '#00E8A2',
+    backgroundColor: '#00F29D',
     borderRadius: 16,
     height: 56,
     width: '100%',
@@ -475,7 +492,7 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.15)',
+    borderColor: 'rgba(0, 242, 157, 0.15)',
     width: '100%',
   },
   sectionLabel: {
@@ -520,7 +537,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.15)',
+    borderColor: 'rgba(0, 242, 157, 0.15)',
     width: '100%',
   },
   troubleHeader: {
@@ -556,15 +573,15 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: 'rgba(0, 232, 162, 0.08)',
+    backgroundColor: 'rgba(0, 242, 157, 0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(0, 232, 162, 0.25)',
+    borderColor: 'rgba(0, 242, 157, 0.25)',
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 1,
   },
   stepNumberText: {
-    color: '#00E8A2',
+    color: '#00F29D',
     fontSize: 10,
     fontWeight: '800',
   },

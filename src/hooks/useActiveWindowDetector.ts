@@ -43,6 +43,7 @@ export function useActiveWindowDetector(nextPrayer: NextPrayerInfo | null, praye
     if (activePrayerName) {
       lastTriggeredPrayer.current = activePrayerName;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Trigger alert if the active prayer started very recently (e.g., within the last 15 seconds)

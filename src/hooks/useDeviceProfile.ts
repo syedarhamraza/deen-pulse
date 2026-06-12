@@ -69,11 +69,23 @@ export function useDeviceProfile() {
       console.error('Failed to complete onboarding', e);
     }
   }, []);
+ 
+  const updateDeviceProfile = useCallback(async (selectedBrand: string) => {
+    try {
+      const newProfile = buildDeviceProfile(selectedBrand);
+      setProfile(newProfile);
+      await AsyncStorage.setItem(DEVICE_PROFILE_KEY, JSON.stringify(newProfile));
+      PrayerCapsuleModule?.setDeviceCategory(newProfile.category);
+    } catch (e) {
+      console.error('Failed to update device profile', e);
+    }
+  }, []);
 
   return {
     profile,
     isOnboardingComplete,
     isLoading,
     completeOnboarding,
+    updateDeviceProfile,
   };
 }

@@ -26,27 +26,40 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Feather';
-import { triggerHaptic } from '../../App';
+import { styles as appStyles, triggerHaptic } from '../../App';
 import { ColorOSSwitch } from '../components/ColorOSSwitch';
 import {
-  getProfileFromStorage,
   DeviceProfile,
   FORCE_LIVE_NOTIFICATION_KEY,
 } from '../utils/deviceProfiles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { FluidModal } from '../components/FluidModal';
 
 const { PrayerCapsuleModule } = NativeModules;
 
-export function OEMGuidanceScreen() {
+const BRANDS = [
+  { id: 'oppo', name: 'OPPO' },
+  { id: 'vivo', name: 'Vivo' },
+  { id: 'oneplus', name: 'OnePlus' },
+  { id: 'realme', name: 'Realme' },
+  { id: 'samsung', name: 'Samsung' },
+  { id: 'xiaomi', name: 'Xiaomi' },
+  { id: 'pixel', name: 'Google / Pixel' },
+  { id: 'other', name: 'Other Brand' },
+];
+
+interface OEMGuidanceScreenProps {
+  profile: DeviceProfile | null;
+  onUpdateProfile: (brand: string) => Promise<void>;
+}
+
+export function OEMGuidanceScreen({ profile, onUpdateProfile }: OEMGuidanceScreenProps) {
   const navigation = useNavigation();
-  const [profile, setProfile] = useState<DeviceProfile | null>(null);
   const [forceCapsule, setForceCapsule] = useState(false);
+  const [showBrandPicker, setShowBrandPicker] = useState(false);
 
   useEffect(() => {
     async function loadData() {
-      const p = await getProfileFromStorage();
-      setProfile(p);
-
       const forceVal = await AsyncStorage.getItem(FORCE_LIVE_NOTIFICATION_KEY);
       setForceCapsule(forceVal === 'true');
     }
@@ -150,15 +163,32 @@ export function OEMGuidanceScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <Text style={[localStyles.sectionHeader, localStyles.sectionHeaderFirst]}>Device Profile</Text>
         <View style={styles.profileSection}>
-          <Text style={styles.label}>Selected Device Brand</Text>
-          <Text style={styles.profileValue}>
-            {profile ? profile.brand.toUpperCase() : 'Detecting...'}
-          </Text>
+          <View style={localStyles.profileHeader}>
+            <View style={localStyles.profileInfoCol}>
+              <Text style={styles.label}>Selected Device Brand</Text>
+              <Text style={styles.profileValue}>
+                {profile ? profile.brand.toUpperCase() : 'Detecting...'}
+              </Text>
+            </View>
+            <Pressable
+              style={({ pressed }) => [localStyles.changeButton, { opacity: pressed ? 0.8 : 1 }]}
+              onPress={() => {
+                triggerHaptic();
+                setShowBrandPicker(true);
+              }}
+            >
+              <Icon name="edit-2" size={12} color="#00F29D" />
+              <Text style={localStyles.changeButtonText}>Change</Text>
+            </Pressable>
+          </View>
         </View>
 
+        <Text style={localStyles.sectionHeader}>Integration Status</Text>
         {renderCategoryGuidance()}
 
+        <Text style={localStyles.sectionHeader}>System Optimization</Text>
         <View style={styles.generalCard}>
           <Text style={styles.generalTitle}>Recommended Settings</Text>
           <Text style={styles.generalDesc}>
@@ -210,9 +240,90 @@ export function OEMGuidanceScreen() {
           </Pressable>
         </View>
       </ScrollView>
+
+      {/* Brand Selection Modal */}
+      <FluidModal
+        visible={showBrandPicker}
+        onClose={() => {
+          triggerHaptic();
+          setShowBrandPicker(false);
+        }}
+        title="Select Device Brand"
+      >
+        <ScrollView style={localStyles.modalScroll} showsVerticalScrollIndicator={false}>
+          {BRANDS.map((brand) => {
+            const isSelected = profile?.brand === brand.id;
+            return (
+              <Pressable
+                key={brand.id}
+                style={({ pressed }) => [
+                  appStyles.modalItem,
+                  isSelected && appStyles.modalItemSelected,
+                  { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
+                ]}
+                onPress={async () => {
+                  triggerHaptic();
+                  await onUpdateProfile(brand.id);
+                  setShowBrandPicker(false);
+                }}
+              >
+                <Text style={[
+                  appStyles.modalItemText,
+                  isSelected && appStyles.modalItemTextSelected,
+                ]}>{brand.name}</Text>
+                {isSelected && <Icon name="check" size={16} color="#00F29D" />}
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      </FluidModal>
     </View>
   );
 }
+
+const localStyles = StyleSheet.create({
+  sectionHeader: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: 'rgba(255, 255, 255, 0.4)',
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
+    marginTop: 22,
+    marginBottom: 10,
+    paddingLeft: 4,
+  },
+  sectionHeaderFirst: {
+    marginTop: 4,
+  },
+  profileHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  profileInfoCol: {
+    flex: 1,
+  },
+  changeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 242, 157, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 242, 157, 0.25)',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    gap: 6,
+  },
+  changeButtonText: {
+    color: '#00F29D',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  modalScroll: {
+    maxHeight: 320,
+    marginVertical: 10,
+  },
+});
 
 const styles = StyleSheet.create({
   container: {

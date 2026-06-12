@@ -23,6 +23,7 @@ import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.AlarmClock
 import android.provider.Settings
@@ -56,6 +57,44 @@ class PrayerCapsuleModule(reactContext: ReactApplicationContext) :
     }
 
     override fun getName(): String = "PrayerCapsuleModule"
+
+    @ReactMethod
+    fun changeAppIcon(iconName: String, promise: Promise) {
+        try {
+            val context = reactApplicationContext
+            val packageManager = context.packageManager
+            val packageName = context.packageName
+
+            val iconAliases = listOf(
+                "com.deenpulse.MainActivityAliasDefault",
+                "com.deenpulse.MainActivityAliasEmerald",
+                "com.deenpulse.MainActivityAliasBlue"
+            )
+
+            val targetAlias = when (iconName) {
+                "emerald" -> "com.deenpulse.MainActivityAliasEmerald"
+                "blue" -> "com.deenpulse.MainActivityAliasBlue"
+                else -> "com.deenpulse.MainActivityAliasDefault"
+            }
+
+            for (aliasName in iconAliases) {
+                val componentName = ComponentName(packageName, aliasName)
+                val state = if (aliasName == targetAlias) {
+                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+                } else {
+                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+                }
+                packageManager.setComponentEnabledSetting(
+                    componentName,
+                    state,
+                    PackageManager.DONT_KILL_APP
+                )
+            }
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject("ICON_CHANGE_ERROR", e.message, e)
+        }
+    }
 
     // ── Foreground Service (Cat 1 Mode A — all-time live notification) ─────────
 

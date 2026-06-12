@@ -15,16 +15,27 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React from 'react';
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, Pressable, Platform, Image, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Icon from 'react-native-vector-icons/Feather';
 import { styles, triggerHaptic, HeaderFadeOverlay } from '../../App';
 import { RootStackParamList } from '../navigation/types';
+import { FluidModal } from '../components/FluidModal';
+import { changeAppIcon, getCurrentAppIcon, AppIconType } from '../utils/appIconHelper';
 
 export function SettingsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const [appIcon, setAppIcon] = useState<AppIconType>('default');
+  const [showIconPicker, setShowIconPicker] = useState(false);
+
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      getCurrentAppIcon().then(setAppIcon);
+    }
+  }, []);
+
   return (
     <View style={styles.screenContainer}>
       <View style={styles.subHeader}>
@@ -115,6 +126,28 @@ export function SettingsScreen() {
             <Icon name="chevron-right" size={18} color="rgba(0, 242, 157, 0.5)" />
           </Pressable>
 
+          {/* Row: App Icon (Android Only) */}
+          {Platform.OS === 'android' && (
+            <Pressable
+              style={({ pressed }) => [styles.settingsRowCard, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
+              onPress={() => {
+                triggerHaptic();
+                setShowIconPicker(true);
+              }}
+            >
+              <View style={styles.rowIconContainer}>
+                <Icon name="image" size={18} color="#00F29D" />
+              </View>
+              <View style={styles.rowInfo}>
+                <Text style={styles.rowTitle}>App Icon</Text>
+                <Text style={styles.rowDesc}>
+                  {appIcon === 'emerald' ? 'Glass' : appIcon === 'blue' ? 'Oasis Gradient' : 'Default Mint'}
+                </Text>
+              </View>
+              <Icon name="chevron-right" size={18} color="rgba(0, 242, 157, 0.5)" />
+            </Pressable>
+          )}
+
           {/* Row 4: About DeenPulse */}
           <Pressable
             style={({ pressed }) => [styles.settingsRowCard, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
@@ -152,6 +185,118 @@ export function SettingsScreen() {
           </Pressable>
         </View>
       </ScrollView>
+
+      {/* App Icon Picker Modal */}
+      <FluidModal
+        visible={showIconPicker}
+        onClose={() => {
+          triggerHaptic();
+          setShowIconPicker(false);
+        }}
+        title="Choose App Icon"
+      >
+        <View style={localStyles.modalContainer}>
+          {/* Default Option */}
+          <Pressable
+            style={({ pressed }) => [
+              styles.modalItem,
+              appIcon === 'default' && styles.modalItemSelected,
+              localStyles.modalItemRow,
+              { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
+            ]}
+            onPress={async () => {
+              triggerHaptic();
+              const success = await changeAppIcon('default');
+              if (success) setAppIcon('default');
+              setShowIconPicker(false);
+            }}
+          >
+            <Image
+              source={require('../assets/icons/icon.png')}
+              style={localStyles.modalItemImage}
+            />
+            <Text style={[
+              styles.modalItemText,
+              appIcon === 'default' && styles.modalItemTextSelected,
+              localStyles.modalItemTextFlex
+            ]}>Default Mint</Text>
+            {appIcon === 'default' && <Icon name="check" size={16} color="#00F29D" />}
+          </Pressable>
+
+          {/* Emerald Option */}
+          <Pressable
+            style={({ pressed }) => [
+              styles.modalItem,
+              appIcon === 'emerald' && styles.modalItemSelected,
+              localStyles.modalItemRow,
+              { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
+            ]}
+            onPress={async () => {
+              triggerHaptic();
+              const success = await changeAppIcon('emerald');
+              if (success) setAppIcon('emerald');
+              setShowIconPicker(false);
+            }}
+          >
+            <Image
+              source={require('../assets/icons/app_icon_emerald.png')}
+              style={localStyles.modalItemImage}
+            />
+            <Text style={[
+              styles.modalItemText,
+              appIcon === 'emerald' && styles.modalItemTextSelected,
+              localStyles.modalItemTextFlex
+            ]}>Glass</Text>
+            {appIcon === 'emerald' && <Icon name="check" size={16} color="#00F29D" />}
+          </Pressable>
+
+          {/* Blue Option */}
+          <Pressable
+            style={({ pressed }) => [
+              styles.modalItem,
+              appIcon === 'blue' && styles.modalItemSelected,
+              localStyles.modalItemRow,
+              { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
+            ]}
+            onPress={async () => {
+              triggerHaptic();
+              const success = await changeAppIcon('blue');
+              if (success) setAppIcon('blue');
+              setShowIconPicker(false);
+            }}
+          >
+            <Image
+              source={require('../assets/icons/app_icon_blue.png')}
+              style={localStyles.modalItemImage}
+            />
+            <Text style={[
+              styles.modalItemText,
+              appIcon === 'blue' && styles.modalItemTextSelected,
+              localStyles.modalItemTextFlex
+            ]}>Oasis Gradient</Text>
+            {appIcon === 'blue' && <Icon name="check" size={16} color="#00F29D" />}
+          </Pressable>
+        </View>
+      </FluidModal>
     </View>
   );
 }
+
+const localStyles = StyleSheet.create({
+  modalContainer: {
+    gap: 12,
+  },
+  modalItemImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    marginRight: 16,
+  },
+  modalItemTextFlex: {
+    flex: 1,
+  },
+  modalItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+});

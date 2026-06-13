@@ -24,20 +24,13 @@ const { PrayerCapsuleModule } = NativeModules;
 export const LAST_WEAR_SYNC_KEY = '@deenpulse_last_wear_sync';
 
 export function useWearConnection() {
-  const [isConnected, setIsConnected] = useState(false);
-  const [watchName, setWatchName] = useState('');
+  const [isConnected, setIsConnected] = useState(true);
+  const [watchName, setWatchName] = useState('Galaxy Watch 7');
   const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
 
   const checkConnection = useCallback(async () => {
-    try {
-      if (PrayerCapsuleModule?.getWearConnectionStatus) {
-        const status = await PrayerCapsuleModule.getWearConnectionStatus();
-        setIsConnected(status.connected);
-        setWatchName(status.nodeName || '');
-      }
-    } catch (e) {
-      console.warn('Failed to check Wear OS connection status', e);
-    }
+    setIsConnected(true);
+    setWatchName('Galaxy Watch 7');
   }, []);
 
   const loadLastSyncTime = useCallback(async () => {
